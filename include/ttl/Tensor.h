@@ -2,39 +2,62 @@
 #ifndef TTL_TENSOR_H
 #define TTL_TENSOR_H
 
-#include "ttl/Expression.h"
-#include "ttl/Index.h"
-#include <type_traits>
+#include <array>
+#include <iostream>
 
 namespace ttl {
 template <int Rank, typename Scalar, int Dimension>
-class Tensor : public Expression<Tensor<Rank, Scalar, Dimension>> {
-  static constexpr auto R = Rank;
-  using S = Scalar;
-  static constexpr auto D = Dimension;
-
+class Tensor {
  public:
-  Tensor() : components_() {
+  using Index = std::array<int, Rank>;
+
+  Tensor() {
   }
 
-  template <typename ... Indices,
-            typename = typename std::enable_if<sizeof...(Indices) == R>::type>
-  auto operator()(Indices ... indices) {
-    return expressions::Bind<Tensor<R, S, D>, IndexSet<Indices...>>(*this);
+  static constexpr int size() {
+    return pow(Dimension, Rank);
   }
+
+  /// Multidimensional addressing based on an array of integers.
+  constexpr Scalar operator[](Index&& i) const {
+    return value_[index_of(0, std::forward<Index>(i))];
+  }
+
+  /// Multidimensional addressing based on an array of integers.
+  Scalar& operator[](Index&& i) {
+    return value_[index_of(0, std::forward<Index>(i))];
+  }
+
+  /// Simple linear addressing.
+  constexpr Scalar operator[](int i) const {
+    return value_[i];
+  }
+
+  // template <typename ... Indices,
+  //           typename = typename std::enable_if<sizeof...(Indices) == R>::type>
+  // auto operator()(Indices ... indices) {
+  //   return expressions::Bind<Tensor<R, S, D>, IndexSet<Indices...>>(*this);
+  // }
 
  private:
-  Tensor<Rank - 1, Scalar, Dimension> components_[Dimension];
-};
-
-template <typename Scalar, int Dimension>
-class Tensor<0, Scalar, Dimension> : public Expression<Tensor<0, Scalar, Dimension>> {
- public:
-  Tensor() : value_() {
+  static constexpr int offset_of(int n, Index&& i) {
+    return i[n] * pow(Dimension, Rank - n - 1);
   }
 
- private:
-  Scalar value_;
+  /// Recursively compute the index for an array.
+  static constexpr int index_of(int n, Index&& i) {
+    return (n < Rank) ? offset_of(n, std::forward<Index>(i)) + index_of(n + 1, std::forward<Index>(i)) : 0;
+  }
+
+  /// Recursively compute k^n at compile time for integers.
+  ///
+  /// This is used by the class to allocate the appropriate number of Scalar
+  /// values in the @p values_ member.
+  static constexpr int pow(int k, int n) {
+    return (n) ? k * pow(k, n - 1) : 1;
+  }
+
+  Scalar value_[size()];
 };
 }
 
