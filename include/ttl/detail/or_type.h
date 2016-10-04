@@ -2,6 +2,7 @@
 #ifndef TTL_DETAIL_OR_TYPE_H
 #define TTL_DETAIL_OR_TYPE_H
 
+#include <ttl/Pack.h>
 #include <ttl/detail/contains.h>
 #include <ttl/detail/iif.h>
 
@@ -16,7 +17,7 @@ template <class T, class U, class... V>
 struct or_type_impl;
 
 /// Base case when we've exhausted all of the packed types.
-template <template <class...> class Pack, class... V>
+template <class... V>
 struct or_type_impl<Pack<>, Pack<>, V...> {
   using type = Pack<V...>;
 };
@@ -25,7 +26,7 @@ struct or_type_impl<Pack<>, Pack<>, V...> {
 ///
 /// 1) If U0 is not in the union V..., then add it to V....
 /// 2) Continue processing U....
-template <template <class...> class Pack, class U0, class... U, class... V>
+template <class U0, class... U, class... V>
 struct or_type_impl<Pack<>, Pack<U0, U...>, V...> {
  private:
   using lhs_ = Pack<>;
@@ -42,8 +43,7 @@ struct or_type_impl<Pack<>, Pack<U0, U...>, V...> {
 ///
 /// 1) If T0 is not in the union V..., then add it to V....
 /// 2) Continue processing T....
-template <template <class...> class Pack, class T0, class... T, class... U,
-          class... V>
+template <class T0, class... T, class... U, class... V>
 struct or_type_impl<Pack<T0, T...>, Pack<U...>, V...> {
  private:
   using lhs_ = Pack<T...>;

@@ -2,21 +2,21 @@
 #ifndef TTL_DETAIL_AND_TYPE_H
 #define TTL_DETAIL_AND_TYPE_H
 
+#include <ttl/Pack.h>
 #include <ttl/detail/contains.h>
 #include <ttl/detail/iif.h>
 
 namespace ttl {
 namespace detail {
 
-/// Implement the metaprogramming operation that will intersect two lists of
-/// types (represented by some packed object---std::tuple in ttl).
+/// Implement the metaprogramming operation that will intersect two packs..
 ///
 /// @{
 template <class T, class U, class... V>
 struct and_type_impl;
 
 /// Base case when we processed all of the left-hand-side types.
-template <template <class...> class Pack, class... U, class... V>
+template <class... U, class... V>
 struct and_type_impl<Pack<>, Pack<U...>, V...> {
   using type = Pack<V...>;
 };
@@ -25,8 +25,7 @@ struct and_type_impl<Pack<>, Pack<U...>, V...> {
 ///
 /// 1) If T0 is in the pack U..., then add T0 to the intersection V....
 /// 2) Continue processing T....
-template <template <class...> class Pack, class T0, class... T, class... U,
-          class... V>
+template <class T0, class... T, class... U, class... V>
 struct and_type_impl<Pack<T0, T...>, Pack<U...>, V...> {
  private:
   using lhs_ = Pack<T...>;

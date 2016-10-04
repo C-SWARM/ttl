@@ -2,30 +2,28 @@
 #ifndef TTL_EXPRESSION_H
 #define TTL_EXPRESSION_H
 
+#include <ttl/Index.h>
+#include <type_traits>
+#include <utility>
+
 namespace ttl {
-template <typename T>
+template <class T, class External, class Internal>
 class Expression {
-};
-
-namespace expressions {
-template <typename T>
-class Bind : Expression<Bind<T>> {
-  T& data_;
+  static_assert(is_empty<intersect<External, Internal>>::value,
+                "Expressions should have disjoint external and internal index "
+                "sets.");
  public:
-  Bind(T& data) : data_(data) {
+  template <class Index>
+  auto eval(Index&& index) const {
+    return e_.eval(std::forward<Index>(index));
   }
-};
 
-template <typename LHS, typename RHS>
-class Add : Expression<Add<LHS, RHS>> {
-  const Bind<LHS>& lhs_;
-  const Bind<RHS>& rhs_;
- public:
-  Add(const Bind<LHS>& lhs, const Bind<LHS>& rhs)
-      : lhs_(lhs), rhs_(rhs) {
+  Expression(T& e) : e_(e) {
   }
+
+ private:
+  T& e_;
 };
-}
-}
+} // namespace ttl
 
 #endif // TTL_EXPRESSION_H

@@ -2,6 +2,7 @@
 #ifndef TTL_DETAIL_XOR_TYPE_H
 #define TTL_DETAIL_XOR_TYPE_H
 
+#include <ttl/Pack.h>
 #include <ttl/detail/contains.h>
 #include <ttl/detail/iif.h>
 #include <ttl/detail/and_type.h>
@@ -19,7 +20,7 @@ template <class T, class U, class... V>
 struct xor_type_impl;
 
 /// Base case is when we've processed the union.
-template <template <class...> class Pack, class... U, class... V>
+template <class... U, class... V>
 struct xor_type_impl<Pack<>, Pack<U...>, V...> {
   using type = Pack<V...>;
 };
@@ -28,8 +29,7 @@ struct xor_type_impl<Pack<>, Pack<U...>, V...> {
 ///
 /// 1. If T0 is not in the intersection, V..., then add T0 to the intersection.
 /// 2. Continue processing T....
-template <template <class...> class Pack, class T0, class... T, class... U,
-          class... V>
+template <class T0, class... T, class... U, class... V>
 struct xor_type_impl<Pack<T0, T...>, Pack<U...>, V...> {
  private:
   using lhs_ = Pack<T...>;

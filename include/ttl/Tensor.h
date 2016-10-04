@@ -2,62 +2,66 @@
 #ifndef TTL_TENSOR_H
 #define TTL_TENSOR_H
 
+#include <ttl/detail/check.h>
+#include <ttl/detail/pow.h>
+#include <ttl/expressions/TensorExpr.h>
 #include <array>
-#include <iostream>
 
 namespace ttl {
 template <int Rank, typename Scalar, int Dimension>
-class Tensor {
+class Tensor
+{
+  template <class... Indices>
+  using TExprType = expressions::TensorExpr<Tensor, Rank, Scalar, Dimension,
+                                            Indices...>;
  public:
-  using Index = std::array<int, Rank>;
+  Tensor() = default;
+  Tensor(Tensor&&) = delete;
+  Tensor& operator=(Tensor&& rhs) = default;
+  Tensor(const Tensor&) = delete;
+  Tensor& operator=(const Tensor& rhs) = default;
 
-  Tensor() {
+  /// The tensor only supports simple linear addressing.
+  ///
+  /// Multidimensional indexing is all handled through a TensorExpr that binds
+  /// an Pack to the tensor, and knows how to transform a multidimensional
+  /// index into a linear index.
+  ///
+  /// @{
+  constexpr Scalar operator[](int i) const { return value_[i]; }
+  Scalar& operator[](int i) { return value_[i]; }
+  /// @}
+
+  /// Create a tensor indexing expression for this tensor.
+  ///
+  /// This operation will bind the tensor to an Pack, which will allow us
+  /// to make type inferences about the types of operations that should be
+  /// available, as well as generate code to actually index the tensor in loops
+  /// and to evaluate its elements.
+  ///
+  /// @code
+  ///   static constexpr Index<'i'> i;
+  ///   static constexpr Index<'j'> j;
+  ///   static constexpr Index<'k'> k;
+  ///   Tensor<3, double, 3> T;
+  ///   auto expr = T(i, j, k);
+  ///   T(i, j, k) = U(k, i, j);
+  /// @code
+  ///
+  /// @tparam   Indices The set of indices to bind to the tensor dimensions.
+  /// @tparam    [anon] A type-check (sizeof...(Indices) == Rank) metaprogram.
+  ///
+  /// @param indices... The actual set of indices to bind (e.g., (i, j, k)).
+  ///
+  /// @returns          A tensor indexing expression.
+  template <class ... Indices, class = detail::check<Rank == sizeof...(Indices)>>
+  TExprType<Indices...> operator()(Indices... indices) {
+    return TExprType<Indices...>(*this, indices...);
   }
-
-  static constexpr int size() {
-    return pow(Dimension, Rank);
-  }
-
-  /// Multidimensional addressing based on an array of integers.
-  constexpr Scalar operator[](Index&& i) const {
-    return value_[index_of(0, std::forward<Index>(i))];
-  }
-
-  /// Multidimensional addressing based on an array of integers.
-  Scalar& operator[](Index&& i) {
-    return value_[index_of(0, std::forward<Index>(i))];
-  }
-
-  /// Simple linear addressing.
-  constexpr Scalar operator[](int i) const {
-    return value_[i];
-  }
-
-  // template <typename ... Indices,
-  //           typename = typename std::enable_if<sizeof...(Indices) == R>::type>
-  // auto operator()(Indices ... indices) {
-  //   return expressions::Bind<Tensor<R, S, D>, IndexSet<Indices...>>(*this);
-  // }
 
  private:
-  static constexpr int offset_of(int n, Index&& i) {
-    return i[n] * pow(Dimension, Rank - n - 1);
-  }
-
-  /// Recursively compute the index for an array.
-  static constexpr int index_of(int n, Index&& i) {
-    return (n < Rank) ? offset_of(n, std::forward<Index>(i)) + index_of(n + 1, std::forward<Index>(i)) : 0;
-  }
-
-  /// Recursively compute k^n at compile time for integers.
-  ///
-  /// This is used by the class to allocate the appropriate number of Scalar
-  /// values in the @p values_ member.
-  static constexpr int pow(int k, int n) {
-    return (n) ? k * pow(k, n - 1) : 1;
-  }
-
-  Scalar value_[size()];
+  static constexpr int Size_ = detail::pow(Dimension, Rank);
+  Scalar value_[Size_];
 };
 }
 
