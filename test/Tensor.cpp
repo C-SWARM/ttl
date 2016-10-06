@@ -51,10 +51,11 @@ TEST(TensorTest, TensorExprAssignment) {
   a[0] = 10;
   assign(b(i), a(i));
   EXPECT_EQ(a[0], b[0]);
+  // assign(b(i), a(j));
 
   ttl::Tensor<2, double, 3> T, U;
   assign(T(i, j), U(j, i));
-
+  // assign(T(i, j), U(j, k));
 
   ttl::Tensor<3, double, 3> A, B, C;
   init(A);
@@ -69,5 +70,7 @@ TEST(TensorTest, TensorExprAssignment) {
 TEST(TensorTest, AddExpression) {
   ttl::Tensor<1, double, 4> x(1), y(2), z;
 
-  // z(i) = x(i) + y(i);
+  z(i) = x(i) + y(i);
+  z(i) = y(i) - x(i);
+  // z(i) = y(i) - x(j);
 }

@@ -49,18 +49,28 @@ class Expression {
   }
 };
 
-/// Check to see if two expressions have compatible index sets.
+/// This helper metaprogram makes sure that the index packs associated with two
+/// expression types are compatible, i.e., they have the same underlying index
+/// types, even if they're not in the same order.
+///
+/// The normal usage is in a template list, e.g.,
+///
+/// @code
+///  template <class L, class R, class = check_compatible<L, R>> class ...
+/// @code
+///
+/// @{
 template <class L, class R>
-struct is_compatible {
-  using LSet_ = typename Traits<L>::IndexSet;
-  using RSet_ = typename Traits<R>::IndexSet;
-  static constexpr bool value = is_equivalent<LSet_, RSet_>::value;
+struct check_compatible_impl {
+  using L_ = typename Traits<L>::IndexPack;
+  using R_ = typename Traits<R>::IndexPack;
+  static constexpr bool value = is_equivalent<L_, R_>::value;
+  using type = detail::check<value>;
 };
 
 template <class L, class R>
-struct check_compatible {
-  using value = typename detail::check<is_compatible<L, R>::value>::value;
-};
+using check_compatible = typename check_compatible_impl<L, R>::type;
+/// @}
 
 } // namespace expressions
 } // namespace ttl

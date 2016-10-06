@@ -11,13 +11,6 @@ namespace detail {
 template <int Rank, class T, class U>
 struct shuffle_impl;
 
-template <int Rank, class... T>
-struct shuffle_impl<Rank, Pack<T...>, Pack<T...>> {
-  static IndexSet<Rank> op(IndexSet<Rank> i) {
-    return i;
-  }
-};
-
 template <int Rank, class T0, class... T, class... U>
 struct shuffle_impl<Rank, Pack<T0, T...>, Pack<U...>> {
   static IndexSet<Rank> op(IndexSet<Rank> i) {
@@ -29,14 +22,14 @@ struct shuffle_impl<Rank, Pack<T0, T...>, Pack<U...>> {
 
 template <int Rank, class... U>
 struct shuffle_impl<Rank, Pack<>, Pack<U...>> {
-  static IndexSet<Rank> op(IndexSet<Rank> i) {
+  static constexpr IndexSet<Rank> op(IndexSet<Rank> i) {
     return i;
   }
 };
 
 template <int Rank, class T, class U>
-inline IndexSet<Rank> shuffle(IndexSet<Rank> i) {
-  return shuffle_impl<Rank, T, U>::op(i);
+inline constexpr IndexSet<Rank> shuffle(IndexSet<Rank> i) {
+  return (is_equal<T, U>::value) ? i : shuffle_impl<Rank, T, U>::op(i);
 }
 } // namespace detail
 } // namespace ttl

@@ -144,7 +144,8 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexPack>>
   template <class R>
   struct apply<Rank, R> {
     static void op(TensorBind& lhs, const R& rhs, IndexSet<Rank> i) {
-      auto j = detail::shuffle<Rank, IndexPack, Traits<R>::IndexPack>(i);
+      using RP = typename Traits<R>::IndexPack;
+      auto j = detail::shuffle<Rank, IndexPack, RP>(i);
       lhs[i] = rhs[j];
     }
   };
