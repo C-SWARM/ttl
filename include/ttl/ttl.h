@@ -4,7 +4,8 @@
 
 #include <ttl/Pack.h>
 #include <ttl/Index.h>
-#include <ttl/Expression.h>
 #include <ttl/Tensor.h>
+#include <ttl/TensorImpl.h>
+#include <ttl/Expressions.h>
 
 #endif // #ifndef TTL_H

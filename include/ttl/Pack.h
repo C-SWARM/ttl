@@ -13,6 +13,14 @@ struct Pack {
   using type = Pack<T...>;
 };
 
+template <class... T>
+struct size;
+
+template <class... T>
+struct size<Pack<T...>> {
+  static constexpr int value = sizeof...(T);
+};
+
 namespace detail {
 template <class T>
 struct is_empty_impl;
