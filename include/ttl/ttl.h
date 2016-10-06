@@ -8,4 +8,6 @@
 #include <ttl/TensorImpl.h>
 #include <ttl/Expressions.h>
 
+#include <ttl/Library/Delta.h>
+
 #endif // #ifndef TTL_H

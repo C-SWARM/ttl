@@ -14,10 +14,13 @@ template <int Rank, typename Scalar, int Dimension>
 class Tensor
 {
  public:
-  Tensor() = default;
-  Tensor(Tensor&&) = delete;
+  Tensor() {
+    std::fill(value_, value_ + Size_, Scalar());
+  }
+
+  Tensor(Tensor&&) = default;
   Tensor& operator=(Tensor&& rhs) = default;
-  Tensor(const Tensor&) = delete;
+  Tensor(const Tensor&) = default;
   Tensor& operator=(const Tensor& rhs) = default;
 
   explicit Tensor(Scalar s) {

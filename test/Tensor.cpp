@@ -46,6 +46,41 @@ TEST(TensorTest, ArrayIndexing) {
   check(A);
 }
 
+
+TEST(TensorTest, Delta) {
+  // D0 and D1 are compile errors.
+  // auto D0 = ttl::Delta<0, double, 1>();
+  // auto D1 = ttl::Delta<1, double, 6>();
+  auto D2 = ttl::Delta<2, double, 6>();
+  for (int i = 0; i < 6; ++i) {
+    for (int j = 0; j < 6; ++j) {
+      EXPECT_EQ(D2[i*6 + j], (i == j) ? 1.0 : 0.0);
+    }
+  }
+
+  auto D3 = ttl::Delta<3, double, 4>(3.14);
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) {
+        int index = i*4*4 + j*4 + k;
+        EXPECT_EQ(D3[index], (i == j && j == k) ? 3.14 : 0.0);
+      }
+    }
+  }
+
+  auto D4 = ttl::Delta<4, int, 3>(42);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      for (int k = 0; k < 3; ++k) {
+        for (int l = 0; l < 3; ++l) {
+          int index = i*3*3*3 + j*3*3 + k*3 + l;
+          EXPECT_EQ(D4[index], (i == j && j == k && k == l) ? 42 : 0.0);
+        }
+      }
+    }
+  }
+}
+
 TEST(TensorTest, TensorExprAssignment) {
   ttl::Tensor<1, double, 1> a, b;
   a[0] = 10;
@@ -74,3 +109,4 @@ TEST(TensorTest, AddExpression) {
   z(i) = y(i) - x(i);
   // z(i) = y(i) - x(j);
 }
+

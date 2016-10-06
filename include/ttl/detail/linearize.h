@@ -40,20 +40,20 @@ namespace detail {
 template <int N, int D, int R>
 struct linearize_impl {
   using next = linearize_impl<N + 1, D, R>;
-  static constexpr int op(std::array<int, R> i, int accum) {
+  static constexpr int op(IndexSet<R> i, int accum) {
     return next::op(i, accum + i[N] * pow(D, R - N - 1));
   }
 };
 
 template <int D, int R>
 struct linearize_impl<R, D, R> {
-  static constexpr int op(std::array<int, R>, int accum) {
+  static constexpr int op(IndexSet<R>, int accum) {
     return accum;
   }
 };
 
 template <int D, int R>
-inline constexpr int linearize(std::array<int, R> in) {
+inline constexpr int linearize(IndexSet<R> in) {
   return linearize_impl<0, D, R>::op(in, 0);
 }
 } // namespace detail
