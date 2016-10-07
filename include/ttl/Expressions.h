@@ -7,5 +7,7 @@
 #include <ttl/Expressions/BinaryOp.h>
 #include <ttl/Expressions/UnaryOp.h>
 #include <ttl/Expressions/ScalarOp.h>
+#include <ttl/Expressions/TensorProduct.h>
+#include <ttl/Expressions/Multiply.h>
 
 #endif // TTL_EXPRESSIONS_EXPRESSIONS_H

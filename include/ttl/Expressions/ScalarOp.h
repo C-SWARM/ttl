@@ -81,13 +81,6 @@ class ScalarOp<Op<R>, L, R, false> : Expression<ScalarOp<Op<R>, L, R, false>>
 };
 
 template <class L, class R>
-constexpr auto operator*(L lhs, R rhs)
-  -> ScalarOp<std::multiplies<promote<L, R>>, L, R>
-{
-  return ScalarOp<std::multiplies<promote<L, R>>, L, R>(lhs, rhs);
-}
-
-template <class L, class R>
 constexpr auto operator/(L lhs, R rhs)
   -> ScalarOp<std::divides<promote<L, R>>, L, R>
 {

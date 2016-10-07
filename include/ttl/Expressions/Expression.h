@@ -44,10 +44,8 @@ struct Traits;
 template <class E>
 class Expression {
  public:
-  using Traits = Traits<E>;
-
-  constexpr auto operator[](IndexSet<Traits::Rank> i) const
-    -> typename Traits::ScalarType
+  constexpr auto operator[](IndexSet<Traits<E>::Rank> i) const
+    -> typename Traits<E>::ScalarType
   {
     return static_cast<const E&>(*this)[i];
   }

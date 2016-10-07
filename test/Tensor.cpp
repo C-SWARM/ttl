@@ -4,6 +4,7 @@
 static constexpr ttl::Index<'i'> i;
 static constexpr ttl::Index<'j'> j;
 static constexpr ttl::Index<'k'> k;
+static constexpr ttl::Index<'l'> l;
 
 int index(int i, int j, int k) {
   return i * 3 * 3 + j * 3 + k;
@@ -175,3 +176,22 @@ TEST(TensorTest, ScalarOp) {
   EXPECT_EQ(u[3], 0.0);
 }
 
+TEST(TensorTest, TensorProduct) {
+  static constexpr ttl::Index<'i'> i;
+  static constexpr ttl::Index<'j'> j;
+  static constexpr ttl::Index<'k'> k;
+  static constexpr ttl::Index<'l'> l;
+
+  ttl::Tensor<2,double,3> A, B, C;
+  ttl::Tensor<4,double,3> D;
+
+  A(i,j) = B(j,i);
+
+  C(i,k) = A(i,j) * B(j,k);
+
+  D(i,j,k,l) = A(i,j) * B(k,l);
+
+  C(i,j) = A(i,j) * B(k,l) * B(k,l);
+
+  y(l) = D(i,j,k,l) * 0.5 * (B(i,j) + B(j,i)) * x(k);
+}

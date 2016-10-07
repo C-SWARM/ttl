@@ -24,19 +24,14 @@ template <int N>
 using IndexSet = std::array<int, N>;
 
 template <class T, class U>
-struct intersect {
-  using type = typename detail::and_type<T, U>::type;
-};
+using intersect = typename detail::and_type<T, U>::type;
 
 template <class T, class U>
-struct unite {
-  using type = typename detail::or_type<T, U>::type;
-};
+using unite = typename detail::or_type<T, U>::type;
 
 template <class T, class U>
-struct symdif {
-  using type = typename detail::xor_type<T, U>::type;
-};
+using symdif = typename detail::xor_type<T, U>::type;
+
 } // namespace ttl
 
 #endif // TTL_INDEX_H

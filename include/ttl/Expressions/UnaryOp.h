@@ -25,13 +25,11 @@ template <class E, class Op>
 class UnaryOp : Expression<UnaryOp<E, Op>>
 {
  public:
-  using Traits = Traits<UnaryOp>;
-
   UnaryOp(E e) : e_(e), op_() {
   }
 
-  constexpr auto operator[](IndexSet<Traits::Rank> i) const
-    -> typename Traits::ScalarType
+  constexpr auto operator[](IndexSet<Traits<UnaryOp>::Rank> i) const
+    -> typename Traits<UnaryOp>::ScalarType
   {
     return op_(e_[i]);
   }
