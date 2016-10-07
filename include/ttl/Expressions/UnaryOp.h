@@ -15,43 +15,48 @@ template <class E, class Op>
 class UnaryOp;
 
 /// The expression Traits for UnaryOp expressions.
+///
+/// This just exports the traits of the underlying expression.
 template <class E, class Op>
-struct Traits<UnaryOp<E, Op>>
-{
-  static constexpr int Dimension = Traits<E>::Dimension;
-  static constexpr int Rank = Traits<E>::Rank;
-  using Scalar = typename Traits<E>::Scalar;
-  using IndexPack = typename Traits<E>::IndexPack;
-  using Type = UnaryOp<E, Op>;
-  using ExpressionType = Expression<Type>;
+struct Traits<UnaryOp<E, Op>> : public Traits<E> {
 };
 
 template <class E, class Op>
-class UnaryOp : Expression<UnaryOp<E, Op>> {
+class UnaryOp : Expression<UnaryOp<E, Op>>
+{
  public:
-  static constexpr int Rank = Traits<UnaryOp>::Rank;
-  using Scalar = typename Traits<UnaryOp>::Scalar;
+  using Traits = Traits<UnaryOp>;
 
-  UnaryOp(const E& e, Op&& op) : e_(e), op_(op) {
+  UnaryOp(E e) : e_(e), op_() {
   }
 
-  constexpr Scalar operator[](IndexSet<Rank> i) const {
-    using Index = typename Traits<E>::IndexPack;
+  constexpr auto operator[](IndexSet<Traits::Rank> i) const
+    -> typename Traits::ScalarType
+  {
     return op_(e_[i]);
   }
 
  private:
-  const E& e_;
+  const E e_;
   const Op op_;
 };
 
+/// Convenience metafunction to create a unary op for a template.
+///
+/// The standard library provides some standard template function objects for
+/// the unary operators. This metafunction binds any of these function object
+/// types with the scalar value of the expression.
+///
+/// @tparam           E The expression type.
+/// @tparam          Op The function object type (e.g., std::negate).
+///
+/// @treturns           The type of the unary operator for E, Op.
+template <class E, template <class> class Op>
+using unary_op_type = UnaryOp<E, Op<typename Traits<E>::ScalarType>>;
+
 template <class E>
-inline constexpr auto operator-(E&& e)
-  -> UnaryOp<E, std::negate<typename Traits<E>::Scalar>> // @todo delete for C++14
-{
-  using Scalar = typename Traits<E>::Scalar;
-  using UnaryOp = UnaryOp<E, std::negate<typename Traits<E>::Scalar>>;
-  return UnaryOp(std::forward<E>(e), std::negate<Scalar>());
+constexpr const unary_op_type<E, std::negate> operator-(E e) {
+  return unary_op_type<E, std::negate>(e);
 }
 
 } // namespace expressions

@@ -90,6 +90,12 @@ TEST(TensorTest, TensorExprAssignment) {
 
   ttl::Tensor<2, double, 3> T, U;
   assign(T(i, j), U(j, i));
+  for (int n = 0; n < 3; ++n) {
+    for (int m = 0; m < 3; ++m) {
+      EXPECT_EQ(T[n*3 + m], U[m*3 + n]);
+    }
+  }
+
   // assign(T(i, j), U(j, k));
 
   ttl::Tensor<3, double, 3> A, B, C;
@@ -129,7 +135,43 @@ TEST(TensorTest, BinaryOp) {
   for (int n = 0; n < 4; ++n) {
     EXPECT_EQ(z[n], 1);
   }
-
   // z(i) = y(i) - x(j);
+}
+
+TEST(TensorTest, ScalarOp) {
+  ttl::Tensor<0, double, 1> x(1), y;
+  y() = 3.1 * x();
+  EXPECT_EQ(y[0], 3.1);
+
+  x() = y() * 3.0;
+  EXPECT_EQ(x[0], 9.3);
+
+  ttl::Tensor<2, int, 2> s = ttl::Delta<2,int,2>(2);
+  ttl::Tensor<2, int, 2> t;
+  ttl::Tensor<2, double, 2> u;
+
+  t(i,j) = (ttl::Tensor<2, int, 2>(2)(i,j) - s(j,i))/2;
+  EXPECT_EQ(t[0], 0);
+  EXPECT_EQ(t[1], 1);
+  EXPECT_EQ(t[2], 1);
+  EXPECT_EQ(t[3], 0);
+
+  s(i,j) = 1.2 * t(i,j);
+  EXPECT_EQ(s[0], 0);
+  EXPECT_EQ(s[1], 1);
+  EXPECT_EQ(s[2], 1);
+  EXPECT_EQ(s[3], 0);
+
+  u(i,j) = 1.2 * t(i,j);
+  EXPECT_EQ(u[0], 0);
+  EXPECT_EQ(u[1], 1.2);
+  EXPECT_EQ(u[2], 1.2);
+  EXPECT_EQ(u[3], 0);
+
+  u(i,j) = s(i,j) % 1;
+  EXPECT_EQ(u[0], 0.0);
+  EXPECT_EQ(u[1], 0.0);
+  EXPECT_EQ(u[2], 0.0);
+  EXPECT_EQ(u[3], 0.0);
 }
 

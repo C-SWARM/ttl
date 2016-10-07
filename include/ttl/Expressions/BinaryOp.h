@@ -29,55 +29,85 @@ template <class L, class R, class Op>
 class BinaryOp;
 
 /// The expression Traits for BinaryOp expressions.
+///
+/// The binary op expression just exports its left-hand-side expression
+/// types. This is a somewhat arbitrary decision---it could export its right
+/// hand side as well.
+///
+/// It overrides the ScalarType based on type promotion rules.
+///
+/// @tparam           L The type of the left hand expression.
+/// @tparam           R The type of the right hand expression.
+/// @tparam           R The type of the operation.
 template <class L, class R, class Op>
-struct Traits<BinaryOp<L, R, Op>>
-{
-  static constexpr int Dimension = Traits<L>::Dimension;
-  static constexpr int Rank = Traits<L>::Rank;
-  using Scalar = typename Traits<L>::Scalar;
-  using IndexPack = typename Traits<L>::IndexPack;
-  using Type = BinaryOp<L, R, Op>;
-  using ExpressionType = Expression<Type>;
+struct Traits<BinaryOp<L, R, Op>> : public Traits<L> {
+  using ScalarType = decltype(Op()(typename Traits<L>::ScalarType(),
+                                   typename Traits<R>::ScalarType()));
 };
 
+/// The BinaryOp expression implementation.
+///
+/// The BinaryOp captures its left hand side and right hand side expressions,
+/// and a function object or lambda for the operation, and implements the
+/// operator[] operation to evaluate an index.
 template <class L, class R, class Op>
-class BinaryOp : Expression<BinaryOp<L, R, Op>> {
+class BinaryOp : Expression<BinaryOp<L, R, Op>>
+{
  public:
-  static constexpr int Rank = Traits<BinaryOp>::Rank;
-  using Scalar = typename Traits<BinaryOp>::Scalar;
-
-  BinaryOp(const L& lhs, const R& rhs, Op&& op) : lhs_(lhs), rhs_(rhs), op_(op) {
+  BinaryOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr Scalar operator[](IndexSet<Rank> i) const {
-    using LP = typename Traits<L>::IndexPack;
-    using RP = typename Traits<R>::IndexPack;
-    return op_(lhs_[i], rhs_[detail::shuffle<Rank, LP, RP>(i)]);
+  constexpr auto operator[](IndexSet<Traits<BinaryOp>::Rank> i) const
+    -> typename Traits<BinaryOp>::ScalarType
+  {
+    return op_(lhs_[i], rhs_[detail::shuffle<
+                             Traits<BinaryOp>::Rank,
+                             typename Traits<L>::IndexType,
+                             typename Traits<R>::IndexType>(i)]);
   }
 
  private:
-  const L& lhs_;
-  const R& rhs_;
-  const Op op_;
+  L lhs_;
+  R rhs_;
+  Op op_;
 };
 
+/// Convenience metafunction to compute the type of a BinaryOp when the Op is a
+/// function object type from the STL (like std::plus).
+///
+/// @tparam           L The type of the left-hand-side expression.
+/// @tparam           R The type of the right-hand-side expression.
+/// @tparam          Op The type of the binary function object.
+///
+/// @treturn            The type of the BinaryOp for L, R, Op.
+///
+/// @{
+template <class L, class R, class Op>
+struct binary_op_type_impl;
+
+template <class L, class R, template <class> class Op>
+struct binary_op_type_impl<L, R, Op<void>> {
+ private:
+  using LeftScalarType_ = typename Traits<L>::ScalarType;
+  using RightScalarType_ = typename Traits<R>::ScalarType;
+  using ScalarType_ = decltype(Op<LeftScalarType_>()(LeftScalarType_(), RightScalarType_()));
+
+ public:
+  using type = BinaryOp<L, R, Op<ScalarType_>>;
+};
+
+template <class L, class R, class Op>
+using binary_op_type = typename binary_op_type_impl<L, R, Op>::type;
+/// @}
+
 template <class L, class R, class = check_compatible<L, R>>
-inline constexpr auto operator+(L&& lhs, R&& rhs)
-  -> BinaryOp<L, R, std::plus<typename Traits<L>::Scalar>> // @todo delete for C++14
-{
-  using Scalar = typename Traits<L>::Scalar;
-  using BinaryOp = BinaryOp<L, R, std::plus<typename Traits<L>::Scalar>>;
-  return BinaryOp(lhs, rhs, std::plus<Scalar>());
+constexpr const binary_op_type<L, R, std::plus<void>> operator+(L lhs, R rhs) {
+  return binary_op_type<L, R, std::plus<void>>(lhs, rhs);
 }
 
-//
 template <class L, class R, class = check_compatible<L, R>>
-inline constexpr auto operator-(L&& lhs, R&& rhs)
-  -> BinaryOp<L, R, std::minus<typename Traits<L>::Scalar>> // @todo delete for C++14
-{
-  using Scalar = typename Traits<L>::Scalar;
-  using BinaryOp = BinaryOp<L, R, std::minus<typename Traits<L>::Scalar>>;
-  return BinaryOp(lhs, rhs, std::minus<Scalar>());
+constexpr const binary_op_type<L, R, std::minus<void>> operator-(L lhs, R rhs) {
+  return binary_op_type<L, R, std::minus<void>>(lhs, rhs);
 }
 
 } // namespace expressions

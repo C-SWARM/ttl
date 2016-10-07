@@ -28,6 +28,9 @@ namespace expressions {
 /// to provide at least the required functionality. This is class concept-based
 /// design... the Expression system will work for any class that defines the
 /// right concepts.
+///
+/// The default traits class tries to generate useful errors for classes that
+/// haven't defined traits.
 template <class E>
 struct Traits;
 
@@ -41,10 +44,11 @@ struct Traits;
 template <class E>
 class Expression {
  public:
-  using Scalar = typename Traits<E>::Scalar;
-  static constexpr int Rank = Traits<E>::Rank;
+  using Traits = Traits<E>;
 
-  constexpr Scalar operator[](IndexSet<Rank> i) const {
+  constexpr auto operator[](IndexSet<Traits::Rank> i) const
+    -> typename Traits::ScalarType
+  {
     return static_cast<const E&>(*this)[i];
   }
 };
@@ -62,15 +66,61 @@ class Expression {
 /// @{
 template <class L, class R>
 struct check_compatible_impl {
-  using L_ = typename Traits<L>::IndexPack;
-  using R_ = typename Traits<R>::IndexPack;
-  static constexpr bool value = is_equivalent<L_, R_>::value;
+ private:
+  using L_ = typename std::remove_reference<L>::type;
+  using R_ = typename std::remove_reference<R>::type;
+  using LI_ = typename Traits<L_>::IndexType;
+  using RI_ = typename Traits<R_>::IndexType;
+
+ public:
+  static constexpr bool value = is_equivalent<LI_, RI_>::value;
   using type = detail::check<value>;
 };
 
 template <class L, class R>
 using check_compatible = typename check_compatible_impl<L, R>::type;
 /// @}
+
+/// Template for promoting scalar types.
+///
+/// We use multiplication as the default
+template <class L, class R,
+          bool = std::is_arithmetic<L>::value,
+          bool = std::is_arithmetic<R>::value>
+struct promote_impl;
+
+template <class L, class R>
+struct promote_impl<L, R, true, true> {
+  using type = decltype(L() * R());             // both scalars
+};
+
+template <class L, class R>
+struct promote_impl<L, R, true, false> {
+ private:
+  using R_ = typename Traits<R>::ScalarType;    // resolve right
+ public:
+  using type = typename promote_impl<L, R_>::type;
+};
+
+template <class L, class R>
+struct promote_impl<L, R, false, true> {
+ private:
+  using L_ = typename Traits<L>::ScalarType;    // resolve left
+ public:
+  using type = typename promote_impl<L_, R>::type;
+};
+
+template <class L, class R>
+struct promote_impl<L, R, false, false> {
+ private:
+  using L_ = typename Traits<L>::ScalarType;    // resolve both
+  using R_ = typename Traits<L>::ScalarType;
+ public:
+  using type = typename promote_impl<L_, R_>::type;
+};
+
+template <class L, class R>
+using promote = typename promote_impl<L, R>::type;
 
 } // namespace expressions
 } // namespace ttl

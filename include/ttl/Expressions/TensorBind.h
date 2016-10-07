@@ -24,30 +24,30 @@ namespace expressions {
 ///
 /// @tparam      Scalar The underlying scalar type of the tensor.
 /// @tparam   Dimension The underlying tensor dimension.
-/// @tparam   IndexPack The index map for this expression.
-template <class Scalar, int Dimension, class IndexPack>
+/// @tparam   IndexType The index map for this expression.
+template <class Scalar, int Dimension, class IndexType>
 class TensorBind;
 
 /// The expression Traits for TensorBind expressions.
 ///
-/// @tparam           S The scalar type for the expression.
+/// @tparam      Scalar The scalar type for the expression.
 /// @tparam           D The dimensionality of the expression.
-/// @tparam           I The indices bound to this expression.
-template <class S, int D, class I>
-struct Traits<TensorBind<S, D, I>>
+/// @tparam       Index The indices bound to this expression.
+template <class Scalar, int D, class Index>
+struct Traits<TensorBind<Scalar, D, Index>>
 {
+  using ScalarType = Scalar;
+  using IndexType = Index;
+  static constexpr int Rank = size<IndexType>::value;
   static constexpr int Dimension = D;
-  static constexpr int      Rank = size<I>::value;
 
-  using         Scalar = S;
-  using      IndexPack = I;
-  using           Type = TensorBind<S, D, I>;
-  using     TensorType = Tensor<Rank, S, D>;
+  using           Type = TensorBind<ScalarType, Dimension, IndexType>;
+  using     TensorType = Tensor<Rank, ScalarType, Dimension>;
   using ExpressionType = Expression<Type>;
 };
 
-template <class Scalar, int Dimension, class IndexPack>
-class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexPack>>
+template <class Scalar, int Dimension, class IndexType>
+class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexType>>
 {
  public:
   /// Import some names that we need.
@@ -101,7 +101,7 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexPack>>
   /// index pack.
   ///
   /// This is the core functionality provided by the TensorBind expression. Its
-  /// job is to loop through the index space defined by its IndexPack and
+  /// job is to loop through the index space defined by its IndexType and
   /// evaluate the right hand side for the remapped index pack.
   ///
   /// @code
@@ -123,7 +123,7 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexPack>>
   /// @tparam    (anon) Restrict this operation to expressions that match.
   template <class E, class = check_compatible<TensorBind, E>>
   TensorBind& operator=(const E& rhs) {
-    apply<0, E>::op(*this, rhs, {0});
+    apply<0, E>::op(*this, rhs, {});
     return *this;
   }
 
@@ -144,8 +144,8 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexPack>>
   template <class R>
   struct apply<Rank, R> {
     static void op(TensorBind& lhs, const R& rhs, IndexSet<Rank> i) {
-      using RP = typename Traits<R>::IndexPack;
-      auto j = detail::shuffle<Rank, IndexPack, RP>(i);
+      using RP = typename Traits<R>::IndexType;
+      auto j = detail::shuffle<Rank, IndexType, RP>(i);
       lhs[i] = rhs[j];
     }
   };

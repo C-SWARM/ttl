@@ -54,7 +54,7 @@ inline constexpr auto Delta(Scalar s = Scalar(1))
   -> Tensor<Rank, Scalar, Dimension>            // @todo delete for C++14
 {
   using T = Tensor<Rank, Scalar, Dimension>;
-  return detail::fill_delta_impl<Dimension, Scalar, T>::op(T(), s);
+  return detail::fill_delta_impl<Dimension, Scalar, T>::op(T(Scalar()), s);
 }
 } // namespace ttl
 
