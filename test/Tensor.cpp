@@ -102,11 +102,34 @@ TEST(TensorTest, TensorExprAssignment) {
   check(C);
 }
 
-TEST(TensorTest, AddExpression) {
+TEST(TensorTest, UnaryOp) {
+  ttl::Tensor<2, int, 2> A(1), B;
+  B(i, j) = -A(i, j);
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      EXPECT_EQ(B[i*2 + j], -1);
+    }
+  }
+}
+
+TEST(TensorTest, BinaryOp) {
   ttl::Tensor<1, double, 4> x(1), y(2), z;
 
   z(i) = x(i) + y(i);
-  z(i) = y(i) - x(i);
+  for (int n = 0; n < 4; ++n) {
+    EXPECT_EQ(z[n], 3);
+  }
+
+  z(i) = y(i) - x(i) - x(i);
+  for (int n = 0; n < 4; ++n) {
+    EXPECT_EQ(z[n], 0);
+  }
+
+  z(i) = y(i) - x(i) - x(i) + y(i) - x(i);
+  for (int n = 0; n < 4; ++n) {
+    EXPECT_EQ(z[n], 1);
+  }
+
   // z(i) = y(i) - x(j);
 }
 

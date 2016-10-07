@@ -1,6 +1,6 @@
 // -*- C++ -*-
-#ifndef TTL_EXPRESSIONS_ADD_EXP_H
-#define TTL_EXPRESSIONS_ADD_EXP_H
+#ifndef TTL_EXPRESSIONS_BINARY_OP_H
+#define TTL_EXPRESSIONS_BINARY_OP_H
 
 #include <ttl/Pack.h>
 #include <ttl/Index.h>
@@ -83,4 +83,4 @@ inline constexpr auto operator-(L&& lhs, R&& rhs)
 } // namespace expressions
 } // namespace ttl
 
-#endif // TTL_EXPRESSIONS_ADD_EXP_H
+#endif // TTL_EXPRESSIONS_BINARY_OP_H
