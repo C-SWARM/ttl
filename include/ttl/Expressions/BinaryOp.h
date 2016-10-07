@@ -41,8 +41,7 @@ class BinaryOp;
 /// @tparam           R The type of the operation.
 template <class L, class R, class Op>
 struct Traits<BinaryOp<L, R, Op>> : public Traits<L> {
-  using ScalarType = decltype(Op()(typename Traits<L>::ScalarType(),
-                                   typename Traits<R>::ScalarType()));
+  using ScalarType = promote<L, R>;
 };
 
 /// The BinaryOp expression implementation.
@@ -60,8 +59,7 @@ class BinaryOp : Expression<BinaryOp<L, R, Op>>
   constexpr auto operator[](IndexSet<Traits<BinaryOp>::Rank> i) const
     -> typename Traits<BinaryOp>::ScalarType
   {
-    return op_(lhs_[i], rhs_[detail::shuffle<
-                             Traits<BinaryOp>::Rank,
+    return op_(lhs_[i], rhs_[detail::shuffle<Traits<BinaryOp>::Rank,
                              typename Traits<L>::IndexType,
                              typename Traits<R>::IndexType>(i)]);
   }
@@ -101,15 +99,18 @@ using binary_op_type = typename binary_op_type_impl<L, R, Op>::type;
 /// @}
 
 template <class L, class R, class = check_compatible<L, R>>
-constexpr const binary_op_type<L, R, std::plus<void>> operator+(L lhs, R rhs) {
-  return binary_op_type<L, R, std::plus<void>>(lhs, rhs);
+constexpr auto operator+(L lhs, R rhs)
+  -> BinaryOp<L, R, std::plus<promote<L, R>>>
+{
+  return BinaryOp<L, R, std::plus<promote<L, R>>>(lhs, rhs);
 }
 
 template <class L, class R, class = check_compatible<L, R>>
-constexpr const binary_op_type<L, R, std::minus<void>> operator-(L lhs, R rhs) {
-  return binary_op_type<L, R, std::minus<void>>(lhs, rhs);
+constexpr auto operator-(L lhs, R rhs)
+  -> BinaryOp<L, R, std::minus<promote<L, R>>>
+{
+  return BinaryOp<L, R, std::minus<promote<L, R>>>(lhs, rhs);
 }
-
 } // namespace expressions
 } // namespace ttl
 
