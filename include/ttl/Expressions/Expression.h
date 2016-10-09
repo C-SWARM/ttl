@@ -32,7 +32,28 @@ namespace expressions {
 /// The default traits class tries to generate useful errors for classes that
 /// haven't defined traits.
 template <class E>
-struct Traits;
+struct expression_traits;
+
+/// The following traits are required for all expression types.
+template <class E>
+using free_type = typename expression_traits<E>::free_type;
+
+template <class E>
+using scalar_type = typename expression_traits<E>::scalar_type;
+
+template <class E>
+struct free_size {
+  using free_type = typename expression_traits<E>::free_type;
+  static constexpr int value = size<free_type>::value;
+};
+
+template <class E>
+struct dimension {
+  static constexpr int value = expression_traits<E>::dimension;
+};
+
+template <class E>
+using free_index = IndexSet<free_size<E>::value>;
 
 /// The base expression class template.
 ///
@@ -44,10 +65,9 @@ struct Traits;
 template <class E>
 class Expression {
  public:
-  constexpr auto operator[](IndexSet<Traits<E>::Rank> i) const
-    -> typename Traits<E>::ScalarType
+  constexpr scalar_type<E> operator()(free_index<E> i) const
   {
-    return static_cast<const E&>(*this)[i];
+    return static_cast<const E&>(*this)(i);
   }
 };
 
@@ -63,16 +83,14 @@ class Expression {
 ///
 /// @{
 template <class L, class R>
-struct check_compatible_impl {
+struct check_compatible_impl
+{
  private:
+  template <bool value> using check = detail::check<value>;
   using L_ = typename std::remove_reference<L>::type;
   using R_ = typename std::remove_reference<R>::type;
-  using LI_ = typename Traits<L_>::IndexType;
-  using RI_ = typename Traits<R_>::IndexType;
-
  public:
-  static constexpr bool value = is_equivalent<LI_, RI_>::value;
-  using type = detail::check<value>;
+  using type = check<is_equivalent<free_type<L_>, free_type<R_>>::value>;
 };
 
 template <class L, class R>
@@ -88,33 +106,28 @@ template <class L, class R,
 struct promote_impl;
 
 template <class L, class R>
-struct promote_impl<L, R, true, true> {
+struct promote_impl<L, R, true, true>
+{
   using type = decltype(L() * R());             // both scalars
 };
 
 template <class L, class R>
-struct promote_impl<L, R, true, false> {
- private:
-  using R_ = typename Traits<R>::ScalarType;    // resolve right
- public:
-  using type = typename promote_impl<L, R_>::type;
+struct promote_impl<L, R, true, false>
+{
+  using type = typename promote_impl<L, scalar_type<R>>::type;
 };
 
 template <class L, class R>
-struct promote_impl<L, R, false, true> {
- private:
-  using L_ = typename Traits<L>::ScalarType;    // resolve left
- public:
-  using type = typename promote_impl<L_, R>::type;
+struct promote_impl<L, R, false, true>
+{
+  using type = typename promote_impl<scalar_type<L>, R>::type;
 };
 
 template <class L, class R>
-struct promote_impl<L, R, false, false> {
- private:
-  using L_ = typename Traits<L>::ScalarType;    // resolve both
-  using R_ = typename Traits<L>::ScalarType;
- public:
-  using type = typename promote_impl<L_, R_>::type;
+struct promote_impl<L, R, false, false>
+{
+  using type = typename promote_impl<scalar_type<L>,
+                                     scalar_type<R>>::type;
 };
 
 template <class L, class R>

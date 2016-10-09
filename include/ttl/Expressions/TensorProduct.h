@@ -8,6 +8,18 @@
 
 namespace ttl {
 namespace expressions {
+
+// template <class E>
+// using full_type = typename expression_traits<E>::full_type;
+
+// template <class E>
+// struct full_rank {
+//   static constexpr int value = sizeof...(full_type<E>);
+// };
+
+// template <class E>
+// using full_index = IndexSet<free_rank<E>::value>;
+
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
@@ -18,57 +30,26 @@ class TensorProduct;
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
-struct Traits<TensorProduct<L, R>> {
-  /// Traits specific to the TensorProduct
-  /// @{
-  using LeftType = L;
-  using RightType = R;
-  using LeftOuterType = typename Traits<L>::IndexType;
-  using RightOuterType = typename Traits<R>::IndexType;
-  using OuterType = symdif<LeftOuterType, RightOuterType>;
-  using ProductType = unite<LeftOuterType, RightOuterType>;
-  static constexpr int ProductSize = size<ProductType>::value;
-  static constexpr int OuterSize =  size<OuterType>::value;
-  /// @}
-
-  /// External traits
-  /// @{
-  using ScalarType = promote<L, R>;
-  using IndexType = OuterType;
-  static constexpr int Rank = size<IndexType>::value;
-  static constexpr int Dimension = Traits<L>::Dimension;
-  /// @}
+struct expression_traits<TensorProduct<L, R>>
+{
+  using free_type = symdif<typename expression_traits<L>::free_type,
+                           typename expression_traits<R>::free_type>;
+  using scalar_type = promote<L, R>;
+  static constexpr int dimension = expression_traits<L>::dimension;
 };
 
+template <class E>
+struct union_size;
 
-template <int N, class E, int M = Traits<E>::OuterSize>
-struct contract {
-  using L = typename Traits<E>::LeftType;
-  using R = typename Traits<E>::RightType;
-  using S = typename Traits<E>::ScalarType;
-  static constexpr int Size = Traits<E>::ProductSize;
-  static constexpr int Dimension = Traits<E>::Dimension;
-
-  static S op(const L& lhs, const R& rhs, IndexSet<Size> i) {
-    S s();
-    for (i[N] = 0; i[N] < Dimension; ++i[N]) {
-      s += contract<N + 1, E, M>::op(lhs, rhs, i);
-    }
-    return s;
-  }
+template <class L, class R>
+struct union_size<TensorProduct<L, R>> {
+  using type = unite<typename expression_traits<L>::free_type,
+                     typename expression_traits<R>::free_type>;
+  static constexpr int value = size<type>::value;
 };
 
-template <class E, int M>
-struct contract<M, E, M> {
-  using L = typename Traits<E>::LeftType;
-  using R = typename Traits<E>::RightType;
-  using S = typename Traits<E>::ScalarType;
-  static constexpr int Size = Traits<E>::ProductSize;
-
-  static S op(const L& lhs, const R& rhs, IndexSet<Size> i) {
-    return 0;
-  }
-};
+template <class E>
+using union_index = IndexSet<union_size<E>::value>;
 
 /// The TensorProduct expression implementation.
 template <class L, class R>
@@ -78,25 +59,36 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   TensorProduct(L lhs, R rhs) : lhs_(lhs), rhs_(rhs) {
   }
 
-  auto operator[](IndexSet<Traits<TensorProduct>::OuterSize> i) const
-    -> typename Traits<TensorProduct>::ScalarType
-  {
-    static constexpr int OuterSize = Traits<TensorProduct>::OuterSize;
-    static constexpr int ProductSize = Traits<TensorProduct>::ProductSize;
+  scalar_type<TensorProduct> operator()(free_index<TensorProduct> i) const {
+    static constexpr int size = free_size<TensorProduct>::value;
 
     // Extend the index set with enough space for the inner, contracted size,
     // copy the outer dimensions into it, and then perform the contraction of
     // the inner indices.
-    IndexSet<ProductSize> inner;
-    std::copy(i, i + OuterSize, inner);
-    return contract<OuterSize, TensorProduct>::op(lhs_, rhs_, inner);
+    union_index<TensorProduct> j;
+    std::copy(&i[0], &i[size], &j[0]);
+    return contract(j);
   }
 
  private:
+  template <int n = free_size<TensorProduct>::value,
+            int N = union_size<TensorProduct>::value>
+  scalar_type<TensorProduct> contract(union_index<TensorProduct> i) const {
+    if (n < N) {
+      scalar_type<TensorProduct> s(0);
+      for (i[n] = 0; i[n] < dimension<TensorProduct>::value; ++i[n]) {
+        s += contract<n + 1>(i);
+      }
+      return s;
+    }
+    else {
+      return lhs_(i) * rhs_(i);
+    }
+  }
+
   L lhs_;
   R rhs_;
 };
-
 
 } // namespace expressions
 } // namespace ttl

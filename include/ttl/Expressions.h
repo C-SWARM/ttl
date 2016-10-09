@@ -8,6 +8,6 @@
 #include <ttl/Expressions/UnaryOp.h>
 #include <ttl/Expressions/ScalarOp.h>
 #include <ttl/Expressions/TensorProduct.h>
-#include <ttl/Expressions/Multiply.h>
+#include <ttl/Expressions/Operators.h>
 
 #endif // TTL_EXPRESSIONS_EXPRESSIONS_H

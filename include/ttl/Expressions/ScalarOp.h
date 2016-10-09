@@ -16,7 +16,7 @@ namespace expressions {
 /// Either the left-hand-side or the right-hand-side might be a scalar. The
 /// scalar operation must preserve this ordering.
 ///
-/// Ops supported: *, /
+/// Ops supported: *, /, %
 template <class Op, class L, class R, bool = std::is_arithmetic<L>::value>
 class ScalarOp;
 
@@ -25,74 +25,68 @@ class ScalarOp;
 /// The scalar op just exports its Expression's Traits, with the scalar type
 /// adjusted as necessary.
 template <class Op, class L, class R>
-struct Traits<ScalarOp<Op, L, R, true>> : public Traits<R> {
-  using ScalarType = promote<L, R>;
+struct expression_traits<ScalarOp<Op, L, R, true>> : expression_traits<R>
+{
+  using scalar_type = promote<L, R>;
 };
 
 template <class Op, class L, class R>
-struct Traits<ScalarOp<Op, L, R, false>> : public Traits<L> {
-  using ScalarType = promote<L, R>;
+struct expression_traits<ScalarOp<Op, L, R, false>> : expression_traits<L>
+{
+  using scalar_type = promote<L, R>;
 };
 
 /// The ScalarOp expression implementation.
 ///
 /// This version of the scalar op matches when the scalar is the left-hand-side
 /// operation.
-template <template <class> class Op, class L, class R>
-class ScalarOp<Op<L>, L, R, true> : Expression<ScalarOp<Op<L>, L, R, true>>
+template <class Op, class L, class R>
+class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
 {
  public:
   ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr auto operator[](IndexSet<Traits<ScalarOp>::Rank> i) const
-    -> typename Traits<ScalarOp>::ScalarType
-  {
-    return op_(lhs_, rhs_[i]);
+  constexpr scalar_type<ScalarOp> operator()(free_index<ScalarOp> i) const {
+    return op_(lhs_, rhs_(i));
   }
 
  private:
   L lhs_;
   R rhs_;
-  Op<typename Traits<ScalarOp>::ScalarType> op_;
+  Op op_;
 };
 
 /// The ScalarOp expression implementation.
 ///
 /// This version of the scalar op matches when the scalar is the right-hand-side
 /// operation.
-template <template <class> class Op, class L, class R>
-class ScalarOp<Op<R>, L, R, false> : Expression<ScalarOp<Op<R>, L, R, false>>
+template <class Op, class L, class R>
+class ScalarOp<Op, L, R, false> : Expression<ScalarOp<Op, L, R, false>>
 {
  public:
   ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr auto operator[](IndexSet<Traits<ScalarOp>::Rank> i) const
-    -> typename Traits<ScalarOp>::ScalarType
-  {
-    return op_(lhs_[i], rhs_);
+  constexpr scalar_type<ScalarOp> operator()(free_index<ScalarOp> i) const {
+    return op_(lhs_(i), rhs_);
   }
 
  private:
   L lhs_;
   R rhs_;
-  Op<typename Traits<ScalarOp>::ScalarType> op_;
+  Op op_;
 };
 
 template <class L, class R>
-constexpr auto operator/(L lhs, R rhs)
-  -> ScalarOp<std::divides<promote<L, R>>, L, R>
-{
-  return ScalarOp<std::divides<promote<L, R>>, L, R>(lhs, rhs);
-}
+using DivideOp = ScalarOp<std::divides<promote<L, R>>, L, R>;
 
 template <class L, class R>
-constexpr auto operator%(L lhs, R rhs)
-  -> ScalarOp<std::modulus<promote<L, R>>, L, R>
-{
-  return ScalarOp<std::modulus<promote<L, R>>, L, R>(lhs, rhs);
-}
+using ModulusOp = ScalarOp<std::modulus<promote<L, R>>, L, R>;
+
+template <class L, class R>
+using MultiplyOp = ScalarOp<std::multiplies<promote<L, R>>, L, R>;
+
 } // namespace expressions
 } // namespace ttl
 

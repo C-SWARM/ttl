@@ -22,42 +22,83 @@ namespace expressions {
 /// multidimensional indexing into tensors, tensor assignment, and natively
 /// supports shuffle operations.
 ///
-/// @tparam      Scalar The underlying scalar type of the tensor.
-/// @tparam   Dimension The underlying tensor dimension.
-/// @tparam   IndexType The index map for this expression.
-template <class Scalar, int Dimension, class IndexType>
+/// @tparam      Tensor The tensor type.
+/// @tparam       Index The index map for this expression.
+template <class Tensor, class Index>
 class TensorBind;
 
 /// The expression Traits for TensorBind expressions.
 ///
-/// @tparam      Scalar The scalar type for the expression.
-/// @tparam           D The dimensionality of the expression.
+/// @tparam      Tensor The class for the underlying tensor.
 /// @tparam       Index The indices bound to this expression.
-template <class Scalar, int D, class Index>
-struct Traits<TensorBind<Scalar, D, Index>>
+template <class Tensor, class Index>
+struct expression_traits<TensorBind<Tensor, Index>>
 {
-  using ScalarType = Scalar;
-  using IndexType = Index;
-  static constexpr int Rank = size<IndexType>::value;
-  static constexpr int Dimension = D;
-
-  using           Type = TensorBind<ScalarType, Dimension, IndexType>;
-  using     TensorType = Tensor<Rank, ScalarType, Dimension>;
-  using ExpressionType = Expression<Type>;
+  using scalar_type = typename tensor_traits<Tensor>::scalar_type;
+  using free_type = Index;
+  static constexpr int dimension = tensor_traits<Tensor>::dimension;
 };
 
-template <class Scalar, int Dimension, class IndexType>
-class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexType>>
-{
- public:
-  /// Import some names that we need.
-  static constexpr int Rank = Traits<TensorBind>::Rank;
-  using TensorType = typename Traits<TensorBind>::TensorType;
+/// The recursive template class that evaluates tensor expressions.
+///
+/// The fundamental goal of ttl is to generate loops over tensor dimension,
+/// evaluating the right-hand-side of the expression for each of the
+/// combinations of inputs on the left hand side.
+///
+/// @code
+///   for i : 0..D-1
+///    for j : 0..D-1
+///      ...
+///        for n : 0..D-1
+///           lhs(i,j,...,n) = rhs(i,j,...,n)
+/// @code
+///
+/// We use recursive template expansion to generate these "loops" statically, by
+/// dynamically enumerating the index dimensions. There is presumably a static
+/// enumeration technique, as our bounds are all known statically.
+///
+/// @tparam           n The current dimension that we need to traverse.
+/// @tparam           L The type of the left-hand-side expression.
+/// @tparam           R The type of the right-hand-side expression.
+/// @tparam           M The total number of free indices to enumerate.
+template <int n, class L, class R, int M = free_size<L>::value>
+struct evaluate {
+  static void op(L& lhs, const R& rhs, free_index<L> i) {
+    for (i[n] = 0; i[n] < dimension<L>::value; ++i[n]) {
+      evaluate<n + 1, L, R>::op(lhs, rhs, i);
+    }
+  }
+};
 
+/// The recursive base case for evaluation.
+///
+/// In this base case we have built the entire index and simply need to assign
+/// the evaluation of the right hand side to the evaluation of the left hand
+/// side.
+///
+/// @tparam           L The type of the left-hand-side expression.
+/// @tparam           R The type of the right-hand-side expression.
+/// @tparam           M The number of free indices (bounds recursion).
+template <class L, class R, int M>
+struct evaluate<M, L, R, M> {
+  static void op(L& lhs, const R& rhs, free_index<L> i) {
+    static constexpr int size = free_size<L>::value;
+    using l_type = free_type<L>;
+    using r_type = free_type<R>;
+    auto j = detail::shuffle<size, l_type, r_type>(i);
+    lhs(i) = rhs(j);
+  }
+};
+
+template <class Tensor, class Index>
+class TensorBind : public Expression<TensorBind<Tensor, Index>>
+{
+  static constexpr int Dimension = tensor_traits<Tensor>::dimension;
+ public:
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
   /// @tparam         t The underlying tensor.
-  explicit TensorBind(TensorType& t) : t_(t) {
+  explicit TensorBind(Tensor& t) : t_(t) {
   }
 
   /// Default assignment, move, and copy should work fine when the
@@ -93,8 +134,16 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexType>>
   ///                   Rank of this TensorBind.
   ///
   /// @returns          The scalar value at the linearized offset.
-  constexpr Scalar operator[](IndexSet<Rank> i) const {
-    return t_[detail::linearize<Dimension, Rank>(i)];
+  constexpr auto operator()(free_index<TensorBind> i) const
+    -> typename std::add_lvalue_reference<decltype(Tensor()[0])>::type
+  {
+    return t_[detail::linearize<Dimension, free_size<TensorBind>::value>(i)];
+  }
+
+  auto operator()(free_index<TensorBind> i)
+    -> decltype(Tensor()[0])
+  {
+    return t_[detail::linearize<Dimension, free_size<TensorBind>::value>(i)];
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -119,38 +168,16 @@ class TensorBind : public Expression<TensorBind<Scalar, Dimension, IndexType>>
   /// the recursive apply template to force that expansion to happen at runtime
   /// and insure that there is the opportunity for inlining and optimization.
   ///
-  /// @tparam         E Right-hand-side expression..., must implement Traits.
+  /// @tparam         R Right-hand-side expression.
   /// @tparam    (anon) Restrict this operation to expressions that match.
-  template <class E, class = check_compatible<TensorBind, E>>
-  TensorBind& operator=(const E& rhs) {
-    apply<0, E>::op(*this, rhs, {});
+  template <class R, class = check_compatible<TensorBind, R>>
+  TensorBind& operator=(const R& rhs) {
+    evaluate<0, TensorBind, R>::op(*this, rhs, {});
     return *this;
   }
 
  private:
-  Scalar& operator[](IndexSet<Rank> i) {
-    return t_[detail::linearize<Dimension, Rank>(i)];
-  }
-
-  template <int N, class R>
-  struct apply {
-    static void op(TensorBind& lhs, const R& rhs, IndexSet<Rank> i) {
-      for (i[N] = 0; i[N] < Dimension; ++i[N]) {
-        apply<N + 1, R>::op(lhs, rhs, i);
-      }
-    }
-  };
-
-  template <class R>
-  struct apply<Rank, R> {
-    static void op(TensorBind& lhs, const R& rhs, IndexSet<Rank> i) {
-      using RP = typename Traits<R>::IndexType;
-      auto j = detail::shuffle<Rank, IndexType, RP>(i);
-      lhs[i] = rhs[j];
-    }
-  };
-
-  TensorType& t_;
+  Tensor& t_;
 };
 } // namespace expressions
 } // namespace ttl

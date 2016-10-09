@@ -10,22 +10,14 @@ namespace ttl {
 namespace expressions {
 /// BinaryOp represents an element-wise combination of two expressions.
 ///
-/// @precondition
-///   is_equivalent<L::External, R::External>::value == true
-/// @precondition
+/// This expression combines two expressions that have equivalent free types to
+/// result in an expression that has a free type equal to that on the left hand
+/// side.
 ///
-/// @postcondition
-///   BinaryOp<...>::External = L::External
-/// @postcondition
-///
-/// This expression combines two expressions that have equivalent External shape
-/// to result in an expression that has an External shape equal to that on the
-/// left hand side. BinaryOp operations do not have any contracted dimensions.
-///
+/// @tparam          Op The element-wise binary operation.
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
-/// @tparam          Op The element-wise binary operation.
-template <class L, class R, class Op>
+template <class Op, class L, class R>
 class BinaryOp;
 
 /// The expression Traits for BinaryOp expressions.
@@ -34,14 +26,16 @@ class BinaryOp;
 /// types. This is a somewhat arbitrary decision---it could export its right
 /// hand side as well.
 ///
-/// It overrides the ScalarType based on type promotion rules.
+/// It overrides the ScalarType based on type promotion rules for the underlying
+/// scalar types.
 ///
+/// @tparam          Op The type of the operation.
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
-/// @tparam           R The type of the operation.
-template <class L, class R, class Op>
-struct Traits<BinaryOp<L, R, Op>> : public Traits<L> {
-  using ScalarType = promote<L, R>;
+template <class Op, class L, class R>
+struct expression_traits<BinaryOp<Op, L, R>> : expression_traits<L>
+{
+  using scalar_type = promote<L, R>;
 };
 
 /// The BinaryOp expression implementation.
@@ -49,19 +43,16 @@ struct Traits<BinaryOp<L, R, Op>> : public Traits<L> {
 /// The BinaryOp captures its left hand side and right hand side expressions,
 /// and a function object or lambda for the operation, and implements the
 /// operator[] operation to evaluate an index.
-template <class L, class R, class Op>
-class BinaryOp : Expression<BinaryOp<L, R, Op>>
+template <class Op, class L, class R>
+class BinaryOp : Expression<BinaryOp<Op, L, R>>
 {
  public:
   BinaryOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr auto operator[](IndexSet<Traits<BinaryOp>::Rank> i) const
-    -> typename Traits<BinaryOp>::ScalarType
-  {
-    return op_(lhs_[i], rhs_[detail::shuffle<Traits<BinaryOp>::Rank,
-                             typename Traits<L>::IndexType,
-                             typename Traits<R>::IndexType>(i)]);
+  constexpr scalar_type<BinaryOp> operator()(free_index<BinaryOp> i) const {
+    return op_(lhs_(i), rhs_(detail::shuffle<free_size<BinaryOp>::value,
+                             free_type<L>, free_type<R>>(i)));
   }
 
  private:
@@ -70,47 +61,12 @@ class BinaryOp : Expression<BinaryOp<L, R, Op>>
   Op op_;
 };
 
-/// Convenience metafunction to compute the type of a BinaryOp when the Op is a
-/// function object type from the STL (like std::plus).
-///
-/// @tparam           L The type of the left-hand-side expression.
-/// @tparam           R The type of the right-hand-side expression.
-/// @tparam          Op The type of the binary function object.
-///
-/// @treturn            The type of the BinaryOp for L, R, Op.
-///
-/// @{
-template <class L, class R, class Op>
-struct binary_op_type_impl;
-
-template <class L, class R, template <class> class Op>
-struct binary_op_type_impl<L, R, Op<void>> {
- private:
-  using LeftScalarType_ = typename Traits<L>::ScalarType;
-  using RightScalarType_ = typename Traits<R>::ScalarType;
-  using ScalarType_ = decltype(Op<LeftScalarType_>()(LeftScalarType_(), RightScalarType_()));
-
- public:
-  using type = BinaryOp<L, R, Op<ScalarType_>>;
-};
-
-template <class L, class R, class Op>
-using binary_op_type = typename binary_op_type_impl<L, R, Op>::type;
-/// @}
+template <class L, class R, class = check_compatible<L, R>>
+using AddOp = BinaryOp<std::plus<promote<L, R>>, L, R>;
 
 template <class L, class R, class = check_compatible<L, R>>
-constexpr auto operator+(L lhs, R rhs)
-  -> BinaryOp<L, R, std::plus<promote<L, R>>>
-{
-  return BinaryOp<L, R, std::plus<promote<L, R>>>(lhs, rhs);
-}
+using SubtractOp = BinaryOp<std::minus<promote<L, R>>, L, R>;
 
-template <class L, class R, class = check_compatible<L, R>>
-constexpr auto operator-(L lhs, R rhs)
-  -> BinaryOp<L, R, std::minus<promote<L, R>>>
-{
-  return BinaryOp<L, R, std::minus<promote<L, R>>>(lhs, rhs);
-}
 } // namespace expressions
 } // namespace ttl
 

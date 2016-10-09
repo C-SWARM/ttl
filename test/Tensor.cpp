@@ -6,47 +6,36 @@ static constexpr ttl::Index<'j'> j;
 static constexpr ttl::Index<'k'> k;
 static constexpr ttl::Index<'l'> l;
 
-int index(int i, int j, int k) {
-  return i * 3 * 3 + j * 3 + k;
+constexpr int index(int D, int i, int j, int k, int l) {
+  return i * D * D * D + j * D * D + k * D + l;
 }
 
-[[gnu::noinline]]
-void
-init(ttl::Tensor<3, double, 3>& T) {
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      for (int k = 0; k < 3; ++k) {
-        T[index(i,j,k)] = index(i,j,k);
-      }
-    }
-  }
+constexpr int index(int D, int i, int j, int k) {
+  return i * D * D + j * D + k;
 }
 
-[[gnu::noinline]]
-void
-check(ttl::Tensor<3, double, 3>& T) {
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      for (int k = 0; k < 3; ++k) {
-        EXPECT_EQ(T[index(i,j,k)], index(i,j,k));
-      }
-    }
-  }
-}
-
-template <class A, class B>
-[[gnu::noinline]]
-void
-assign(A&& a, B&& b) {
-  a = b;
+constexpr int index(int D, int i, int j) {
+  return i * D + j;
 }
 
 TEST(TensorTest, ArrayIndexing) {
   ttl::Tensor<3, double, 3> A;
-  init(A);
-  check(A);
-}
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      for (int k = 0; k < 3; ++k) {
+        A[index(3,i,j,k)] = index(3,i,j,k);
+      }
+    }
+  }
 
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      for (int k = 0; k < 3; ++k) {
+        EXPECT_EQ(A[index(3,i,j,k)], index(3,i,j,k));
+      }
+    }
+  }
+}
 
 TEST(TensorTest, Delta) {
   // D0 and D1 are compile errors.
@@ -55,7 +44,7 @@ TEST(TensorTest, Delta) {
   auto D2 = ttl::Delta<2, double, 6>();
   for (int i = 0; i < 6; ++i) {
     for (int j = 0; j < 6; ++j) {
-      EXPECT_EQ(D2[i*6 + j], (i == j) ? 1.0 : 0.0);
+      EXPECT_EQ(D2[index(6,i,j)], (i == j) ? 1.0 : 0.0);
     }
   }
 
@@ -63,8 +52,7 @@ TEST(TensorTest, Delta) {
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 4; ++k) {
-        int index = i*4*4 + j*4 + k;
-        EXPECT_EQ(D3[index], (i == j && j == k) ? 3.14 : 0.0);
+        EXPECT_EQ(D3[index(4,i,j,k)], (i == j && j == k) ? 3.14 : 0.0);
       }
     }
   }
@@ -74,8 +62,8 @@ TEST(TensorTest, Delta) {
     for (int j = 0; j < 3; ++j) {
       for (int k = 0; k < 3; ++k) {
         for (int l = 0; l < 3; ++l) {
-          int index = i*3*3*3 + j*3*3 + k*3 + l;
-          EXPECT_EQ(D4[index], (i == j && j == k && k == l) ? 42 : 0.0);
+          EXPECT_EQ(D4[index(3,i,j,k,l)],
+                    (i == j && j == k && k == l) ? 42 : 0.0);
         }
       }
     }
@@ -85,28 +73,31 @@ TEST(TensorTest, Delta) {
 TEST(TensorTest, TensorExprAssignment) {
   ttl::Tensor<1, double, 1> a, b;
   a[0] = 10;
-  assign(b(i), a(i));
+  b(i) = a(i);
   EXPECT_EQ(a[0], b[0]);
   // assign(b(i), a(j));
 
-  ttl::Tensor<2, double, 3> T, U;
-  assign(T(i, j), U(j, i));
+  ttl::Tensor<2, double, 3> T, U(3.14);
+  T(i, j) = U(i, j);
   for (int n = 0; n < 3; ++n) {
     for (int m = 0; m < 3; ++m) {
-      EXPECT_EQ(T[n*3 + m], U[m*3 + n]);
+      EXPECT_EQ(T[index(3,n,m)], U[index(3,n,m)]);
     }
   }
 
-  // assign(T(i, j), U(j, k));
+  U[index(3,1,0)] = 42;
+  T(i,j) = U(j,i);
+  EXPECT_EQ(T[index(3,0,1)], 42);
 
-  ttl::Tensor<3, double, 3> A, B, C;
-  init(A);
-  assign(B(i,j,k), A(i,j,k));
-  check(B);
-
-  assign(B(j,i,k), A(i,j,k));
-  assign(C(i,j,k), B(j,i,k));
-  check(C);
+  ttl::Tensor<3, double, 3> A, B;
+  B(i,j,k) = A(k,j,i);
+  for (int n = 0; n < 3; ++n) {
+    for (int m = 0; m < 3; ++m) {
+      for (int o = 0; o < 3; ++o) {
+        EXPECT_EQ(B[index(3,n,m,o)], A[index(3,o,m,n)]);
+      }
+    }
+  }
 }
 
 TEST(TensorTest, UnaryOp) {
@@ -114,7 +105,7 @@ TEST(TensorTest, UnaryOp) {
   B(i, j) = -A(i, j);
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 2; ++j) {
-      EXPECT_EQ(B[i*2 + j], -1);
+      EXPECT_EQ(B[index(2,i,j)], -1);
     }
   }
 }
@@ -176,22 +167,16 @@ TEST(TensorTest, ScalarOp) {
   EXPECT_EQ(u[3], 0.0);
 }
 
-TEST(TensorTest, TensorProduct) {
-  static constexpr ttl::Index<'i'> i;
-  static constexpr ttl::Index<'j'> j;
-  static constexpr ttl::Index<'k'> k;
-  static constexpr ttl::Index<'l'> l;
 
+TEST(TensorTest, TensorProduct) {
   ttl::Tensor<2,double,3> A, B, C;
   ttl::Tensor<4,double,3> D;
 
-  A(i,j) = B(j,i);
+  // C(i,k) = A(i,j) * B(j,k);
 
-  C(i,k) = A(i,j) * B(j,k);
+  // D(i,j,k,l) = A(i,j) * B(k,l);
 
-  D(i,j,k,l) = A(i,j) * B(k,l);
+  // C(i,j) = A(i,j) * B(k,l) * B(k,l);
 
-  C(i,j) = A(i,j) * B(k,l) * B(k,l);
-
-  y(l) = D(i,j,k,l) * 0.5 * (B(i,j) + B(j,i)) * x(k);
+  // y(l) = D(i,j,k,l) * 0.5 * (B(i,j) + B(j,i)) * x(k);
 }

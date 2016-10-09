@@ -60,15 +60,15 @@ class Tensor
   template <class... Indices,
             class = detail::check<Rank == sizeof...(Indices)>>
   auto operator()(Indices... indices)
-    -> expressions::TensorBind<Scalar, Dimension, Pack<Indices...>>
+    -> expressions::TensorBind<Tensor, Pack<Indices...>>
   {
-    return expressions::TensorBind<Scalar, Dimension, Pack<Indices...>>(*this);
+    return expressions::TensorBind<Tensor, Pack<Indices...>>(*this);
   }
 
  private:
   static constexpr int Size_ = detail::pow(Dimension, Rank);
   Scalar value_[Size_];
 };
-}
+} // namespace ttl
 
 #endif // TTL_TENSOR_H
