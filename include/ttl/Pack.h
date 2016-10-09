@@ -5,21 +5,12 @@
 /// Simple utility to deal with index packs.
 #include <ttl/detail/contains.h>
 #include <ttl/detail/iif.h>
+#include <tuple>
 #include <type_traits>
 
 namespace ttl {
 template <class... T>
-struct Pack {
-  using type = Pack<T...>;
-};
-
-template <class... T>
-struct size;
-
-template <class... T>
-struct size<Pack<T...>> {
-  static constexpr int value = sizeof...(T);
-};
+using Pack = std::tuple<T...>;
 
 namespace detail {
 template <class T>
@@ -44,7 +35,8 @@ struct is_empty<Pack<T...>> {
   static constexpr bool value = detail::is_empty_impl<Pack<T...>>::value;
 };
 
-template <template <class, class> class op, class... T, class... U>
+template <template <class, class> class op,
+          class... T, class... U>
 struct is_empty<op<Pack<T...>, Pack<U...>>> {
   using type_ = typename op<Pack<T...>, Pack<U...>>::type;
   static constexpr bool value = detail::is_empty_impl<type_>::value;

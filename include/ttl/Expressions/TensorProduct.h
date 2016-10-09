@@ -45,7 +45,7 @@ template <class L, class R>
 struct union_size<TensorProduct<L, R>> {
   using type = unite<typename expression_traits<L>::free_type,
                      typename expression_traits<R>::free_type>;
-  static constexpr int value = size<type>::value;
+  static constexpr int value = std::tuple_size<type>::value;
 };
 
 template <class E>

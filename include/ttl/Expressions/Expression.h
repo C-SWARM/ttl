@@ -44,7 +44,7 @@ using scalar_type = typename expression_traits<E>::scalar_type;
 template <class E>
 struct free_size {
   using free_type = typename expression_traits<E>::free_type;
-  static constexpr int value = size<free_type>::value;
+  static constexpr int value = std::tuple_size<free_type>::value;
 };
 
 template <class E>
