@@ -24,6 +24,14 @@ struct tensor_traits <Tensor<Rank, ScalarType, Dimension>>
   using dimension = std::integral_constant<int, Dimension>;
   using scalar_type = ScalarType;
 };
+
+template <int Rank, typename ScalarType, int Dimension>
+struct tensor_traits <Tensor<Rank, ScalarType*, Dimension>>
+{
+  using rank = std::integral_constant<int, Rank>;
+  using dimension = std::integral_constant<int, Dimension>;
+  using scalar_type = ScalarType;
+};
 } // namespace ttl
 
 #endif // #ifndef TTL_TENSOR_H

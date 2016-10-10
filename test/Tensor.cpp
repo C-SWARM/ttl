@@ -240,3 +240,55 @@ TEST(TensorTest, TensorProduct) {
   EXPECT_EQ(y[0], 330);
   EXPECT_EQ(y[1], 330);
 }
+
+TEST(TensorTest, ExternalStorage) {
+  double storage[12];
+  ttl::Tensor<2,double*,2> A(&storage[0]), B(&storage[4], 1), C(&storage[8], 2);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(B[index(2,n,m)], 1);
+      EXPECT_EQ(C[index(2,n,m)], 2);
+    }
+  }
+
+  A(i,j) = B(i,j) + C(j,i);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(A[index(2,n,m)], 3);
+    }
+  }
+
+  ttl::Tensor<1,double*,2> x(&storage[0]), y(&storage[4]);
+  x(i) = C(i,j) * y(j);
+  EXPECT_EQ(A[0], 4);
+  EXPECT_EQ(A[1], 4);
+
+  A(i,j) = B(i,j);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(A[index(2,n,m)], B[index(2,n,m)]);
+    }
+  }
+
+  ttl::Tensor<2,double,2> D(3.14);
+  A(i,j) = D(i,j);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(A[index(2,n,m)], D[index(2,n,m)]);
+    }
+  }
+
+  D(i,j) = B(j,i);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(D[index(2,n,m)], B[index(2,n,m)]);
+    }
+  }
+
+  A(i,k) = C(i,j) * D(j,k);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(A[index(2,n,m)], 4);
+    }
+  }
+}
