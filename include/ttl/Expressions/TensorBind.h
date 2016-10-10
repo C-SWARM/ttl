@@ -2,15 +2,13 @@
 #ifndef TTL_EXPRESSIONS_TENSOR_BIND_H
 #define TTL_EXPRESSIONS_TENSOR_BIND_H
 
-#include <ttl/Pack.h>
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
-#include <ttl/detail/check.h>
-#include <ttl/detail/linearize.h>
-#include <ttl/detail/shuffle.h>
 #include <ttl/Expressions/Expression.h>
+#include <ttl/Expressions/linearize.h>
+#include <ttl/Expressions/transform.h>
+#include <ttl/util/is_equivalent.h>
 #include <utility>
-#include <iostream>
 
 namespace ttl {
 namespace expressions {
@@ -36,7 +34,7 @@ struct expression_traits<TensorBind<Tensor, Index>>
 {
   using scalar_type = typename tensor_traits<Tensor>::scalar_type;
   using free_type = Index;
-  static constexpr int dimension = tensor_traits<Tensor>::dimension;
+  using dimension = typename tensor_traits<Tensor>::dimension;
 };
 
 /// The recursive template class that evaluates tensor expressions.
@@ -63,9 +61,10 @@ struct expression_traits<TensorBind<Tensor, Index>>
 /// @tparam           M The total number of free indices to enumerate.
 template <int n, class L, class R, int M = free_size<L>::value>
 struct evaluate {
-  static void op(L& lhs, const R& rhs, free_index<L> i) {
-    for (i[n] = 0; i[n] < dimension<L>::value; ++i[n]) {
-      evaluate<n + 1, L, R>::op(lhs, rhs, i);
+  static void op(L& lhs, const R& rhs, free_type<L> index) {
+    for (int i = 0; i < dimension<L>::value; ++i) {
+      std::get<n>(index) = i;
+      evaluate<n + 1, L, R>::op(lhs, rhs, index);
     }
   }
 };
@@ -81,19 +80,14 @@ struct evaluate {
 /// @tparam           M The number of free indices (bounds recursion).
 template <class L, class R, int M>
 struct evaluate<M, L, R, M> {
-  static void op(L& lhs, const R& rhs, free_index<L> i) {
-    static constexpr int size = free_size<L>::value;
-    using l_type = free_type<L>;
-    using r_type = free_type<R>;
-    auto j = detail::shuffle<size, l_type, r_type>(i);
-    lhs(i) = rhs(j);
+  static void op(L& lhs, const R& rhs, free_type<L> index) {
+    lhs[index] = rhs[index];
   }
 };
 
 template <class Tensor, class Index>
 class TensorBind : public Expression<TensorBind<Tensor, Index>>
 {
-  static constexpr int Dimension = tensor_traits<Tensor>::dimension;
  public:
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
@@ -134,16 +128,16 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///                   Rank of this TensorBind.
   ///
   /// @returns          The scalar value at the linearized offset.
-  constexpr auto operator()(free_index<TensorBind> i) const
-    -> typename std::add_lvalue_reference<decltype(Tensor()[0])>::type
-  {
-    return t_[detail::linearize<Dimension, free_size<TensorBind>::value>(i)];
+  template <class I>
+  constexpr scalar_type<TensorBind> operator[](I i) const {
+    return t_[to_offset(i)];
   }
 
-  auto operator()(free_index<TensorBind> i)
-    -> decltype(Tensor()[0])
-  {
-    return t_[detail::linearize<Dimension, free_size<TensorBind>::value>(i)];
+  /// This non-const version only matches the left hand expression of a tensor
+  /// assignment operation, and we know that it has to have the free type
+  /// associated with this TensorBind expression because we generated it.
+  scalar_type<TensorBind>& operator[](free_type<TensorBind> i) {
+    return t_[to_offset(i)];
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -170,13 +164,25 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @tparam         R Right-hand-side expression.
   /// @tparam    (anon) Restrict this operation to expressions that match.
-  template <class R, class = check_compatible<TensorBind, R>>
+  template <class R>
   TensorBind& operator=(const R& rhs) {
+    static_assert(util::is_equivalent<free_type<TensorBind>, free_type<R>>::value,
+                  "Attempted assignment of incompatible Tensors");
     evaluate<0, TensorBind, R>::op(*this, rhs, {});
     return *this;
   }
 
  private:
+  /// Convenience functions to linearize index types.
+  ///
+  /// @todo clean up this expression for C++14
+  template <class I>
+  static constexpr scalar_type<TensorBind> to_offset(I i) {
+    return linearize<
+      typename tensor_traits<Tensor>::dimension>(
+          transform<free_type<TensorBind>>(i));
+  }
+
   Tensor& t_;
 };
 } // namespace expressions

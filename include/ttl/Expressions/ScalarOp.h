@@ -2,10 +2,8 @@
 #ifndef TTL_EXPRESSIONS_SCALAR_OP_H
 #define TTL_EXPRESSIONS_SCALAR_OP_H
 
-#include <ttl/Pack.h>
-#include <ttl/Index.h>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/detail/iif.h>
+#include <ttl/Expressions/promote.h>
 #include <functional>
 #include <type_traits>
 
@@ -47,8 +45,9 @@ class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
   ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr scalar_type<ScalarOp> operator()(free_index<ScalarOp> i) const {
-    return op_(lhs_, rhs_(i));
+  template <class I>
+  constexpr scalar_type<ScalarOp> operator[](I i) const {
+    return op_(lhs_, rhs_[i]);
   }
 
  private:
@@ -68,8 +67,9 @@ class ScalarOp<Op, L, R, false> : Expression<ScalarOp<Op, L, R, false>>
   ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr scalar_type<ScalarOp> operator()(free_index<ScalarOp> i) const {
-    return op_(lhs_(i), rhs_);
+  template <class I>
+  constexpr scalar_type<ScalarOp> operator[](I i) const {
+    return op_(lhs_[i], rhs_);
   }
 
  private:

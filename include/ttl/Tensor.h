@@ -2,6 +2,8 @@
 #ifndef TTL_TENSOR_H
 #define TTL_TENSOR_H
 
+#include <type_traits>
+
 namespace ttl {
 /// The core class template for all tensors, which are really just
 /// multidimensional dense arrays in TTL.
@@ -18,8 +20,8 @@ struct tensor_traits;
 template <int Rank, typename ScalarType, int Dimension>
 struct tensor_traits <Tensor<Rank, ScalarType, Dimension>>
 {
-  static constexpr int rank = Rank;
-  static constexpr int dimension = Dimension;
+  using rank = std::integral_constant<int, Rank>;
+  using dimension = std::integral_constant<int, Dimension>;
   using scalar_type = ScalarType;
 };
 } // namespace ttl

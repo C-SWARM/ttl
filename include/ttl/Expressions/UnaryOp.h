@@ -2,9 +2,8 @@
 #ifndef TTL_EXPRESSIONS_UNARY_OP_H
 #define TTL_EXPRESSIONS_UNARY_OP_H
 
-#include <ttl/Pack.h>
-#include <ttl/Index.h>
 #include <ttl/Expressions/Expression.h>
+#include <functional>
 
 namespace ttl {
 namespace expressions {
@@ -29,8 +28,9 @@ class UnaryOp : Expression<UnaryOp<Op, E>>
   UnaryOp(E e) : e_(e), op_() {
   }
 
-  constexpr scalar_type<UnaryOp> operator()(free_index<UnaryOp> i) const {
-    return op_(e_(i));
+  template <class I>
+  constexpr scalar_type<UnaryOp> operator[](I i) const {
+    return op_(e_[i]);
   }
 
  private:
@@ -38,8 +38,8 @@ class UnaryOp : Expression<UnaryOp<Op, E>>
   const Op op_;
 };
 
-template <class R>
-using NegateOp = UnaryOp<std::negate<scalar_type<R>>, R>;
+template <class E>
+using NegateOp = UnaryOp<std::negate<scalar_type<E>>, E>;
 
 } // namespace expressions
 } // namespace ttl

@@ -4,7 +4,7 @@
 
 #include <ttl/Tensor.h>
 #include <ttl/TensorImpl.h>
-#include <ttl/detail/pow.h>
+#include <ttl/util/pow.h>
 
 namespace ttl {
 namespace detail {
@@ -24,15 +24,15 @@ namespace detail {
 /// @returns            The linear index of the Nth diagonal element.
 template <int D, int R>
 constexpr int diagonal(const int n, const int i = 0) {
-  return (i < R) ? n * pow(D, i) + diagonal<D, R>(n, i + 1) : 0;
+  return (i < R) ? n * util::pow(D, i) + diagonal<D, R>(n, i + 1) : 0;
 }
 
 template <class T, class S,
-          int D = tensor_traits<T>::dimension,
-          int R = tensor_traits<T>::rank>
-T make_delta(T&& t, const S s, const int n = 0) {
-  if (n < D) {
-    t[diagonal<D, R>(n)] = s;
+          class D = typename tensor_traits<T>::dimension,
+          class R = typename tensor_traits<T>::rank>
+T make_delta(T&& t, S s, int n = 0) {
+  if (n < D::value) {
+    t[diagonal<D::value, R::value>(n)] = s;
     return make_delta(std::forward<T>(t), s, n + 1);
   }
   else {

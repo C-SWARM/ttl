@@ -3,8 +3,7 @@
 #define TTL_TENSOR_IMPL_H
 
 #include <ttl/Tensor.h>
-#include <ttl/detail/check.h>
-#include <ttl/detail/pow.h>
+#include <ttl/util/pow.h>
 #include <ttl/Expressions/TensorBind.h>
 #include <array>
 #include <algorithm>
@@ -13,6 +12,8 @@ namespace ttl {
 template <int Rank, typename Scalar, int Dimension>
 class Tensor
 {
+  static constexpr auto Size_ = util::pow(Dimension, Rank);
+
  public:
   Tensor() = default;
   Tensor(Tensor&&) = default;
@@ -31,8 +32,13 @@ class Tensor
   /// index into a linear index.
   ///
   /// @{
-  constexpr Scalar operator[](int i) const { return value_[i]; }
-  Scalar& operator[](int i) { return value_[i]; }
+  constexpr Scalar operator[](int i) const {
+    return value_[i];
+  }
+
+  Scalar& operator[](int i) {
+    return value_[i];
+  }
   /// @}
 
   /// Create a tensor indexing expression for this tensor.
@@ -52,21 +58,19 @@ class Tensor
   /// @code
   ///
   /// @tparam   Indices The set of indices to bind to the tensor dimensions.
-  /// @tparam    [anon] A type-check (sizeof...(Indices) == Rank) metaprogram.
+  /// @tparam    (anon) A type-check (sizeof...(Indices) == Rank) metaprogram.
   ///
-  /// @param indices... The actual set of indices to bind (e.g., (i, j, k)).
+  /// @param     (anon) The actual set of indices to bind (e.g., (i,j,k)).
   ///
   /// @returns          A tensor indexing expression.
-  template <class... Indices,
-            class = detail::check<Rank == sizeof...(Indices)>>
-  auto operator()(Indices... indices)
-    -> expressions::TensorBind<Tensor, Pack<Indices...>>
+  template <class... Indices>
+  expressions::TensorBind<Tensor, std::tuple<Indices...>> operator()(Indices...)
   {
-    return expressions::TensorBind<Tensor, Pack<Indices...>>(*this);
+    static_assert(Rank == sizeof...(Indices), "Tensor indexing mismatch.");
+    return expressions::TensorBind<Tensor, std::tuple<Indices...>>(*this);
   }
 
  private:
-  static constexpr int Size_ = detail::pow(Dimension, Rank);
   Scalar value_[Size_];
 };
 } // namespace ttl

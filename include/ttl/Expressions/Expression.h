@@ -1,11 +1,8 @@
 // -*- C++ -*-
-#ifndef TTL_EXPRESSION_H
-#define TTL_EXPRESSION_H
+#ifndef TTL_EXPRESSIONS_EXPRESSION_H
+#define TTL_EXPRESSIONS_EXPRESSION_H
 
-#include <ttl/Pack.h>
-#include <ttl/Index.h>
-#include <ttl/detail/check.h>
-#include <array>
+#include <tuple>
 #include <type_traits>
 
 namespace ttl {
@@ -42,18 +39,11 @@ template <class E>
 using scalar_type = typename expression_traits<E>::scalar_type;
 
 template <class E>
-struct free_size {
-  using free_type = typename expression_traits<E>::free_type;
-  static constexpr int value = std::tuple_size<free_type>::value;
-};
+using dimension = typename expression_traits<E>::dimension;
 
+/// Derived traits that are widely used.
 template <class E>
-struct dimension {
-  static constexpr int value = expression_traits<E>::dimension;
-};
-
-template <class E>
-using free_index = IndexSet<free_size<E>::value>;
+using free_size = typename std::tuple_size<free_type<E>>::type;
 
 /// The base expression class template.
 ///
@@ -65,75 +55,12 @@ using free_index = IndexSet<free_size<E>::value>;
 template <class E>
 class Expression {
  public:
-  constexpr scalar_type<E> operator()(free_index<E> i) const
-  {
-    return static_cast<const E&>(*this)(i);
+  template <class I>
+  constexpr scalar_type<E> operator[](I i) const {
+    return static_cast<const E&>(*this)[i];
   }
 };
-
-/// This helper metaprogram makes sure that the index packs associated with two
-/// expression types are compatible, i.e., they have the same underlying index
-/// types, even if they're not in the same order.
-///
-/// The normal usage is in a template list, e.g.,
-///
-/// @code
-///  template <class L, class R, class = check_compatible<L, R>> class ...
-/// @code
-///
-/// @{
-template <class L, class R>
-struct check_compatible_impl
-{
- private:
-  template <bool value> using check = detail::check<value>;
-  using L_ = typename std::remove_reference<L>::type;
-  using R_ = typename std::remove_reference<R>::type;
- public:
-  using type = check<is_equivalent<free_type<L_>, free_type<R_>>::value>;
-};
-
-template <class L, class R>
-using check_compatible = typename check_compatible_impl<L, R>::type;
-/// @}
-
-/// Template for promoting scalar types.
-///
-/// We use multiplication as the default
-template <class L, class R,
-          bool = std::is_arithmetic<L>::value,
-          bool = std::is_arithmetic<R>::value>
-struct promote_impl;
-
-template <class L, class R>
-struct promote_impl<L, R, true, true>
-{
-  using type = decltype(L() * R());             // both scalars
-};
-
-template <class L, class R>
-struct promote_impl<L, R, true, false>
-{
-  using type = typename promote_impl<L, scalar_type<R>>::type;
-};
-
-template <class L, class R>
-struct promote_impl<L, R, false, true>
-{
-  using type = typename promote_impl<scalar_type<L>, R>::type;
-};
-
-template <class L, class R>
-struct promote_impl<L, R, false, false>
-{
-  using type = typename promote_impl<scalar_type<L>,
-                                     scalar_type<R>>::type;
-};
-
-template <class L, class R>
-using promote = typename promote_impl<L, R>::type;
-
 } // namespace expressions
 } // namespace ttl
 
-#endif // TTL_EXPRESSION_H
+#endif // TTL_EXPRESSIONS_EXPRESSION_H

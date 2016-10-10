@@ -2,9 +2,10 @@
 #ifndef TTL_EXPRESSIONS_BINARY_OP_H
 #define TTL_EXPRESSIONS_BINARY_OP_H
 
-#include <ttl/Pack.h>
-#include <ttl/Index.h>
 #include <ttl/Expressions/Expression.h>
+#include <ttl/Expressions/promote.h>
+#include <ttl/util/is_equivalent.h>
+#include <functional>
 
 namespace ttl {
 namespace expressions {
@@ -43,16 +44,22 @@ struct expression_traits<BinaryOp<Op, L, R>> : expression_traits<L>
 /// The BinaryOp captures its left hand side and right hand side expressions,
 /// and a function object or lambda for the operation, and implements the
 /// operator[] operation to evaluate an index.
+///
+/// @tparam          Op The element-wise binary operation.
+/// @tparam           L The type of the left hand expression.
+/// @tparam           R The type of the right hand expression.
 template <class Op, class L, class R>
 class BinaryOp : Expression<BinaryOp<Op, L, R>>
 {
+  static_assert(util::is_equivalent<free_type<L>, free_type<R>>::value,
+                "BinaryOp expressions do not have equivalent index types.");
  public:
   BinaryOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  constexpr scalar_type<BinaryOp> operator()(free_index<BinaryOp> i) const {
-    return op_(lhs_(i), rhs_(detail::shuffle<free_size<BinaryOp>::value,
-                             free_type<L>, free_type<R>>(i)));
+  template <class I>
+  constexpr scalar_type<BinaryOp> operator[](I i) const {
+    return op_(lhs_[i], rhs_[i]);
   }
 
  private:
@@ -61,10 +68,10 @@ class BinaryOp : Expression<BinaryOp<Op, L, R>>
   Op op_;
 };
 
-template <class L, class R, class = check_compatible<L, R>>
+template <class L, class R>
 using AddOp = BinaryOp<std::plus<promote<L, R>>, L, R>;
 
-template <class L, class R, class = check_compatible<L, R>>
+template <class L, class R>
 using SubtractOp = BinaryOp<std::minus<promote<L, R>>, L, R>;
 
 } // namespace expressions

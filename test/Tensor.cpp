@@ -167,16 +167,76 @@ TEST(TensorTest, ScalarOp) {
   EXPECT_EQ(u[3], 0.0);
 }
 
-
 TEST(TensorTest, TensorProduct) {
-  ttl::Tensor<2,double,3> A, B, C;
-  ttl::Tensor<4,double,3> D;
+  ttl::Tensor<2,double,2> A(3), B(2), C;
 
-  // C(i,k) = A(i,j) * B(j,k);
+  ttl::Tensor<0,double,2> s;
+  s() = B(k,l) * B(k,l);
+  EXPECT_EQ(s[0], 16);
 
-  // D(i,j,k,l) = A(i,j) * B(k,l);
+  C(i,k) = A(i,j) * B(j,k);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(C[index(2,n,m)], 12);
+    }
+  }
 
-  // C(i,j) = A(i,j) * B(k,l) * B(k,l);
+  C(j,k) = A(i,j) * B(k,i);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(C[index(2,n,m)], 12);
+    }
+  }
 
-  // y(l) = D(i,j,k,l) * 0.5 * (B(i,j) + B(j,i)) * x(k);
+  C(i,j) = (A(i,j) * B(k,l)) * B(k,l);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(C[index(2,n,m)], 48);
+    }
+  }
+
+  C(i,j) = A(i,j) * s();
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(C[index(2,n,m)], 48);
+    }
+  }
+
+  C(i,j) = A(i,j) * (B(k,l) * B(k,l));
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      EXPECT_EQ(C[index(2,n,m)], 48);
+    }
+  }
+
+  ttl::Tensor<4,double,2> D;
+
+  D(i,j,k,l) = A(i,j) * B(k,l);
+  for (int n = 0; n < 2; ++n) {
+    for (int m = 0; m < 2; ++m) {
+      for (int o = 0; o < 2; ++o) {
+        for (int p = 0; p < 2; ++p) {
+          EXPECT_EQ(D[index(2,n,m,o,p)], 6);
+        }
+      }
+    }
+  }
+
+  ttl::Tensor<1,double,2> x, y;
+  x[0] = 2;
+  x[1] = 3;
+
+  auto E = ttl::Delta<2,double,2>();
+  E[1] = 1;
+  y(i) = (B(i,j) + E(i,j)) * x(j);
+  EXPECT_EQ(y[0], 15);
+  EXPECT_EQ(y[1], 13);
+
+  y(j) = (B(i,j) + E(i,j)) * x(i);
+  EXPECT_EQ(y[0], 12);
+  EXPECT_EQ(y[1], 15);
+
+  y(l) = D(i,j,k,l) * 0.5 * ((B(i,j) + E(i,j)) + (B(j,i) + E(i,j))) * x(k);
+  EXPECT_EQ(y[0], 330);
+  EXPECT_EQ(y[1], 330);
 }
