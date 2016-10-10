@@ -20,3 +20,6 @@ include_directories(include)
 add_subdirectory(include)
 add_subdirectory(test)
 
+install(DIRECTORY include
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+  PATTERN "CMakeLists.txt" EXCLUDE)
