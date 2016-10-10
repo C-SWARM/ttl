@@ -2,6 +2,9 @@
 #ifndef TTL_EXPRESSIONS_PROMOTE_H
 #define TTL_EXPRESSIONS_PROMOTE_H
 
+#include <ttl/Expressions/Expression.h>
+#include <type_traits>
+
 namespace ttl {
 namespace expressions {
 namespace detail {

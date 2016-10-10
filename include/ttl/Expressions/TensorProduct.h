@@ -66,6 +66,9 @@ inline constexpr scalar_type<E> contract(const E& e, I index) {
 template <class L, class R>
 class TensorProduct : Expression<TensorProduct<L, R>>
 {
+  static_assert(is_expression<L>::value, "Operand is not Expression");
+  static_assert(is_expression<R>::value, "Operand is not Expression");
+
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of operator[]

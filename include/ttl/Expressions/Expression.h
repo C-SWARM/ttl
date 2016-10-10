@@ -2,6 +2,7 @@
 #ifndef TTL_EXPRESSIONS_EXPRESSION_H
 #define TTL_EXPRESSIONS_EXPRESSION_H
 
+#include <ttl/Tensor.h>
 #include <tuple>
 #include <type_traits>
 
@@ -31,6 +32,15 @@ namespace expressions {
 template <class E>
 struct expression_traits;
 
+/// This specialization is used to try and print a hopefully useful error when
+/// Tensors are used without indices.
+template <int Rank, typename Scalar, int Dimension>
+struct expression_traits<Tensor<Rank, Scalar, Dimension>>
+{
+  using scalar_type = Scalar;
+  using dimension = std::integral_constant<int, Dimension>;
+};
+
 /// The following traits are required for all expression types.
 template <class E>
 using free_type = typename expression_traits<E>::free_type;
@@ -56,10 +66,19 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  constexpr scalar_type<E> operator[](I i) const {
+  constexpr typename expression_traits<E>::scalar_type operator[](I i) const {
     return static_cast<const E&>(*this)[i];
   }
 };
+
+template <class E>
+struct is_expression_impl {
+  using type = std::is_base_of<Expression<E>, E>;
+};
+
+template <class E>
+using is_expression = typename is_expression_impl<E>::type;
+
 } // namespace expressions
 } // namespace ttl
 
