@@ -19,12 +19,12 @@ class TensorProduct;
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
-struct expression_traits<TensorProduct<L, R>>
+struct traits<TensorProduct<L, R>>
 {
-  using free_type = outer_type<typename expression_traits<L>::free_type,
-                               typename expression_traits<R>::free_type>;
+  using free_type = outer_type<typename traits<L>::free_type,
+                               typename traits<R>::free_type>;
   using scalar_type = promote<L, R>;
-  using dimension = typename expression_traits<L>::dimension;
+  using dimension = typename traits<L>::dimension;
 };
 
 namespace detail {
@@ -72,8 +72,8 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of operator[]
-  using hidden_type = intersection<typename expression_traits<L>::free_type,
-                                   typename expression_traits<R>::free_type>;
+  using hidden_type = intersection<typename traits<L>::free_type,
+                                   typename traits<R>::free_type>;
  public:
   TensorProduct(L lhs, R rhs) : lhs_(lhs), rhs_(rhs) {
   }

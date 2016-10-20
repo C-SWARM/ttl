@@ -25,16 +25,16 @@ namespace expressions {
 template <class Tensor, class Index>
 class TensorBind;
 
-/// The expression Traits for TensorBind expressions.
+/// The expression traits for TensorBind expressions.
 ///
 /// @tparam      Tensor The class for the underlying tensor.
 /// @tparam       Index The indices bound to this expression.
 template <class Tensor, class Index>
-struct expression_traits<TensorBind<Tensor, Index>>
+struct traits<TensorBind<Tensor, Index>>
 {
-  using scalar_type = typename tensor_traits<Tensor>::scalar_type;
+  using scalar_type = typename traits<Tensor>::scalar_type;
   using free_type = Index;
-  using dimension = typename tensor_traits<Tensor>::dimension;
+  using dimension = typename traits<Tensor>::dimension;
 };
 
 /// The recursive template class that evaluates tensor expressions.
@@ -178,9 +178,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @todo clean up this expression for C++14
   template <class I>
   static constexpr scalar_type<TensorBind> to_offset(I i) {
-    return linearize<
-      typename tensor_traits<Tensor>::dimension>(
-          transform<free_type<TensorBind>>(i));
+    /// @todo C++14 doesn't require such a long line because we can have a
+    ///       `using` alias for the inner type.
+    return linearize<typename traits<Tensor>::dimension>(transform<free_type<TensorBind>>(i));
   }
 
   Tensor& t_;

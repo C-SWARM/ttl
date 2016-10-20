@@ -34,7 +34,7 @@ class BinaryOp;
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class Op, class L, class R>
-struct expression_traits<BinaryOp<Op, L, R>> : expression_traits<L>
+struct traits<BinaryOp<Op, L, R>> : traits<L>
 {
   using scalar_type = promote<L, R>;
 };

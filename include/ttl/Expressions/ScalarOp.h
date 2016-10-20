@@ -23,13 +23,13 @@ class ScalarOp;
 /// The scalar op just exports its Expression's Traits, with the scalar type
 /// adjusted as necessary.
 template <class Op, class L, class R>
-struct expression_traits<ScalarOp<Op, L, R, true>> : expression_traits<R>
+struct traits<ScalarOp<Op, L, R, true>> : traits<R>
 {
   using scalar_type = promote<L, R>;
 };
 
 template <class Op, class L, class R>
-struct expression_traits<ScalarOp<Op, L, R, false>> : expression_traits<L>
+struct traits<ScalarOp<Op, L, R, false>> : traits<L>
 {
   using scalar_type = promote<L, R>;
 };

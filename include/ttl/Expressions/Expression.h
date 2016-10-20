@@ -30,12 +30,12 @@ namespace expressions {
 /// The default traits class tries to generate useful errors for classes that
 /// haven't defined traits.
 template <class E>
-struct expression_traits;
+struct traits;
 
 /// This specialization is used to try and print a hopefully useful error when
 /// Tensors are used without indices.
 template <int R, int D, class T>
-struct expression_traits<Tensor<R, D, T>>
+struct traits<Tensor<R, D, T>>
 {
   using scalar_type = typename std::remove_pointer<T>::type;
   using dimension = std::integral_constant<int, D>;
@@ -43,13 +43,13 @@ struct expression_traits<Tensor<R, D, T>>
 
 /// The following traits are required for all expression types.
 template <class E>
-using free_type = typename expression_traits<E>::free_type;
+using free_type = typename traits<E>::free_type;
 
 template <class E>
-using scalar_type = typename expression_traits<E>::scalar_type;
+using scalar_type = typename traits<E>::scalar_type;
 
 template <class E>
-using dimension = typename expression_traits<E>::dimension;
+using dimension = typename traits<E>::dimension;
 
 /// Derived traits that are widely used.
 template <class E>
@@ -66,7 +66,7 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  constexpr typename expression_traits<E>::scalar_type operator[](I i) const {
+  constexpr typename traits<E>::scalar_type operator[](I i) const {
     return static_cast<const E&>(*this)[i];
   }
 };

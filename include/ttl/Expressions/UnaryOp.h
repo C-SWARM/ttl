@@ -17,7 +17,7 @@ class UnaryOp;
 ///
 /// This just exports the traits of the underlying expression.
 template <class Op, class E>
-struct expression_traits<UnaryOp<Op, E>> : public expression_traits<E>
+struct traits<UnaryOp<Op, E>> : public traits<E>
 {
 };
 
