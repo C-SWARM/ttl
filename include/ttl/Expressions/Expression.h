@@ -34,11 +34,11 @@ struct expression_traits;
 
 /// This specialization is used to try and print a hopefully useful error when
 /// Tensors are used without indices.
-template <int Rank, typename Scalar, int Dimension>
-struct expression_traits<Tensor<Rank, Scalar, Dimension>>
+template <int R, int D, class T>
+struct expression_traits<Tensor<R, D, T>>
 {
-  using scalar_type = Scalar;
-  using dimension = std::integral_constant<int, Dimension>;
+  using scalar_type = typename std::remove_pointer<T>::type;
+  using dimension = std::integral_constant<int, D>;
 };
 
 /// The following traits are required for all expression types.

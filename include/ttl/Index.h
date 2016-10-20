@@ -12,7 +12,7 @@ namespace ttl {
 /// @code
 ///   Index<'a'> i;
 ///   Index<'a'> j;
-///   Tensor<2,int,2> M,N;
+///   Tensor<2,2,int> M,N;
 ///   M(i,j) == M(i,i);
 /// @code
 ///

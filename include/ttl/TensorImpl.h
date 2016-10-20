@@ -5,35 +5,43 @@
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/TensorBind.h>
 #include <ttl/util/pow.h>
+#include <cassert>
 #include <tuple>
 #include <algorithm>
 
 namespace ttl {
-template <int Rank, typename Scalar, int Dimension>
+template <int R, int D, class T>
 class Tensor
 {
-  static constexpr auto Size_ = util::pow(Dimension, Rank);
+  /// The number of elements in the tensor.
+  static constexpr int Size = util::pow(D, R);
 
  public:
-  Tensor() = default;
-  Tensor(Tensor&&) = default;
-  Tensor& operator=(Tensor&& rhs) = default;
-  Tensor(const Tensor&) = default;
-  Tensor& operator=(const Tensor& rhs) = default;
+  /// The scalar array backing the tensor.
+  T data[Size];
 
-  explicit Tensor(Scalar s) {
-    std::fill(value_, value_ + Size_, s);
+  /// Assignment from a compatible tensor.
+  template <class U>
+  Tensor& operator=(const Tensor<R, D, U>& rhs) {
+    std::copy_n(rhs.data, Size, data);
+    return *this;
   }
 
+  /// Fill all of the tensor elements with a scalar.
+  template <class U>
+  Tensor& fill(U scalar) {
+    std::fill_n(data, Size, scalar);
+    return *this;
+  }
 
   /// Simple linear addressing.
   /// @}
-  constexpr Scalar operator[](int i) const {
-    return value_[i];
+  constexpr T operator[](int i) const {
+    return data[i];
   }
 
-  Scalar& operator[](int i) {
-    return value_[i];
+  T& operator[](int i) {
+    return data[i];
   }
   /// @}
 
@@ -53,92 +61,92 @@ class Tensor
   ///   T(i, j, k) = U(k, i, j);
   /// @code
   ///
-  /// @tparam   Indices The set of indices to bind to the tensor dimensions.
-  /// @tparam    (anon) A type-check (sizeof...(Indices) == Rank) metaprogram.
+  /// @tparam     Index The set of indices to bind to the tensor dimensions.
   ///
   /// @param     (anon) The actual set of indices to bind (e.g., (i,j,k)).
   ///
   /// @returns          A tensor indexing expression.
-  template <class... Indices>
-  expressions::TensorBind<Tensor, std::tuple<Indices...>> operator()(Indices...)
-  {
-    static_assert(Rank == sizeof...(Indices), "Tensor indexing mismatch.");
-    return expressions::TensorBind<Tensor, std::tuple<Indices...>>(*this);
+  template <class... Index>
+  expressions::TensorBind<Tensor, std::tuple<Index...>> operator()(Index...) {
+    static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
+    return expressions::TensorBind<Tensor, std::tuple<Index...>>(*this);
   }
-
- private:
-  Scalar value_[Size_];
 };
 
-template <int Rank, typename Scalar, int Dimension>
-class Tensor<Rank, Scalar*, Dimension>
+/// A partial specialization of the tensor template for external storage.
+///
+/// This specialization is provided for compatibility with external storage
+/// allocation. The user must specify a pointer to the external storage during
+/// construction, which will then be used to store row-major tensor data.
+template <int R, int D, class T>
+class Tensor<R, D, T*>
 {
-  static constexpr auto Size_ = util::pow(Dimension, Rank);
+  static constexpr int Size = util::pow(D, R);
 
  public:
+  /// Store a reference to the external data buffer.
+  T (&data)[Size];
+
+  /// The external storage tensor does not support default or copy construction.
+  /// @{
   Tensor() = delete;
   Tensor(Tensor&& rhs) = delete;
   Tensor(const Tensor&) = delete;
+  /// @}
 
-  Tensor& operator=(Tensor&& rhs) {
-    std::copy(rhs.value_, rhs.value_ + Size_, value_);
-    return *this;
+  /// The only way to construct an external storage tensor is with the pointer
+  /// to the external data buffer. The constructor simply captures a reference
+  /// to this location.
+  Tensor(T (*data)[Size]) : data(*data) {
   }
 
+  Tensor(T* data) : Tensor(reinterpret_cast<T(*)[Size]>(data)) {
+  }
+
+  /// Assignment from a tensor is interpreted as a copy of the underlying data.
+  /// @{
   Tensor& operator=(const Tensor& rhs) {
-    std::copy(rhs.value_, rhs.value_ + Size_, value_);
+    std::copy_n(rhs.data, Size, data);
     return *this;
   }
 
-  Tensor(Scalar* value) : value_(*(Scalar(*)[Size_])value) {
-  }
-
-  Tensor(Scalar* value, Scalar s) : value_(*(Scalar(*)[Size_])value) {
-    std::fill(value_, value_ + Size_, s);
-  }
-
-  /// Simple linear addressing.
-  /// @}
-  constexpr Scalar operator[](int i) const {
-    return value_[i];
-  }
-
-  Scalar& operator[](int i) {
-    return value_[i];
+  template <class U>
+  Tensor& operator=(const Tensor<R, D, U>& rhs) {
+    std::copy_n(rhs.data, Size, data);
+    return *this;
   }
   /// @}
 
-  /// Create a tensor indexing expression for this tensor.
-  ///
-  /// This operation will bind the tensor to an Pack, which will allow us
-  /// to make type inferences about the types of operations that should be
-  /// available, as well as generate code to actually index the tensor in loops
-  /// and to evaluate its elements.
-  ///
-  /// @code
-  ///   static constexpr Index<'i'> i;
-  ///   static constexpr Index<'j'> j;
-  ///   static constexpr Index<'k'> k;
-  ///   Tensor<3, double, 3> T;
-  ///   auto expr = T(i, j, k);
-  ///   T(i, j, k) = U(k, i, j);
-  /// @code
-  ///
-  /// @tparam   Indices The set of indices to bind to the tensor dimensions.
-  /// @tparam    (anon) A type-check (sizeof...(Indices) == Rank) metaprogram.
-  ///
-  /// @param     (anon) The actual set of indices to bind (e.g., (i,j,k)).
-  ///
-  /// @returns          A tensor indexing expression.
-  template <class... Indices>
-  expressions::TensorBind<Tensor, std::tuple<Indices...>> operator()(Indices...)
-  {
-    static_assert(Rank == sizeof...(Indices), "Tensor indexing mismatch.");
-    return expressions::TensorBind<Tensor, std::tuple<Indices...>>(*this);
+  /// Assignment from an initializer_list copies data to the external buffer.
+  template <class U>
+  Tensor& operator=(std::initializer_list<U>&& rhs) {
+    /// @todo Static assert is okay with c++14.
+    /// static_assert(data.size() == Size, "Initializer list has invalid length.");
+    assert(rhs.size() == Size);
+    std::copy_n(rhs.begin(), Size, data);
+    return *this;
   }
 
- private:
-  Scalar (&value_)[Size_];
+  /// Fill the tensor with a scalar.
+  template <class U>
+  Tensor& fill(U scalar) {
+    std::fill_n(data, Size, scalar);
+    return *this;
+  }
+
+  constexpr T operator[](int i) const {
+    return data[i];
+  }
+
+  T& operator[](int i) {
+    return data[i];
+  }
+
+  template <class... Index>
+  expressions::TensorBind<Tensor, std::tuple<Index...>> operator()(Index...) {
+    static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
+    return expressions::TensorBind<Tensor, std::tuple<Index...>>(*this);
+  }
 };
 } // namespace ttl
 

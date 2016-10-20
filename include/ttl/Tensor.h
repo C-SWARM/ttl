@@ -7,7 +7,7 @@
 namespace ttl {
 /// The core class template for all tensors, which are really just
 /// multidimensional dense arrays in TTL.
-template <int Rank, typename ScalarType, int Dimension>
+template <int Rank, int Dimension, class ScalarType>
 class Tensor;
 
 /// We need to do some metaprogramming with tensors where external functions
@@ -17,20 +17,12 @@ class Tensor;
 template <class T>
 struct tensor_traits;
 
-template <int Rank, typename ScalarType, int Dimension>
-struct tensor_traits <Tensor<Rank, ScalarType, Dimension>>
+template <int R, int D, class T>
+struct tensor_traits <Tensor<R, D, T>>
 {
-  using rank = std::integral_constant<int, Rank>;
-  using dimension = std::integral_constant<int, Dimension>;
-  using scalar_type = ScalarType;
-};
-
-template <int Rank, typename ScalarType, int Dimension>
-struct tensor_traits <Tensor<Rank, ScalarType*, Dimension>>
-{
-  using rank = std::integral_constant<int, Rank>;
-  using dimension = std::integral_constant<int, Dimension>;
-  using scalar_type = ScalarType;
+  using rank = std::integral_constant<int, R>;
+  using dimension = std::integral_constant<int, D>;
+  using scalar_type = typename std::remove_pointer<T>::type;
 };
 } // namespace ttl
 
