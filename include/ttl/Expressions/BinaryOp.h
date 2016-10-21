@@ -43,7 +43,7 @@ struct traits<BinaryOp<Op, L, R>> : traits<L>
 ///
 /// The BinaryOp captures its left hand side and right hand side expressions,
 /// and a function object or lambda for the operation, and implements the
-/// operator[] operation to evaluate an index.
+/// get operation to evaluate an index.
 ///
 /// @tparam          Op The element-wise binary operation.
 /// @tparam           L The type of the left hand expression.
@@ -62,8 +62,8 @@ class BinaryOp : Expression<BinaryOp<Op, L, R>>
   }
 
   template <class I>
-  constexpr scalar_type<BinaryOp> operator[](I i) const {
-    return op_(lhs_[i], rhs_[i]);
+  constexpr const scalar_type<BinaryOp> get(I i) const {
+    return op_(lhs_.get(i), rhs_.get(i));
   }
 
  private:

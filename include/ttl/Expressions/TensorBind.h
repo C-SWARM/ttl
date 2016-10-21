@@ -5,7 +5,6 @@
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/linearize.h>
 #include <ttl/Expressions/transform.h>
 #include <ttl/util/is_equivalent.h>
 #include <ttl/Expressions/traits.h>
@@ -82,7 +81,7 @@ struct evaluate {
 template <class L, class R, int M>
 struct evaluate<M, L, R, M> {
   static void op(L& lhs, const R& rhs, free_type<L> index) {
-    lhs[index] = rhs[index];
+    lhs.set(index, rhs.get(index));
   }
 };
 
@@ -130,15 +129,15 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  constexpr scalar_type<TensorBind> operator[](I i) const {
-    return t_[to_offset(i)];
+  constexpr const scalar_type<TensorBind> get(I i) const {
+    return t_.get(transform<free_type<TensorBind>>(i));
   }
 
-  /// This non-const version only matches the left hand expression of a tensor
-  /// assignment operation, and we know that it has to have the free type
-  /// associated with this TensorBind expression because we generated it.
-  scalar_type<TensorBind>& operator[](free_type<TensorBind> i) {
-    return t_[to_offset(i)];
+  /// This set operation is used during evaluation to set a left-hand-side
+  /// element.
+  template <class I, class U>
+  void set(I index, U scalar) const {
+    t_.set(transform<free_type<TensorBind>>(index), scalar);
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -176,16 +175,6 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   }
 
  private:
-  /// Convenience functions to linearize index types.
-  ///
-  /// @todo clean up this expression for C++14
-  template <class I>
-  static constexpr scalar_type<TensorBind> to_offset(I i) {
-    /// @todo C++14 doesn't require such a long line because we can have a
-    ///       `using` alias for the inner type.
-    return linearize<typename traits<Tensor>::dimension>(transform<free_type<TensorBind>>(i));
-  }
-
   Tensor& t_;
 };
 } // namespace expressions

@@ -29,8 +29,8 @@ class UnaryOp : Expression<UnaryOp<Op, E>>
   }
 
   template <class I>
-  constexpr scalar_type<UnaryOp> operator[](I i) const {
-    return op_(e_[i]);
+  constexpr const scalar_type<UnaryOp> get(I index) const {
+    return op_(e_.get(index));
   }
 
  private:

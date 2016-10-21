@@ -4,6 +4,7 @@
 
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/TensorBind.h>
+#include <ttl/util/linearize.h>
 #include <ttl/util/pow.h>
 #include <cassert>
 #include <tuple>
@@ -42,12 +43,27 @@ class Tensor
 
   /// Simple linear addressing.
   /// @{
-  constexpr T operator[](int i) const {
+  constexpr const T& operator[](int i) const {
     return data[i];
   }
 
   T& operator[](int i) {
     return data[i];
+  }
+  /// @}
+
+  /// Multidimensional indexing for expressions.
+  /// @{
+  template <class I>
+  constexpr T get(I index) const {
+    static_assert(R == std::tuple_size<I>::value, "Invalid indexing width");
+    return data[util::linearize<D>(index)];
+  }
+
+  template <class I, class U>
+  void set(I index, U scalar) {
+    static_assert(R == std::tuple_size<I>::value, "Invalid indexing width");
+    data[util::linearize<D>(index)] = scalar;
   }
   /// @}
 
@@ -159,6 +175,21 @@ class Tensor<R, D, T*>
   T& operator[](int i) {
     return data[i];
   }
+
+  /// Multidimensional indexing for Index tuples.
+  /// @{
+  template <class I>
+  constexpr T get(I index) const {
+    static_assert(R == std::tuple_size<I>::value, "Invalid indexing width");
+    return data[util::linearize<D>(index)];
+  }
+
+  template <class I, class U>
+  void set(I index, U scalar) {
+    static_assert(R == std::tuple_size<I>::value, "Invalid indexing width");
+    data[util::linearize<D>(index)] = scalar;
+  }
+  /// @}
 
   template <class... Index>
   constexpr const const_bind<Index...> operator()(Index...) const {

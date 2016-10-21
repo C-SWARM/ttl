@@ -47,8 +47,8 @@ class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
   }
 
   template <class I>
-  constexpr scalar_type<ScalarOp> operator[](I i) const {
-    return op_(lhs_, rhs_[i]);
+  constexpr const scalar_type<ScalarOp> get(I i) const {
+    return op_(lhs_, rhs_.get(i));
   }
 
  private:
@@ -71,8 +71,8 @@ class ScalarOp<Op, L, R, false> : Expression<ScalarOp<Op, L, R, false>>
   }
 
   template <class I>
-  constexpr scalar_type<ScalarOp> operator[](I i) const {
-    return op_(lhs_[i], rhs_);
+  constexpr const scalar_type<ScalarOp> get(I i) const {
+    return op_(lhs_.get(i), rhs_);
   }
 
  private:

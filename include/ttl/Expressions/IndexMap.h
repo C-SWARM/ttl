@@ -31,10 +31,10 @@ class IndexMap : public Expression<IndexMap<E, OuterType>> {
   }
 
   template <class I>
-  constexpr const scalar_type<IndexMap> operator[](I i) const {
+  constexpr const scalar_type<IndexMap> get(I i) const {
     static_assert(util::is_equivalent<OuterType, I>::value,
                   "Unexpected outer type during index mapping");
-    return e_[transform<free_type<IndexMap>>(i)];
+    return e_.get(transform<free_type<IndexMap>>(i));
   }
 
  private:

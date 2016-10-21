@@ -38,7 +38,7 @@ template <class E, class I, int n,
           int N = std::tuple_size<I>::value>
 struct contract_impl
 {
-  static scalar_type<E> op(const E& e, I index) {
+  static const scalar_type<E> op(const E& e, I index) {
     scalar_type<E> s(0);
     for (int i = 0; i < dimension<E>::value; ++i) {
       std::get<n>(index).set(i);
@@ -51,7 +51,7 @@ struct contract_impl
 template <class E, class I, int N>
 struct contract_impl<E, I, N, N>
 {
-  static constexpr scalar_type<E> op(const E& e, I i) {
+  static constexpr const scalar_type<E> op(const E& e, I i) {
     return e(i);
   }
 };
@@ -71,7 +71,7 @@ class TensorProduct : Expression<TensorProduct<L, R>>
 
   /// The type of the inner dimensions, needed during contraction.
   ///
-  /// @todo C++14 scope this inside of operator[]
+  /// @todo C++14 scope this inside of get
   using hidden_type = intersection<typename traits<L>::free_type,
                                    typename traits<R>::free_type>;
  public:
@@ -79,15 +79,14 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   }
 
   template <class I>
-  constexpr scalar_type<TensorProduct> operator[](I i) const {
-    return contract<
-      std::tuple_size<I>::value>(*this, std::tuple_cat(i, hidden_type()));
+  constexpr const scalar_type<TensorProduct> get(I i) const {
+    return contract<std::tuple_size<I>::value>(*this, std::tuple_cat(i, hidden_type()));
   }
 
   /// Used as a leaf call during contraction.
   template <class I>
-  constexpr scalar_type<TensorProduct> operator()(I i) const {
-    return lhs_[i] * rhs_[i];
+  constexpr const scalar_type<TensorProduct> operator()(I index) const {
+    return lhs_.get(index) * rhs_.get(index);
   }
 
  private:
