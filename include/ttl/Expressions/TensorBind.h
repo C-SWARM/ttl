@@ -30,11 +30,9 @@ class TensorBind;
 /// @tparam      Tensor The class for the underlying tensor.
 /// @tparam       Index The indices bound to this expression.
 template <class Tensor, class Index>
-struct traits<TensorBind<Tensor, Index>>
+struct traits<TensorBind<Tensor, Index>> : traits<Tensor>
 {
-  using scalar_type = typename traits<Tensor>::scalar_type;
   using free_type = Index;
-  using dimension = typename traits<Tensor>::dimension;
 };
 
 /// The recursive template class that evaluates tensor expressions.
