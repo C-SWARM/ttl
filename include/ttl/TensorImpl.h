@@ -16,6 +16,12 @@ class Tensor
   /// The number of elements in the tensor.
   static constexpr int Size = util::pow(D, R);
 
+  template <class... Index>
+  using bind = expressions::TensorBind<Tensor, std::tuple<Index...>>;
+
+  template <class... Index>
+  using const_bind = expressions::TensorBind<const Tensor, std::tuple<Index...>>;
+
  public:
   /// The scalar array backing the tensor.
   T data[Size];
@@ -35,7 +41,7 @@ class Tensor
   }
 
   /// Simple linear addressing.
-  /// @}
+  /// @{
   constexpr T operator[](int i) const {
     return data[i];
   }
@@ -67,9 +73,15 @@ class Tensor
   ///
   /// @returns          A tensor indexing expression.
   template <class... Index>
-  expressions::TensorBind<Tensor, std::tuple<Index...>> operator()(Index...) {
+  bind<Index...> operator()(Index...) {
     static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
-    return expressions::TensorBind<Tensor, std::tuple<Index...>>(*this);
+    return bind<Index...>(*this);
+  }
+
+  template <class... Index>
+  constexpr const const_bind<Index...> operator()(Index...) const {
+    static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
+    return const_bind<Index...>(*this);
   }
 };
 
@@ -82,6 +94,12 @@ template <int R, int D, class T>
 class Tensor<R, D, T*>
 {
   static constexpr int Size = util::pow(D, R);
+
+  template <class... Index>
+  using bind = expressions::TensorBind<Tensor, std::tuple<Index...>>;
+
+  template <class... Index>
+  using const_bind = expressions::TensorBind<const Tensor, std::tuple<Index...>>;
 
  public:
   /// Store a reference to the external data buffer.
@@ -143,9 +161,15 @@ class Tensor<R, D, T*>
   }
 
   template <class... Index>
-  expressions::TensorBind<Tensor, std::tuple<Index...>> operator()(Index...) {
+  constexpr const const_bind<Index...> operator()(Index...) const {
     static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
-    return expressions::TensorBind<Tensor, std::tuple<Index...>>(*this);
+    return const_bind<Index...>(*this);
+  }
+
+  template <class... Index>
+  bind<Index...> operator()(Index...) {
+    static_assert(R == sizeof...(Index), "Tensor indexing mismatch.");
+    return bind<Index...>(*this);
   }
 };
 } // namespace ttl

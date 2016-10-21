@@ -8,6 +8,7 @@
 #include <ttl/Expressions/linearize.h>
 #include <ttl/Expressions/transform.h>
 #include <ttl/util/is_equivalent.h>
+#include <ttl/Expressions/traits.h>
 #include <utility>
 
 namespace ttl {

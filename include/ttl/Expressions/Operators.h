@@ -3,7 +3,6 @@
 #define TTL_EXPRESSIONS_OPERATORS_H
 
 /// This file binds operators to expressions.
-
 #include <ttl/Expressions/BinaryOp.h>
 #include <ttl/Expressions/ScalarOp.h>
 #include <ttl/Expressions/UnaryOp.h>
