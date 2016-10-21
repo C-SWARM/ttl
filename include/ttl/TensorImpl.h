@@ -125,7 +125,8 @@ class Tensor<R, D, T*>
   /// @{
   Tensor() = delete;
   Tensor(Tensor&& rhs) = delete;
-  Tensor(const Tensor&) = delete;
+  Tensor(const Tensor& rhs) : data(rhs.data) {
+  }
   /// @}
 
   /// The only way to construct an external storage tensor is with the pointer

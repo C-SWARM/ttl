@@ -5,38 +5,70 @@
 #include <ttl/Expressions/Expression.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
-#include <ttl/util/is_equivalent.h>
+#include <ttl/util/is_subset.h>
 
 namespace ttl {
 namespace expressions {
 /// The expression that maps from one index space to another.
-///
-/// The basic purpose of this expression is to shuffle the free_type of its child
-/// expression into a compatible free_type for the parent expression.
-template <class T, class OuterType, class InnerType>
+template <class E, class OuterType, class InnerType>
 class IndexMap;
 
-template <class T, class OuterType, class InnerType>
-struct traits<IndexMap<T, OuterType, InnerType>> : traits<T>
+/// The IndexMap just masks the child's free_type trait with the OuterType.
+template <class E, class OuterType, class InnerType>
+struct traits<IndexMap<E, OuterType, InnerType>> : traits<E>
 {
   using free_type = OuterType;
 };
 
-template <class T, class OuterType, class InnerType>
-class IndexMap : public Expression<IndexMap<T, OuterType, InnerType>> {
+/// The IndexMap implementation.
+///
+/// The basic purpose of this expression is to shuffle the free_type of its child
+/// expression into a compatible free_type for the parent expression.
+///
+/// @tparam           T The type of the child expression.
+/// @tparam   OuterType The type of the index space to export.
+/// @tparam   InnerType The type of the child index space.
+template <class E, class OuterType, class InnerType = free_type<E>>
+class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
  public:
-  explicit IndexMap(const T& t) : t_(t) {
+  /// The index map is simply initialized with its child expression.
+  IndexMap(const E& e) : e_(e) {
   }
 
-  template <class I>
-  constexpr const scalar_type<IndexMap> get(I i) const {
-    static_assert(util::is_equivalent<OuterType, I>::value,
+  /// The index map get() operation remaps the incoming index.
+  ///
+  /// The get() operation takes an index, defined in the outer type, and maps it
+  /// into the inner type. Interestingly, the incoming index does not
+  /// necessarily match the OuterType for this class. The OuterType is used
+  /// during the static upward traversal for type checking, while the get()
+  /// operation is used dynamically during evaluation.
+  ///
+  /// A simple case where the Index type is not equivalent to the OuterType is
+  /// a matrix multiplication with a transpose.
+  ///
+  /// @code
+  ///   C(i,k) = A(i,j)*B(k,j).to(j,k); // C = A*B^T
+  /// @code
+  ///
+  /// In this context, the tensor product is creating indexes in the (i,k,j)
+  /// space, and the IndexMap on the right hand side is only exporting the (j,k)
+  /// space. Basically, B is not indexed by (i) so it is ignored. The index
+  /// space transformation below will filter out those unused dimensions before
+  /// forwarding them along to the child.
+  ///
+  /// @tparam     Index The type of the incoming index.
+  /// @param          i The instance of the incoming instance.
+  /// @returns          The scalar computed by the child expression for this
+  ///                   index.
+  template <class Index>
+  constexpr const scalar_type<IndexMap> get(Index i) const {
+    static_assert(util::is_subset<OuterType, Index>::value,
                   "Unexpected outer type during index mapping");
-    return t_.get(transform<InnerType>(i));
+    return e_.get(transform<InnerType>(i));
   }
 
  private:
-  const T& t_;
+  const E& e_;
 };
 } // namespace expressions
 } // namespace ttl
