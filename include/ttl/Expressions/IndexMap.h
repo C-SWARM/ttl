@@ -13,32 +13,30 @@ namespace expressions {
 ///
 /// The basic purpose of this expression is to shuffle the free_type of its child
 /// expression into a compatible free_type for the parent expression.
-template <class E, class OuterType>
+template <class T, class OuterType, class InnerType>
 class IndexMap;
 
-template <class E, class OuterType>
-struct traits<IndexMap<E, OuterType>> : traits<E>
+template <class T, class OuterType, class InnerType>
+struct traits<IndexMap<T, OuterType, InnerType>> : traits<T>
 {
   using free_type = OuterType;
 };
 
-template <class E, class OuterType>
-class IndexMap : public Expression<IndexMap<E, OuterType>> {
-  static_assert(util::is_equivalent<free_type<E>, OuterType>::value,
-                "Mapped index types are not equivalent.");
+template <class T, class OuterType, class InnerType>
+class IndexMap : public Expression<IndexMap<T, OuterType, InnerType>> {
  public:
-  explicit IndexMap(const E& e) : e_(e) {
+  explicit IndexMap(const T& t) : t_(t) {
   }
 
   template <class I>
   constexpr const scalar_type<IndexMap> get(I i) const {
     static_assert(util::is_equivalent<OuterType, I>::value,
                   "Unexpected outer type during index mapping");
-    return e_.get(transform<free_type<IndexMap>>(i));
+    return t_.get(transform<InnerType>(i));
   }
 
  private:
-  const E& e_;
+  const T& t_;
 };
 } // namespace expressions
 } // namespace ttl
