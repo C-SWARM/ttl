@@ -167,6 +167,8 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @tparam    (anon) Restrict this operation to expressions that match.
   template <class R>
   TensorBind& operator=(const R& rhs) {
+    static_assert(dimension<R>::value == dimension<TensorBind>::value,
+                  "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<free_type<TensorBind>, free_type<R>>::value,
                   "Attempted assignment of incompatible Tensors");
     evaluate<0, TensorBind, R>::op(*this, rhs, {});
