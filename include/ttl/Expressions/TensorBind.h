@@ -35,54 +35,6 @@ struct traits<TensorBind<Tensor, Index>> : traits<Tensor>
   using free_type = Index;
 };
 
-/// The recursive template class that evaluates tensor expressions.
-///
-/// The fundamental goal of ttl is to generate loops over tensor dimension,
-/// evaluating the right-hand-side of the expression for each of the
-/// combinations of inputs on the left hand side.
-///
-/// @code
-///   for i : 0..D-1
-///    for j : 0..D-1
-///      ...
-///        for n : 0..D-1
-///           lhs(i,j,...,n) = rhs(i,j,...,n)
-/// @code
-///
-/// We use recursive template expansion to generate these "loops" statically, by
-/// dynamically enumerating the index dimensions. There is presumably a static
-/// enumeration technique, as our bounds are all known statically.
-///
-/// @tparam           n The current dimension that we need to traverse.
-/// @tparam           L The type of the left-hand-side expression.
-/// @tparam           R The type of the right-hand-side expression.
-/// @tparam           M The total number of free indices to enumerate.
-template <int n, class L, class R, int M = free_size<L>::value>
-struct evaluate {
-  static void op(L& lhs, const R& rhs, free_type<L> index) {
-    for (int i = 0; i < dimension<L>::value; ++i) {
-      std::get<n>(index) = i;
-      evaluate<n + 1, L, R>::op(lhs, rhs, index);
-    }
-  }
-};
-
-/// The recursive base case for evaluation.
-///
-/// In this base case we have built the entire index and simply need to assign
-/// the evaluation of the right hand side to the evaluation of the left hand
-/// side.
-///
-/// @tparam           L The type of the left-hand-side expression.
-/// @tparam           R The type of the right-hand-side expression.
-/// @tparam           M The number of free indices (bounds recursion).
-template <class L, class R, int M>
-struct evaluate<M, L, R, M> {
-  static void op(L& lhs, const R& rhs, free_type<L> index) {
-    lhs.set(index, rhs.get(index));
-  }
-};
-
 template <class Tensor, class Index>
 class TensorBind : public Expression<TensorBind<Tensor, Index>>
 {
@@ -90,7 +42,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
   /// @tparam         t The underlying tensor.
-  explicit TensorBind(Tensor& t) : t_(t) {
+  TensorBind(Tensor& t) : t_(t) {
   }
 
   /// Default assignment, move, and copy should work fine when the
@@ -100,16 +52,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @{
   TensorBind(TensorBind&&) = default;
-  TensorBind& operator=(TensorBind&& rhs) {
-    t_ = rhs.t_;
-    return *this;
-  };
-
+  TensorBind& operator=(TensorBind&& rhs) = default;
   TensorBind(const TensorBind&) = default;
-  TensorBind& operator=(const TensorBind& rhs) {
-    t_ = rhs.t_;
-    return *this;
-  }
+  TensorBind& operator=(const TensorBind& rhs) = default;
   /// @}
 
   /// The index operator maps the index array using the normal interpretation of
@@ -128,14 +73,14 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @returns          The scalar value at the linearized offset.
   template <class I>
   constexpr const scalar_type<TensorBind> get(I i) const {
-    return t_.get(transform<free_type<TensorBind>>(i));
+    return t_.get(transform<Index>(i));
   }
 
   /// This set operation is used during evaluation to set a left-hand-side
   /// element.
-  template <class I, class U>
-  void set(I index, U scalar) const {
-    t_.set(transform<free_type<TensorBind>>(index), scalar);
+  template <class U>
+  void set(Index index, U scalar) const {
+    t_.set(index, scalar);
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -166,15 +111,55 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator=(const R& rhs) {
     static_assert(dimension<R>::value == dimension<TensorBind>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(util::is_equivalent<free_type<TensorBind>, free_type<R>>::value,
+    static_assert(util::is_equivalent<Index, free_type<R>>::value,
                   "Attempted assignment of incompatible Tensors");
-    evaluate<0, TensorBind, R>::op(*this, rhs, {});
+    evaluate<R>::op(*this, rhs, {});
     return *this;
   }
 
  private:
+  /// The recursive template class that evaluates tensor expressions.
+  ///
+  /// The fundamental goal of ttl is to generate loops over tensor dimension,
+  /// evaluating the right-hand-side of the expression for each of the
+  /// combinations of inputs on the left hand side.
+  ///
+  /// @code
+  ///   for i : 0..D-1
+  ///    for j : 0..D-1
+  ///      ...
+  ///        for n : 0..D-1
+  ///           lhs(i,j,...,n) = rhs(i,j,...,n)
+  /// @code
+  ///
+  /// We use recursive template expansion to generate these "loops" statically, by
+  /// dynamically enumerating the index dimensions. There is presumably a static
+  /// enumeration technique, as our bounds are all known statically.
+  ///
+  /// @tparam           R The type of the right-hand-side expression.
+  /// @tparam           n The current dimension that we need to traverse.
+  /// @tparam           M The total number of free indices to enumerate.
+  template <class R, int n = 0, int M = free_size<TensorBind>::value>
+  struct evaluate {
+    static void op(TensorBind& lhs, const R& rhs, Index index) {
+      for (int i = 0; i < dimension<TensorBind>::value; ++i) {
+        std::get<n>(index) = i;
+        evaluate<R, n + 1>::op(lhs, rhs, std::forward<Index>(index));
+      }
+    }
+  };
+
+  template <class R, int M>
+  struct evaluate<R, M, M> {
+    static void op(TensorBind& lhs, const R& rhs, Index&& index) {
+      lhs.set(index, rhs.get(index));
+    }
+  };
+
   Tensor& t_;
 };
+
+
 } // namespace expressions
 } // namespace ttl
 
