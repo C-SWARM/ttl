@@ -84,15 +84,14 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  constexpr const scalar_type<TensorBind> get(I i) const {
-    return t_.get(transform<Index>(i));
+  constexpr scalar_type<Tensor> eval(I i) const {
+    return t_.eval(transform<Index>(i));
   }
 
-  /// This set operation is used during evaluation to set a left-hand-side
+  /// This eval operation is used during evaluation to set a left-hand-side
   /// element.
-  template <class U>
-  void set(Index index, U scalar) const {
-    t_.set(index, scalar);
+  constexpr scalar_type<Tensor>& eval(Index index) const {
+    return t_.eval(index);
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -121,7 +120,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @tparam    (anon) Restrict this operation to expressions that match.
   template <class E>
   TensorBind& operator=(const E& rhs) {
-    static_assert(dimension<E>::value == dimension<TensorBind>::value,
+    static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
@@ -164,7 +163,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @param      rhs The right hand side expression tree.
     /// @param    index The partially constructed index.
     static void op(TensorBind& lhs, const E& rhs, Index index) {
-      for (int i = 0; i < dimension<TensorBind>::value; ++i) {
+      for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index) = i;
         evaluate<E, n + 1>::op(lhs, rhs, index);
       }
@@ -186,7 +185,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// evaluates the right-hand-side for one specific input and stores it in
     /// the left-hand-side.
     static void op(TensorBind& lhs, const E& rhs, const Index& index) {
-      lhs.set(index, rhs.get(index));
+      lhs.eval(index) = rhs.eval(index);
     }
   };
 

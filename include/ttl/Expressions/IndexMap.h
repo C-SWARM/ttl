@@ -35,12 +35,12 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   IndexMap(const E& e) : e_(e) {
   }
 
-  /// The index map get() operation remaps the incoming index.
+  /// The index map eval() operation remaps the incoming index.
   ///
-  /// The get() operation takes an index, defined in the outer type, and maps it
-  /// into the inner type. Interestingly, the incoming index does not
+  /// The eval() operation takes an index, defined in the outer type, and maps
+  /// it into the inner type. Interestingly, the incoming index does not
   /// necessarily match the OuterType for this class. The OuterType is used
-  /// during the static upward traversal for type checking, while the get()
+  /// during the static upward traversal for type checking, while the eval()
   /// operation is used dynamically during evaluation.
   ///
   /// A simple case where the Index type is not equivalent to the OuterType is
@@ -61,10 +61,10 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   /// @returns          The scalar computed by the child expression for this
   ///                   index.
   template <class Index>
-  constexpr const scalar_type<IndexMap> get(Index i) const {
+  constexpr scalar_type<IndexMap> eval(Index index) const {
     static_assert(util::is_subset<OuterType, Index>::value,
                   "Unexpected outer type during index mapping");
-    return e_.get(transform<InnerType>(i));
+    return e_.eval(transform<InnerType>(i));
   }
 
  private:

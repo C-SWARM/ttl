@@ -54,7 +54,7 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   TensorProduct(const L& lhs, const R& rhs) : lhs_(lhs), rhs_(rhs) {
   }
 
-  /// The get() operation for the product forwards to the contraction routine.
+  /// The eval() operation for the product forwards to the contraction routine.
   ///
   /// In TTL, contraction requires that we take an outer index---something like
   /// (i,j)---extend it with "slots" for inner hidden dimensions---like
@@ -66,14 +66,14 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class Index>
-  constexpr const scalar_type<TensorProduct> get(Index i) const {
+  constexpr scalar_type<TensorProduct> eval(Index i) const {
     return contract<std::tuple_size<Index>::value>(std::tuple_cat(i, hidden_type()));
   }
 
   /// Used as a leaf call during contraction.
   template <class Index>
-  constexpr const scalar_type<TensorProduct> operator()(Index index) const {
-    return lhs_.get(index) * rhs_.get(index);
+  constexpr scalar_type<TensorProduct> apply(Index index) const {
+    return lhs_.eval(index) * rhs_.eval(index);
   }
 
  private:
@@ -98,8 +98,7 @@ class TensorProduct : Expression<TensorProduct<L, R>>
     ///
     /// @param        e The tensor product expression.
     /// @param    index The partially generated index to fill in.
-    static const scalar_type<TensorProduct>
-    op(const TensorProduct& e, Index index) {
+    static scalar_type<TensorProduct> op(const TensorProduct& e, Index index) {
       scalar_type<TensorProduct> s(0);
       for (int i = 0; i < dimension<TensorProduct>::value; ++i) {
         std::get<n>(index).set(i);
@@ -128,9 +127,9 @@ class TensorProduct : Expression<TensorProduct<L, R>>
     ///
     /// @param        e The actual product expression.
     /// @param    index The fully generated index to evaluate.
-    static constexpr const scalar_type<TensorProduct>
+    static constexpr scalar_type<TensorProduct>
     op(const TensorProduct& e, Index index) {
-      return e(index);
+      return e.apply(index);
     }
   };
 
@@ -160,7 +159,7 @@ class TensorProduct : Expression<TensorProduct<L, R>>
   ///
   /// @returns            The contracted scalar.
   template <int n, class Index>
-  constexpr const scalar_type<TensorProduct> contract(Index index) const {
+  constexpr scalar_type<TensorProduct> contract(Index index) const {
     return contract_impl<Index, n>::op(*this, index);
   }
 

@@ -22,8 +22,8 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  constexpr const scalar_type<E> get(I index) const {
-    return static_cast<const E*>(this)->get(index);
+  constexpr scalar_type<E> eval(I index) const {
+    return static_cast<const E*>(this)->eval(index);
   }
 
   template <class... I>

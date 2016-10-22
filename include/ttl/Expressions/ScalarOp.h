@@ -43,17 +43,17 @@ class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
 {
   static_assert(is_expression<R>::value, "Operand is not Expression");
  public:
-  ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
+  ScalarOp(const L& lhs, const R& rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  template <class I>
-  constexpr const scalar_type<ScalarOp> get(I i) const {
-    return op_(lhs_, rhs_.get(i));
+  template <class Index>
+  constexpr scalar_type<ScalarOp> eval(Index index) const {
+    return op_(lhs_, rhs_.eval(index));
   }
 
  private:
-  L lhs_;
-  R rhs_;
+  const L& lhs_;
+  const R& rhs_;
   Op op_;
 };
 
@@ -70,9 +70,9 @@ class ScalarOp<Op, L, R, false> : Expression<ScalarOp<Op, L, R, false>>
   ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  template <class I>
-  constexpr const scalar_type<ScalarOp> get(I i) const {
-    return op_(lhs_.get(i), rhs_);
+  template <class Index>
+  constexpr scalar_type<ScalarOp> eval(Index index) const {
+    return op_(lhs_.eval(index), rhs_);
   }
 
  private:

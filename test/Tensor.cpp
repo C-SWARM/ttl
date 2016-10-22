@@ -132,6 +132,15 @@ TEST(TensorTest, AssignWiden) {
   EXPECT_EQ(A[3], double(I[3]));
 }
 
+TEST(TensorTest, AssignToConst) {
+  ttl::Tensor<2, 2, int> I{1, 0, 0, 1};
+  ttl::Tensor<2, 2, const int> A = I;
+  EXPECT_EQ(A[0], double(I[0]));
+  EXPECT_EQ(A[1], double(I[1]));
+  EXPECT_EQ(A[2], double(I[2]));
+  EXPECT_EQ(A[3], double(I[3]));
+}
+
 TEST(TensorTest, AssignInitializer) {
   ttl::Tensor<2, 2, double> A;
   A = {1.0, 0.0, 0.0, 1.0};

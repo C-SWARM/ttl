@@ -61,9 +61,9 @@ class BinaryOp : Expression<BinaryOp<Op, L, R>>
   BinaryOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
   }
 
-  template <class I>
-  constexpr const scalar_type<BinaryOp> get(I i) const {
-    return op_(lhs_.get(i), rhs_.get(i));
+  template <class Index>
+  constexpr scalar_type<BinaryOp> eval(Index index) const {
+    return op_(lhs_.eval(index), rhs_.eval(index));
   }
 
  private:
