@@ -11,209 +11,453 @@
 #include <algorithm>
 
 namespace ttl {
+/// Common functionality for the tensor specializations.
+///
+/// The TensorBase implements a quasi-CRTP pattern in order to statically
+/// dispatch based on the subclass implementation of the data storage.
+///
+/// @tparam           R The tensor's rank.
+/// @tparam           D The tensor's dimension.
+/// @tparam           S The tensor's scalar storage (only used explicitly when
+///                     casting to the derived tensor type).
 template <int R, int D, class S>
-class Tensor
+class TensorBase
 {
-  /// The number of elements in the tensor.
-  static constexpr int Size = util::pow(D, R);
+  // These two typedefs are really only necessary because we don't have c++14
+  // and can't really effectively infer return types.
+  using Derived = Tensor<R,D,S>;
+  using Scalar = typename std::remove_pointer<S>::type;
 
-  template <class... Indices>
-  using bind = expressions::TensorBind<Tensor, std::tuple<Indices...>>;
-
-  template <class... Indices>
-  using const_bind = expressions::TensorBind<const Tensor, std::tuple<Indices...>>;
-
- public:
-  /// The scalar array backing the tensor.
-  S data[Size];
-
-  /// Assignment from a compatible tensor.
-  template <class T>
-  Tensor& operator=(const Tensor<R, D, T>& rhs) {
-    std::copy_n(rhs.data, Size, data);
-    return *this;
-  }
-
-  /// Fill all of the tensor elements with a scalar.
-  template <class T>
-  Tensor& fill(T t) {
-    std::fill_n(data, Size, t);
-    return *this;
-  }
-
-  /// Simple linear addressing.
-  /// @{
-  constexpr S operator[](int i) const {
-    return data[i];
-  }
-
-  constexpr S& operator[](int i) {
-    return data[i];
-  }
-  /// @}
-
-  /// Multidimensional indexing for expressions.
-  /// @{
-  template <class Index>
-  constexpr S eval(Index index) const {
-    return data[linearize(index)];
-  }
-
-  template <class Index>
-  constexpr S& eval(Index index) {
-    return data[linearize(index)];
-  }
-  /// @}
-
-  /// Create a tensor indexing expression for this tensor.
-  ///
-  /// This operation will bind the tensor to an Pack, which will allow us
-  /// to make type inferences about the types of operations that should be
-  /// available, as well as generate code to actually index the tensor in loops
-  /// and to evaluate its elements.
-  ///
-  /// @code
-  ///   static constexpr Index<'i'> i;
-  ///   static constexpr Index<'j'> j;
-  ///   static constexpr Index<'k'> k;
-  ///   Tensor<3, double, 3> T;
-  ///   auto expr = T(i, j, k);
-  ///   T(i, j, k) = U(k, i, j);
-  /// @code
-  ///
-  /// @tparam     Index The set of indices to bind to the tensor dimensions.
-  ///
-  /// @param     (anon) The actual set of indices to bind (e.g., (i,j,k)).
-  ///
-  /// @returns          A tensor indexing expression.
-  template <class... Indices>
-  bind<Indices...> operator()(Indices...) {
-    static_assert(R == sizeof...(Indices), "Tensor indexing mismatch.");
-    return bind<Indices...>(*this);
-  }
-
-  template <class... Indices>
-  constexpr const const_bind<Indices...> operator()(Indices...) const {
-    static_assert(R == sizeof...(Indices), "Tensor indexing mismatch.");
-    return const_bind<Indices...>(*this);
-  }
+  // These typedefs are used to workaround the fact that constexpr can only have
+  // a return value and not static_asserts.
+  template <class I>
+  using check_tuple_length = typename std::enable_if<R == std::tuple_size<I>::value>::type;
+  template <class... I>
+  using check_length = typename std::enable_if<R == sizeof...(I)>::type;
 
  private:
-  template <class Index>
-  static constexpr int linearize(Index index) {
-    static_assert(R == std::tuple_size<Index>::value, "Invalid indexing width");
-    return util::linearize<D>(index);
+  static constexpr std::size_t Size = util::pow(D,R); ///!< Number of elements
+
+  constexpr const Derived& derived() const noexcept {
+    return *static_cast<const Derived* const>(this);
+  }
+
+  constexpr Derived& derived() noexcept {
+    return *static_cast<Derived* const>(this);
+  }
+
+ protected:
+  template <class T>
+  Derived& copy(std::initializer_list<T> list) noexcept {
+    // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
+    auto size = Size;
+    std::size_t min = std::min(size, list.size());
+    std::copy_n(list.begin(), min, derived().data);     // copy prefix
+    std::fill_n(&derived().data[min], Size - min, 0);   // 0-fill suffix
+    return derived();
+  }
+
+  template <class T>
+  Derived& copy(const Tensor<R,D,T>& rhs) noexcept {
+    std::copy_n(rhs.data, Size, derived().data);
+    return derived();
+  }
+
+  template <class T>
+  Derived& copy(Tensor<R,D,T>&& rhs) noexcept {
+    std::copy_n(std::move(rhs.data), Size, derived().data);
+    return derived();
+  }
+
+ public:
+  /// Fill a tensor with a scalar value.
+  ///
+  /// @code
+  ///   auto T = Tensor<R,D,int>().fill(1);
+  /// @code
+  ///
+  /// @tparam         T The type of the scalar, must be compatible with S.
+  /// @param     scalar The actual scalar.
+  /// @returns          A reference to the tensor so that fill() can be
+  ///                   chained.
+  template <class T>
+  Derived& fill(T scalar) noexcept {
+    std::fill_n(derived().data, Size, scalar);
+    return derived();
+  }
+
+  /// Basic linear indexing into the tensor.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> T;
+  ///   int i = T[0];
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          The scalar value at @p i.
+  constexpr const Scalar operator[](int i) const noexcept {
+    return derived().data[i];
+  }
+
+  /// Basic linear indexing into the tensor.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> T;
+  ///   T[0] = 42;
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          A reference to the scalar value at @p i.
+  constexpr Scalar& operator[](int i) noexcept {
+    return derived().data[i];
+  }
+
+  /// Multidimensional indexing into the tensor, used during evaluation.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> T
+  ///   Index I = {0,1,...}
+  ///   int i = T.eval(I)
+  /// @code
+  ///
+  /// @tparam     Index The tuple type for the index.
+  /// @param      index The multidimension index to access.
+  /// @returns          The scalar value at the linearized @p index.
+  template <class Index, class = check_tuple_length<Index>>
+  constexpr const Scalar eval(Index index) const noexcept {
+    return derived().data[util::linearize<D>(index)];
+  }
+
+  /// Multidimensional indexing into the tensor, used during evaluation.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> T
+  ///   Index I = {0,1,...}
+  ///   T.eval(I) = 42
+  /// @code
+  ///
+  /// @tparam     Index The tuple type for the index.
+  /// @param      index The multidimension index to access.
+  /// @returns          The a reference to the scalar value at the linearized @p
+  ///                   index.
+  template <class Index, class = check_tuple_length<Index>>
+  constexpr Scalar& eval(Index index) noexcept {
+    return derived().data[util::linearize<D>(index)];
+  }
+
+  /// Bind a TensorBind expression to a tensor.
+  ///
+  /// This is the core operation that provides the tensor syntax that we want to
+  /// provide. The user binds a tensor to a set of indices, and the TTL
+  /// expression template structure can
+  ///
+  /// 1) Type check expressions.
+  /// 2) Generate loops over indices during evaluation and contraction.
+  ///
+  /// @code
+  ///  Index<'i'> i;
+  ///  Index<'j'> j;
+  ///  Index<'k'> k;
+  ///  Tensor<R,D,S> A, B, C;
+  ///  C(i,j) = A(i,k)*B(k,j)
+  /// @code
+  ///
+  /// @tparam...      I The index types to bind to the tensor.
+  /// @param     (anon) The index values are unimportant during binding.
+  /// @returns          A TensorBind expression that can serves as the leaf
+  ///                   expression in TTL expressions.
+  template <class... I, class = check_length<I...>>
+  constexpr auto operator()(I...) const noexcept
+    -> const expressions::TensorBind<const Derived, std::tuple<I...>> // c++11
+  {
+    return expressions::TensorBind<const Derived, std::tuple<I...>>(derived());
+  }
+
+  /// Bind a TensorBind expression to a tensor.
+  ///
+  /// This is the core operation that provides the tensor syntax that we want to
+  /// provide. The user binds a tensor to a set of indices, and the TTL
+  /// expression template structure can
+  ///
+  /// 1) Type check expressions.
+  /// 2) Generate loops over indices during evaluation and contraction.
+  ///
+  /// @code
+  ///  Index<'i'> i;
+  ///  Index<'j'> j;
+  ///  Index<'k'> k;
+  ///  Tensor<R,D,S> A, B, C;
+  ///  C(i,j) = A(i,k)*B(k,j)
+  /// @code
+  ///
+  /// @tparam...      I The index types to bind to the tensor.
+  /// @param     (anon) The index values are unimportant during binding.
+  /// @returns          A TensorBind expression that can serves as the leaf
+  ///                   expression in TTL expressions.
+  template <class... I, class = check_length<I...>>
+  constexpr auto operator()(I...) noexcept
+    -> expressions::TensorBind<Derived, std::tuple<I...>> // c++11
+  {
+    return expressions::TensorBind<Derived, std::tuple<I...>>(derived());
   }
 };
 
-/// A partial specialization of the tensor template for external storage.
+/// The normal tensor type.
 ///
-/// This specialization is provided for compatibility with external storage
-/// allocation. The user must specify a pointer to the external storage during
-/// construction, which will then be used to store row-major tensor data.
+/// The Tensor stores an array of scalar values, and provides the necessary
+/// constructors and assignment operators so that the tensor can be used as a
+/// value-type aggregate.
 template <int R, int D, class S>
-class Tensor<R, D, S*>
+class Tensor : public TensorBase<R,D,S>
 {
-  static constexpr int Size = util::pow(D, R);
-
-  template <class... Indices>
-  using bind = expressions::TensorBind<Tensor, std::tuple<Indices...>>;
-
-  template <class... Indices>
-  using const_bind = expressions::TensorBind<const Tensor, std::tuple<Indices...>>;
-
  public:
-  /// Store a reference to the external data buffer.
-  S (&data)[Size];
+  /// Standard default constructor.
+  ///
+  /// The default constructor leaves the tensor data uninitialized. To
+  /// initialize a tensor to 0 use Tensor<R,D,S> T = {};
+  constexpr Tensor() noexcept = default;
+  constexpr Tensor(const Tensor&) noexcept = default;
+  constexpr Tensor(Tensor&&) noexcept = default;
 
-  /// The external storage tensor does not support default construction
-  /// @{
-  Tensor() = delete;
-  /// @}
-
-  Tensor(Tensor&& rhs) = delete;
-  Tensor(const Tensor& rhs) : data(rhs.data) {
+  /// Allow list initialization of tensors.
+  ///
+  /// @code
+  ///  Tensor<R,D,S> T = {0,1,...};
+  /// @code
+  ///
+  /// @param       list The initializer list for the tensor.
+  Tensor(std::initializer_list<S> list) noexcept {
+    this->copy(list);
   }
 
-  /// The only way to construct an external storage tensor is with the pointer
-  /// to the external data buffer. The constructor simply captures a reference
-  /// to this location.
+  /// Allow initialization from tensors of compatible type.
+  ///
+  /// @code
+  ///  Tensor<R,D,double> A;
+  ///  Tensor<R,D,const double> B;
+  ///  Tensor<R,D,int> C;
+  ///  const int d[]={...};
+  ///  Tensor<R,D,const int*> D(d);
+  ///  A = B; // copy from const tensor
+  ///  A = C; // copy and promote type
+  ///  A = D; // copy from const external tensor
+  /// @code
+  ///
+  /// The copy is performed using the promotion and compatibility rules of the
+  /// std::copy_n algorithm.
+  ///
+  /// @tparam         T The scalar type for the right hand side.
+  /// @param        rhs The tensor to copy from.
+  template <class T>
+  Tensor(const Tensor<R,D,T>& rhs) noexcept {
+    this->copy(rhs);
+  }
+
+  /// Allow initialization from tensors of compatible type.
+  ///
+  /// @code
+  ///  Tensor<R,D,double> A;
+  ///  const int d[]={...};
+  ///  A = std::move(Tensor<R,D,const double>{}); // move from const tensor
+  ///  A = std::move(Tensor<R,D,int>{});          // move and promote type
+  ///  A = std::move(Tensor<R,D,const int*>(d));  // move const external tensor
+  /// @code
+  ///
+  /// The copy is performed using the promotion and compatibility rules of the
+  /// std::copy_n algorithm.
+  ///
+  /// @tparam         T The scalar type for the right hand side.
+  /// @param        rhs The tensor rvalue to copy from.
+  template <class T>
+  Tensor(Tensor<R,D,T>&& rhs) noexcept {
+    this->copy(std::move(rhs));
+  }
+
+  /// Normal assignment and move operators.
+  constexpr Tensor& operator=(const Tensor&) noexcept = default;
+  constexpr Tensor& operator=(Tensor&&) noexcept = default;
+
+  // We remove the constness from the type for tensors so that we can use the
+  // default constructor to leave the data uninitialized. If we don't do this
+  // then expressions like Tensor<R,D,const S> T = {}; don't work.
+
+  typename std::remove_const<S>::type data[util::pow(D,R)]; ///!< scalar storage
+};
+
+/// The tensor specialization for external storage.
+///
+/// During construction this specialization captures a reference to external
+/// storage, and then tries to provide the same value semantics as the basic
+/// tensor class.
+template <int R, int D, class S>
+class Tensor<R,D,S*> : public TensorBase<R,D,S*>
+{
+  static constexpr int Size = util::pow(D,R);
+
+ public:
+  /// No default construction (we _must_ have external space)
+  constexpr Tensor() noexcept = delete;
+
+  /// Copy and move constructors just capture the same external buffer.
+  constexpr Tensor(const Tensor&) noexcept = default;
+  constexpr Tensor(Tensor&&) noexcept = default;
+
+  /// Initialize the tensor with an external buffer of data.
+  ///
+  /// This constructor captures a reference to a buffer of the right type and
+  /// size.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,int*> A(a);
+  ///   Tensor<1,4,int*> A(a);
+  ///   Tensor<2,2,const int*> A(a);
+  /// @code
+  ///
+  /// @param       data The external buffer.
   Tensor(S (*data)[Size]) : data(*data) {
   }
 
+  /// Allow a simple pointer to be used as the external buffer.
+  ///
+  /// This constructor interprets the pointer as the right sized buffer.
+  ///
+  /// @code
+  ///   int a[8];
+  ///   Tensor<2,2,int*> A(&a[4]);
+  /// @code
+  ///
+  /// @param       data The external buffer.
   Tensor(S* data) : Tensor(reinterpret_cast<S(*)[Size]>(data)) {
   }
 
-  /// Assignment from a tensor is interpreted as a copy of the underlying data.
-  /// @{
-  Tensor& operator=(const Tensor& rhs) {
-    std::copy_n(rhs.data, Size, data);
-    return *this;
-  }
-
+  /// Copy construction makes the new tensor use the same buffer as the rhs.
+  ///
+  /// This uses built in type promotion rules to ensure that a pointer to the @p
+  /// T type is compatible with a pointer to the @p S type. We expect this to
+  /// only work for cv types.
+  ///
+  /// This will only match external tensor types. It is not possible to
+  /// initialize an external tensor with an internal tensor.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,int*> A(a);
+  ///   Tensor<2,2,const int*> B = A;
+  /// @code
+  ///
+  /// @tparam       T The pointed to scalar type for the right-hand-side.
+  /// @param      rhs The right hand side tensor.
   template <class T>
-  Tensor& operator=(const Tensor<R, D, T>& rhs) {
-    std::copy_n(rhs.data, Size, data);
-    return *this;
+  Tensor(const Tensor<R,D,T*>& rhs) noexcept : data(rhs.data) {
   }
-  /// @}
 
-  /// Assignment from an initializer_list copies data to the external buffer.
+  /// Move construction captures the buffer from the rhs.
+  ///
+  ///
+  /// This uses built in type promotion rules to ensure that a pointer to the @p
+  /// T type is compatible with a pointer to the @p S type. We expect this to
+  /// only work for cv types.
+  ///
+  /// This will only match external tensor types. It is not possible to
+  /// initialize an external tensor with an internal tensor.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,const int*> B = std::move(Tensor<2,2,int*>(a));
+  /// @code
+  ///
+  /// @tparam       T The pointed to scalar type for the right-hand-side.
+  /// @param      rhs The right hand side tensor.
   template <class T>
-  Tensor& operator=(std::initializer_list<T>&& rhs) {
-    /// @todo Static assert is okay with c++14.
-    /// static_assert(data.size() == Size, "Initializer list has invalid length.");
-    assert(rhs.size() == Size);
-    std::copy_n(rhs.begin(), Size, data);
-    return *this;
+  Tensor(Tensor<R,D,T*>&& rhs) noexcept : data(std::move(rhs.data)) {
   }
 
-  /// Fill the tensor with a scalar.
+  /// Copy the data from the rhs.
+  ///
+  /// As opposed to construction, the copy operator actually copies the data
+  /// from the rhs tensor. This implements the value semantics expected from
+  /// tensors.
+  ///
+  /// @param        rhs The right hand side of the assignment.
+  /// @returns          A reference to *this;
+  constexpr Tensor& operator=(const Tensor& rhs) noexcept {
+    return this->copy(rhs);
+  }
+
+  /// Move the data from the rhs.
+  ///
+  /// As opposed to construction, the move operator actually copies the data
+  /// from the rhs tensor. This implements the value semantics expected from
+  /// tensors.
+  ///
+  /// @param        rhs The right hand side of the assignment.
+  /// @returns          A reference to *this;
+  constexpr Tensor& operator=(Tensor&& rhs) noexcept {
+    return this->copy(std::move(rhs));
+  }
+
+  /// Assign an initializer list to the external tensor.
+  ///
+  /// The normal "in-place" storage tensor gets this functionality from its
+  /// initializer list constructor, but we need it explicitly since we have no
+  /// initializer list constructor.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,int*> A(a);
+  ///   A = {0,1,2,3};
+  /// @code
+  ///
+  /// @param        rhs The right hand side of the assignment.
+  /// @returns          A reference to *this.
+  constexpr Tensor& operator=(std::initializer_list<S> list) noexcept {
+    return this->copy(list);
+  }
+
+  /// Copy the data from any type of right hand side tensor.
+  ///
+  /// This supports both in place and external tensor assignments, and
+  /// implements the expected value-type copy. T->S compatibility is governed by
+  /// the std::copy_n semantics.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,int*> A(a);
+  ///   Tensor<2,2,int> B = {0,1,2,3};
+  ///   A = B;
+  /// @code
+  ///
+  /// @tparam         T The scalar type for the right hand side tensor.
+  /// @param        rhs The right hand side tensor.
+  /// @returns          A reference to *this.
   template <class T>
-  Tensor& fill(T scalar) {
-    std::fill_n(data, Size, scalar);
-    return *this;
+  constexpr Tensor& operator=(const Tensor<R,D,T>& rhs) noexcept {
+    return this->copy(rhs);
   }
 
-  constexpr S operator[](int i) const {
-    return data[i];
+  /// Copy the data from any type of right hand side tensor.
+  ///
+  /// This supports both in place and external tensor assignments, and
+  /// implements the expected value-type copy. T->S compatibility is governed by
+  /// the std::copy_n semantics.
+  ///
+  /// @code
+  ///   int a[4];
+  ///   Tensor<2,2,int*> A(a);
+  ///   Tensor<2,2,int> B = {0,1,2,3};
+  ///   A = B;
+  /// @code
+  ///
+  /// @tparam         T The scalar type for the right hand side tensor.
+  /// @param        rhs The right hand side tensor.
+  /// @returns          A reference to *this.
+  template <class T>
+  constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
+    return this->copy(std::move(rhs));
   }
 
-  S& operator[](int i) {
-    return data[i];
-  }
-
-  /// Multidimensional indexing for Index tuples.
-  /// @{
-  template <class Index>
-  constexpr S eval(Index index) const {
-    return data[linearize(index)];
-  }
-
-  template <class Index>
-  constexpr S& eval(Index index) {
-    return data[linearize(index)];
-  }
-  /// @}
-
-  template <class... Indices>
-  constexpr const const_bind<Indices...> operator()(Indices...) const {
-    static_assert(R == sizeof...(Indices), "Tensor indexing mismatch.");
-    return const_bind<Indices...>(*this);
-  }
-
-  template <class... Indices>
-  bind<Indices...> operator()(Indices...) {
-    static_assert(R == sizeof...(Indices), "Tensor indexing mismatch.");
-    return bind<Indices...>(*this);
-  }
-
- private:
-  template <class Index>
-  static constexpr int linearize(Index index) {
-    static_assert(R == std::tuple_size<Index>::value, "Invalid indexing width");
-    return util::linearize<D>(index);
-  }
+  S (&data)[Size];                              ///!< The external storage
 };
 } // namespace ttl
 

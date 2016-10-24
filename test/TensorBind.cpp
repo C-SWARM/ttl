@@ -1,72 +1,103 @@
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
 
+const int e[] = {0,1,2,3,4,5,6,7};
 static constexpr ttl::Index<'i'> i;
 static constexpr ttl::Index<'j'> j;
-
-static constexpr const ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
-static constexpr const ttl::Tensor<2,2,const int> C = {0, 1, 2, 3};
-
-const int e[4] = {0,1,2,3};
-static ttl::Tensor<2,2,const int*> E{e};
-
-constexpr int index(int D, int i, int j) {
-  return i * D + j;
-}
+static const ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
+static const ttl::Tensor<2,2,const int> C = {0, 1, 2, 3};
+static const ttl::Tensor<2,2,const int*> E(e);
 
 TEST(TensorBind, Assign) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = B(i,j);
-  EXPECT_EQ(B[index(2,0,0)], A[index(2,0,0)]);
-  EXPECT_EQ(B[index(2,0,1)], A[index(2,0,1)]);
-  EXPECT_EQ(B[index(2,1,0)], A[index(2,1,0)]);
-  EXPECT_EQ(B[index(2,1,1)], A[index(2,1,1)]);
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[1]);
+  EXPECT_EQ(B[2], A[2]);
+  EXPECT_EQ(B[3], A[3]);
 }
 
 TEST(TensorBind, AssignFromConst) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = C(i,j);
-  EXPECT_EQ(B[index(2,0,0)], A[index(2,0,0)]);
-  EXPECT_EQ(B[index(2,0,1)], A[index(2,0,1)]);
-  EXPECT_EQ(B[index(2,1,0)], A[index(2,1,0)]);
-  EXPECT_EQ(B[index(2,1,1)], A[index(2,1,1)]);
-}
-
-TEST(TensorBind, AssignFromConst) {
-  ttl::Tensor<2,2,int> A;
-  A(i,j) = C(i,j);
-  EXPECT_EQ(B[index(2,0,0)], A[index(2,0,0)]);
-  EXPECT_EQ(B[index(2,0,1)], A[index(2,0,1)]);
-  EXPECT_EQ(B[index(2,1,0)], A[index(2,1,0)]);
-  EXPECT_EQ(B[index(2,1,1)], A[index(2,1,1)]);
+  EXPECT_EQ(C[0], A[0]);
+  EXPECT_EQ(C[1], A[1]);
+  EXPECT_EQ(C[2], A[2]);
+  EXPECT_EQ(C[3], A[3]);
 }
 
 TEST(TensorBind, AssignFromExternal) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = E(i,j);
-  EXPECT_EQ(e[index(2,0,0)], A[index(2,0,0)]);
-  EXPECT_EQ(e[index(2,0,1)], A[index(2,0,1)]);
-  EXPECT_EQ(e[index(2,1,0)], A[index(2,1,0)]);
-  EXPECT_EQ(e[index(2,1,1)], A[index(2,1,1)]);
+  EXPECT_EQ(e[0], A[0]);
+  EXPECT_EQ(e[1], A[1]);
+  EXPECT_EQ(e[2], A[2]);
+  EXPECT_EQ(e[3], A[3]);
 }
 
 TEST(TensorBind, AssignToExternal) {
   int a[4];
-  ttl::Tensor<2,2,int*> A{a};
+  ttl::Tensor<2,2,int*> A(a);
   A(i,j) = B(i,j);
-  EXPECT_EQ(B[index(2,0,0)], a[index(2,0,0)]);
-  EXPECT_EQ(B[index(2,0,1)], a[index(2,0,1)]);
-  EXPECT_EQ(B[index(2,1,0)], a[index(2,1,0)]);
-  EXPECT_EQ(B[index(2,1,1)], a[index(2,1,1)]);
+  EXPECT_EQ(a[0], B[0]);
+  EXPECT_EQ(a[1], B[1]);
+  EXPECT_EQ(a[2], B[2]);
+  EXPECT_EQ(a[3], B[3]);
 }
 
 TEST(TensorBind, AssignExternal) {
   int a[4];
-  ttl::Tensor<2,2,int*> A{a};
+  ttl::Tensor<2,2,int*> A(a);
   A(i,j) = E(i,j);
-  EXPECT_EQ(e[index(2,0,0)], a[index(2,0,0)]);
-  EXPECT_EQ(e[index(2,0,1)], a[index(2,0,1)]);
-  EXPECT_EQ(e[index(2,1,0)], a[index(2,1,0)]);
-  EXPECT_EQ(e[index(2,1,1)], a[index(2,1,1)]);
+  EXPECT_EQ(a[0], e[0]);
+  EXPECT_EQ(a[1], e[1]);
+  EXPECT_EQ(a[2], e[2]);
+  EXPECT_EQ(a[3], e[3]);
 }
 
+TEST(TensorBind, AssignPermute) {
+  ttl::Tensor<2,2,int> A;
+  A(i,j) = B(j,i);
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[2]);
+  EXPECT_EQ(B[2], A[1]);
+  EXPECT_EQ(B[3], A[3]);
+}
+
+TEST(TensorBind, AssignPermuteFromConst) {
+  ttl::Tensor<2,2,int> A;
+  A(i,j) = C(j,i);
+  EXPECT_EQ(C[0], A[0]);
+  EXPECT_EQ(C[1], A[2]);
+  EXPECT_EQ(C[2], A[1]);
+  EXPECT_EQ(C[3], A[3]);
+}
+
+TEST(TensorBind, AssignPermuteFromExternal) {
+  ttl::Tensor<2,2,int> A;
+  A(i,j) = E(j,i);
+  EXPECT_EQ(e[0], A[0]);
+  EXPECT_EQ(e[1], A[2]);
+  EXPECT_EQ(e[2], A[1]);
+  EXPECT_EQ(e[3], A[3]);
+}
+
+TEST(TensorBind, AssignPermuteToExternal) {
+  int a[4];
+  ttl::Tensor<2,2,int*> A(a);
+  A(i,j) = B(j,i);
+  EXPECT_EQ(a[0], B[0]);
+  EXPECT_EQ(a[1], B[2]);
+  EXPECT_EQ(a[2], B[1]);
+  EXPECT_EQ(a[3], B[3]);
+}
+
+TEST(TensorBind, AssignPermuteExternal) {
+  int a[4];
+  ttl::Tensor<2,2,int*> A(a);
+  A(i,j) = E(j,i);
+  EXPECT_EQ(a[0], e[0]);
+  EXPECT_EQ(a[1], e[2]);
+  EXPECT_EQ(a[2], e[1]);
+  EXPECT_EQ(a[3], e[3]);
+}

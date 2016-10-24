@@ -90,7 +90,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
 
   /// This eval operation is used during evaluation to set a left-hand-side
   /// element.
-  constexpr scalar_type<Tensor>& eval(Index index) const {
+  constexpr scalar_type<Tensor>& eval(Index index) {
     return t_.eval(index);
   }
 

@@ -5,7 +5,7 @@ static constexpr ttl::Index<'i'> i;
 static constexpr ttl::Index<'j'> j;
 static constexpr ttl::Index<'k'> k;
 
-static constexpr ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
+static ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
 
 constexpr int index(int D, int i, int j) {
   return i * D + j;

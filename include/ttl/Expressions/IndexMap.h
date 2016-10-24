@@ -64,7 +64,7 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   constexpr scalar_type<IndexMap> eval(Index index) const {
     static_assert(util::is_subset<OuterType, Index>::value,
                   "Unexpected outer type during index mapping");
-    return e_.eval(transform<InnerType>(i));
+    return e_.eval(transform<InnerType>(index));
   }
 
  private:
