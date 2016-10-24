@@ -13,9 +13,9 @@ TEST(TensorProduct, Simple) {
   ttl::Tensor<2,2,int> C;
   C(i,j) = A(i,k) * B(k,j);
   EXPECT_EQ(C[0], 10);
-  EXPECT_EQ(C[0], 13);
-  EXPECT_EQ(C[0], 22);
-  EXPECT_EQ(C[0], 29);
+  EXPECT_EQ(C[1], 13);
+  EXPECT_EQ(C[2], 22);
+  EXPECT_EQ(C[3], 29);
 }
 
 TEST(TensorProduct, Lazy) {
@@ -26,9 +26,9 @@ TEST(TensorProduct, Lazy) {
   auto t1 = B(k,j);
   C(i,j) = t0 * t1;
   EXPECT_EQ(C[0], 10);
-  EXPECT_EQ(C[0], 13);
-  EXPECT_EQ(C[0], 22);
-  EXPECT_EQ(C[0], 29);
+  EXPECT_EQ(C[1], 13);
+  EXPECT_EQ(C[2], 22);
+  EXPECT_EQ(C[3], 29);
 }
 
 TEST(TensorProduct, ComplexLazy) {
@@ -40,4 +40,8 @@ TEST(TensorProduct, ComplexLazy) {
   auto t0 = A(i,j) * B(j,k);
   auto t1 = C(k,l) * D(l,m);
   E(i,m) = t0 * t1;
+  EXPECT_EQ(E[0], 1088);
+  EXPECT_EQ(E[1], 1301);
+  EXPECT_EQ(E[2], 2416);
+  EXPECT_EQ(E[3], 2889);
 }
