@@ -97,50 +97,32 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// Assignment from any right hand side expression that has an equivalent
   /// index pack.
   ///
-  /// This is the core functionality provided by the TensorBind expression. Its
-  /// job is to loop through the index space defined by its IndexType and
-  /// evaluate the right hand side for the remapped index pack.
-  ///
-  /// @code
-  ///   A(i, j) = B(j, i)
-  ///
-  ///   for (i in 0..Dimension-1)
-  ///     for (j in 0..Dimension-1)
-  ///       a = linearize(i, j)
-  ///       b = linearize(j, i)
-  ///       A[a] = B[b]
-  ///
-  /// @code
-  ///
-  /// The only way that I can figure out to do this is through recursion. We use
-  /// the recursive apply template to force that expansion to happen at runtime
-  /// and insure that there is the opportunity for inlining and optimization.
-  ///
   /// @tparam         E Type of the Right-hand-side expression.
-  /// @tparam    (anon) Restrict this operation to expressions that match.
+  /// @param        rhs The right-hand-side expression.
+  /// @returns          A reference to *this for chaining.
   template <class E>
   TensorBind& operator=(const E& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    evaluate<E>::op(*this, rhs, {},
-                    [](scalar_type<Tensor>& lhs, scalar_type<Tensor> rhs) {
-                      lhs = rhs;
-                    });
+    apply<>::op([&,this](const Index& i) { eval(i) = rhs.eval(i); });
     return *this;
   }
 
+  /// Accumulate from any right hand side expression that has an equivalent
+  /// index pack.
+  ///
+  /// @tparam         E Type of the Right-hand-side expression.
+  /// @param        rhs The right-hand-side expression.
+  /// @returns          A reference to *this for chaining.
   template <class E>
   TensorBind& operator+=(const E& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    evaluate<E>::op(*this, rhs, {},
-                    [](scalar_type<Tensor>& lhs, scalar_type<Tensor> rhs) {
-                      lhs += rhs;
-                    });
+    apply<>::op([&,this](const Index& i) { eval(i) += rhs.eval(i); });
     return *this;
   }
 
@@ -164,50 +146,41 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// enumeration technique, as our bounds are all known statically.
   ///
   /// @note I tried to use a normal recursive function but there were typing
-  /// errors for the case where M=0 (i.e., the degenerate scalar tensor type).
+  ///       errors for the case where M=0 (i.e., the degenerate scalar tensor
+  ///       type).
   ///
-  /// @tparam           E The type of the right-hand-side expression.
   /// @tparam           n The current dimension that we need to traverse.
   /// @tparam           M The total number of free indices to enumerate.
-  template <class E, int n = 0, int M = free_size<TensorBind>::value>
-  struct evaluate
+  template <int n = 0, int M = free_size<TensorBind>::value>
+  struct apply
   {
     /// The evaluation routine just iterates through the values of the nth
     /// dimension of the tensor, recursively calling the template.
     ///
-    /// @param      lhs The TensorBind expression.
-    /// @param      rhs The right hand side expression tree.
+    /// @tparam      Op The lambda to evaluate for each index.
     /// @param    index The partially constructed index.
     template <class Op>
-    static void op(TensorBind& lhs, const E& rhs, Index index, Op f) {
+    static void op(Op&& f, Index index = {}) {
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index) = i;
-        evaluate<E, n + 1>::op(lhs, rhs, index, f);
+        apply<n + 1>::op(std::forward<Op>(f), index);
       }
     }
   };
 
   /// The base case for tensor evaluation.
   ///
-  /// Once we've enumerated a value for each dimension we simply evaluate the
-  /// expression for those inputs. This matches when n==M (from the basic
-  /// template definition).
-  ///
-  /// @tparam         R The type of the right-hand-side operation.
-  /// @tparam         M The number of dimensions to enumerate.
-  template <class E, int M>
-  struct evaluate<E, M, M>
+  /// @tparam         M The total number of dimensions to enumerate.
+  template <int M>
+  struct apply<M, M>
   {
-    /// The inner loop of all TTL pre-contraction evaluation. This simply
-    /// evaluates the right-hand-side for one specific input and stores it in
-    /// the left-hand-side.
     template <class Op>
-    static void op(TensorBind& lhs, const E& rhs, const Index& index, Op f) {
-      f(lhs.eval(index), rhs.eval(index));
+    static void op(Op&& f, const Index& index) {
+      f(index);
     }
   };
 
-  Tensor& t_;                                   //<! The underlying tensor.
+  Tensor& t_;                                   ///<! The underlying tensor.
 };
 
 } // namespace expressions
