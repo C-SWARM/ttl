@@ -124,7 +124,23 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    evaluate<E>::op(*this, rhs, {});
+    evaluate<E>::op(*this, rhs, {},
+                    [](scalar_type<Tensor>& lhs, scalar_type<Tensor> rhs) {
+                      lhs = rhs;
+                    });
+    return *this;
+  }
+
+  template <class E>
+  TensorBind& operator+=(const E& rhs) {
+    static_assert(dimension<E>::value == dimension<Tensor>::value,
+                  "Cannot operate on expressions of differing dimension");
+    static_assert(util::is_equivalent<Index, free_type<E>>::value,
+                  "Attempted assignment of incompatible Tensors");
+    evaluate<E>::op(*this, rhs, {},
+                    [](scalar_type<Tensor>& lhs, scalar_type<Tensor> rhs) {
+                      lhs += rhs;
+                    });
     return *this;
   }
 
@@ -162,10 +178,11 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @param      lhs The TensorBind expression.
     /// @param      rhs The right hand side expression tree.
     /// @param    index The partially constructed index.
-    static void op(TensorBind& lhs, const E& rhs, Index index) {
+    template <class Op>
+    static void op(TensorBind& lhs, const E& rhs, Index index, Op f) {
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index) = i;
-        evaluate<E, n + 1>::op(lhs, rhs, index);
+        evaluate<E, n + 1>::op(lhs, rhs, index, f);
       }
     }
   };
@@ -184,8 +201,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// The inner loop of all TTL pre-contraction evaluation. This simply
     /// evaluates the right-hand-side for one specific input and stores it in
     /// the left-hand-side.
-    static void op(TensorBind& lhs, const E& rhs, const Index& index) {
-      lhs.eval(index) = rhs.eval(index);
+    template <class Op>
+    static void op(TensorBind& lhs, const E& rhs, const Index& index, Op f) {
+      f(lhs.eval(index), rhs.eval(index));
     }
   };
 

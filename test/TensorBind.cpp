@@ -17,6 +17,15 @@ TEST(TensorBind, Assign) {
   EXPECT_EQ(B[3], A[3]);
 }
 
+TEST(TensorBind, Accumulate) {
+  ttl::Tensor<2,2,int> A = {};
+  A(i,j) += B(i,j);
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[1]);
+  EXPECT_EQ(B[2], A[2]);
+  EXPECT_EQ(B[3], A[3]);
+}
+
 TEST(TensorBind, AssignFromConst) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = C(i,j);
