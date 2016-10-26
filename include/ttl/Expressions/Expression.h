@@ -33,6 +33,10 @@ class Expression {
   }
 };
 
+template <class E>
+struct traits<Expression<E>> : public traits<E> {
+};
+
 namespace detail {
 template <class E>
 struct is_expression_impl {

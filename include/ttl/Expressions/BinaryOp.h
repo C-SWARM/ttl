@@ -34,7 +34,7 @@ class BinaryOp;
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class Op, class L, class R>
-struct traits<BinaryOp<Op, L, R>> : traits<L>
+struct traits<BinaryOp<Op, L, R>> : public traits<L>
 {
   using scalar_type = promote<L, R>;
 };
@@ -49,7 +49,7 @@ struct traits<BinaryOp<Op, L, R>> : traits<L>
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class Op, class L, class R>
-class BinaryOp : Expression<BinaryOp<Op, L, R>>
+class BinaryOp : public Expression<BinaryOp<Op, L, R>>
 {
   static_assert(is_expression<L>::value, "Operand is not Expression");
   static_assert(is_expression<R>::value, "Operand is not Expression");

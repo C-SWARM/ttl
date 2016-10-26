@@ -30,7 +30,7 @@ class TensorBind;
 /// @tparam      Tensor The class for the underlying tensor.
 /// @tparam       Index The indices bound to this expression.
 template <class Tensor, class Index>
-struct traits<TensorBind<Tensor, Index>> : traits<Tensor>
+struct traits<TensorBind<Tensor, Index>> : public traits<Tensor>
 {
   using free_type = Index;
 };

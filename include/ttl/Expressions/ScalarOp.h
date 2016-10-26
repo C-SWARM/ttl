@@ -23,13 +23,13 @@ class ScalarOp;
 /// The scalar op just exports its Expression's Traits, with the scalar type
 /// adjusted as necessary.
 template <class Op, class L, class R>
-struct traits<ScalarOp<Op, L, R, true>> : traits<R>
+struct traits<ScalarOp<Op, L, R, true>> : public traits<R>
 {
   using scalar_type = promote<L, R>;
 };
 
 template <class Op, class L, class R>
-struct traits<ScalarOp<Op, L, R, false>> : traits<L>
+struct traits<ScalarOp<Op, L, R, false>> : public traits<L>
 {
   using scalar_type = promote<L, R>;
 };
@@ -39,7 +39,7 @@ struct traits<ScalarOp<Op, L, R, false>> : traits<L>
 /// This version of the scalar op matches when the scalar is the left-hand-side
 /// operation.
 template <class Op, class L, class R>
-class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
+class ScalarOp<Op, L, R, true> : public  Expression<ScalarOp<Op, L, R, true>>
 {
   static_assert(is_expression<R>::value, "Operand is not Expression");
  public:
@@ -62,7 +62,7 @@ class ScalarOp<Op, L, R, true> : Expression<ScalarOp<Op, L, R, true>>
 /// This version of the scalar op matches when the scalar is the right-hand-side
 /// operation.
 template <class Op, class L, class R>
-class ScalarOp<Op, L, R, false> : Expression<ScalarOp<Op, L, R, false>>
+class ScalarOp<Op, L, R, false> : public Expression<ScalarOp<Op, L, R, false>>
 {
   static_assert(is_expression<L>::value, "Operand is not Expression");
 

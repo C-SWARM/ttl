@@ -8,6 +8,14 @@ static const ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
 static const ttl::Tensor<2,2,const int> C = {0, 1, 2, 3};
 static const ttl::Tensor<2,2,const int*> E(e);
 
+TEST(TensorBind, Initialize) {
+  const ttl::Tensor<2,2,int> A = 2 * B(i,j);
+  EXPECT_EQ(2 * B[0], A[0]);
+  EXPECT_EQ(2 * B[1], A[1]);
+  EXPECT_EQ(2 * B[2], A[2]);
+  EXPECT_EQ(2 * B[3], A[3]);
+}
+
 TEST(TensorBind, Assign) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = B(i,j);

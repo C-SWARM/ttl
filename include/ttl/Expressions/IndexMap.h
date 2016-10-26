@@ -15,7 +15,7 @@ class IndexMap;
 
 /// The IndexMap just masks the child's free_type trait with the OuterType.
 template <class E, class OuterType, class InnerType>
-struct traits<IndexMap<E, OuterType, InnerType>> : traits<E>
+struct traits<IndexMap<E, OuterType, InnerType>> : public traits<E>
 {
   using free_type = OuterType;
 };

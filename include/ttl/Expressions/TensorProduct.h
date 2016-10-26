@@ -38,7 +38,7 @@ struct traits<TensorProduct<L, R>>
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
-class TensorProduct : Expression<TensorProduct<L, R>>
+class TensorProduct : public Expression<TensorProduct<L, R>>
 {
   static_assert(dimension<L>::value == dimension<R>::value,
                 "Cannot combine expressions with different dimensionality");

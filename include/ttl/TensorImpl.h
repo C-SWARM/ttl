@@ -3,7 +3,8 @@
 #define TTL_TENSOR_IMPL_H
 
 #include <ttl/Tensor.h>
-#include <ttl/Expressions/TensorBind.h>
+#include <ttl/Expressions.h>
+// #include <ttl/Expressions/TensorBind.h>
 #include <ttl/util/linearize.h>
 #include <ttl/util/pow.h>
 #include <cassert>
@@ -67,6 +68,18 @@ class TensorBase
   Derived& copy(Tensor<R,D,T>&& rhs) noexcept {
     std::copy_n(std::move(rhs.data), Size, derived().data);
     return derived();
+  }
+
+  template <class Index>
+  constexpr const expressions::TensorBind<const Derived, Index> // c++11
+  bind() const noexcept {
+    return expressions::TensorBind<const Derived, Index>(derived());
+  }
+
+  template <class Index>
+  constexpr expressions::TensorBind<Derived, Index> // c++11
+  bind() noexcept {
+    return expressions::TensorBind<Derived, Index>(derived());
   }
 
  public:
@@ -166,11 +179,10 @@ class TensorBase
   /// @param     (anon) The index values are unimportant during binding.
   /// @returns          A TensorBind expression that can serves as the leaf
   ///                   expression in TTL expressions.
-  template <class... I, class = check_length<I...>>
-  constexpr auto operator()(I...) const noexcept
-    -> const expressions::TensorBind<const Derived, std::tuple<I...>> // c++11
-  {
-    return expressions::TensorBind<const Derived, std::tuple<I...>>(derived());
+  template <class... I, class = check_length<I...>/* c++11 */>
+  constexpr const expressions::TensorBind<const Derived, std::tuple<I...>> // c++11
+  operator()(I...) const noexcept {
+    return bind<std::tuple<I...>>();
   }
 
   /// Bind a TensorBind expression to a tensor.
@@ -194,11 +206,10 @@ class TensorBase
   /// @param     (anon) The index values are unimportant during binding.
   /// @returns          A TensorBind expression that can serves as the leaf
   ///                   expression in TTL expressions.
-  template <class... I, class = check_length<I...>>
-  constexpr auto operator()(I...) noexcept
-    -> expressions::TensorBind<Derived, std::tuple<I...>> // c++11
-  {
-    return expressions::TensorBind<Derived, std::tuple<I...>>(derived());
+  template <class... I, class = check_length<I...>/* c++11 */>
+  constexpr expressions::TensorBind<Derived, std::tuple<I...>> // c++11
+  operator()(I...) noexcept {
+    return bind<std::tuple<I...>>();
   }
 };
 
@@ -271,6 +282,13 @@ class Tensor : public TensorBase<R,D,S>
   template <class T>
   Tensor(Tensor<R,D,T>&& rhs) noexcept {
     this->copy(std::move(rhs));
+  }
+
+  /// Allow initialization from expressions of compatible type.
+  template <class E>
+  Tensor(const expressions::Expression<E>&& rhs) {
+    // http://stackoverflow.com/questions/9289859/calling-template-function-of-template-base-class
+    this->template bind<expressions::free_type<E>>() = rhs;
   }
 
   /// Normal assignment and move operators.
@@ -459,6 +477,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
 
   S (&data)[Size];                              ///!< The external storage
 };
+
 } // namespace ttl
 
 #endif // #ifndef TTL_TENSOR_IMPL_H

@@ -22,7 +22,7 @@ struct traits<UnaryOp<Op, E>> : public traits<E>
 };
 
 template <class Op, class E>
-class UnaryOp : Expression<UnaryOp<Op, E>>
+class UnaryOp : public Expression<UnaryOp<Op, E>>
 {
  public:
   UnaryOp(E e) : e_(e), op_() {

@@ -34,17 +34,17 @@ struct traits;
 
 /// This specialization is used to try and print a hopefully useful error when
 /// Tensors are used without indices.
-template <int R, int D, class T>
-struct traits<Tensor<R, D, T>>
+template <int R, int D, class S>
+struct traits<Tensor<R, D, S>>
 {
-  using scalar_type = typename std::remove_pointer<T>::type;
+  using scalar_type = typename std::remove_pointer<S>::type;
   using dimension = std::integral_constant<int, D>;
 };
 
-template <int R, int D, class T>
-struct traits<const Tensor<R, D, T>>
+template <int R, int D, class S>
+struct traits<const Tensor<R, D, S>>
 {
-  using scalar_type = typename std::remove_pointer<T>::type;
+  using scalar_type = typename std::remove_pointer<S>::type;
   using dimension = std::integral_constant<int, D>;
 };
 
