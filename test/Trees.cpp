@@ -7,18 +7,7 @@ static constexpr ttl::Index<'k'> k;
 static constexpr ttl::Index<'l'> l;
 static constexpr ttl::Index<'m'> m;
 
-TEST(TensorProduct, Simple) {
-  ttl::Tensor<2,2,int> A = {1, 2, 3, 4};
-  ttl::Tensor<2,2,int> B = {2, 3, 4, 5};
-  ttl::Tensor<2,2,int> C;
-  C(i,j) = A(i,k) * B(k,j);
-  EXPECT_EQ(C[0], 10);
-  EXPECT_EQ(C[1], 13);
-  EXPECT_EQ(C[2], 22);
-  EXPECT_EQ(C[3], 29);
-}
-
-TEST(TensorProduct, Lazy) {
+TEST(Trees, LazyTensorProduct) {
   ttl::Tensor<2,2,int> A = {1, 2, 3, 4};
   ttl::Tensor<2,2,int> B = {2, 3, 4, 5};
   ttl::Tensor<2,2,int> C;
@@ -31,7 +20,7 @@ TEST(TensorProduct, Lazy) {
   EXPECT_EQ(C[3], 29);
 }
 
-TEST(TensorProduct, ComplexLazy) {
+TEST(Trees, LazyTensorProductComplex) {
   ttl::Tensor<2,2,int> A = {1, 2, 3, 4};
   ttl::Tensor<2,2,int> B = {2, 3, 4, 5};
   ttl::Tensor<2,2,int> C = {3, 4, 5, 6};

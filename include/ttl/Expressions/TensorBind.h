@@ -178,6 +178,17 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     static void op(Op&& f, const Index& index) {
       f(index);
     }
+
+    /// Specialize for the case where the index space is empty (i.e., the
+    /// left-hand-side is a scalar as in an inner product).
+    ///
+    /// @code
+    ///   c() = a(i) * b(i)
+    /// @code
+    template <class Op>
+    static void op(Op&& f) {
+      f(Index{});
+    }
   };
 
   Tensor& t_;                                   ///<! The underlying tensor.
