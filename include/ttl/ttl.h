@@ -8,5 +8,6 @@
 #include <ttl/Expressions.h>
 
 #include <ttl/Library/Delta.h>
+#include <ttl/Library/epsilon.h>
 
 #endif // #ifndef TTL_H
