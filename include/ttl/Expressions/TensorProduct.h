@@ -23,10 +23,11 @@ class TensorProduct;
 template <class L, class R>
 struct traits<TensorProduct<L, R>>
 {
-  using free_type = outer_type<typename traits<L>::free_type,
-                               typename traits<R>::free_type>;
+  using free_type = outer_type<typename traits<rinse<L>>::free_type,
+                               typename traits<rinse<R>>::free_type>;
   using scalar_type = promote<L, R>;
-  using dimension = typename traits<L>::dimension;
+  using dimension = typename traits<rinse<L>>::dimension;
+  using rank = typename std::tuple_size<free_type>::type;
 };
 
 /// The TensorProduct expression implementation.
