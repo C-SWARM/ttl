@@ -32,7 +32,7 @@ template <class E, class OuterType, class InnerType = free_type<E>>
 class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
  public:
   /// The index map is simply initialized with its child expression.
-  IndexMap(const E& e) : e_(e) {
+  IndexMap(E e) : e_(e) {
   }
 
   /// The index map eval() operation remaps the incoming index.
@@ -68,7 +68,7 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   }
 
  private:
-  const E& e_;
+  E e_;
 };
 } // namespace expressions
 } // namespace ttl

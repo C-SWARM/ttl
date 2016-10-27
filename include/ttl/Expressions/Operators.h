@@ -50,7 +50,7 @@ struct ProductOp<L, R, false> {
 };
 
 template <class L, class R>
-constexpr typename ProductOp<L, R>::type operator*(L lhs, R rhs) {
+constexpr const typename ProductOp<L, R>::type operator*(L lhs, R rhs) {
   return typename ProductOp<L, R>::type(lhs, rhs);
 }
 

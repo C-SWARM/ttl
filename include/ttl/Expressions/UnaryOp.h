@@ -34,8 +34,8 @@ class UnaryOp : public Expression<UnaryOp<Op, E>>
   }
 
  private:
-  const E e_;
-  const Op op_;
+  E e_;
+  Op op_;
 };
 
 template <class E>

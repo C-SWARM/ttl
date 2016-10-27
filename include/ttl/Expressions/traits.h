@@ -48,15 +48,20 @@ struct traits<const Tensor<R, D, S>>
   using dimension = std::integral_constant<int, D>;
 };
 
+namespace detail {
+template <class E>
+using rinse = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+}
+
 /// The following traits are required for all expression types.
 template <class E>
-using free_type = typename traits<E>::free_type;
+using free_type = typename traits<detail::rinse<E>>::free_type;
 
 template <class E>
-using scalar_type = typename traits<E>::scalar_type;
+using scalar_type = typename traits<detail::rinse<E>>::scalar_type;
 
 template <class E>
-using dimension = typename traits<E>::dimension;
+using dimension = typename traits<detail::rinse<E>>::dimension;
 
 /// Derived traits that are widely used.
 template <class E>

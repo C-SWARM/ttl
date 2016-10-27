@@ -52,10 +52,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @nb gcc is happy defaulting these but icc 16 won't
   /// @{
-  TensorBind(TensorBind&& rhs) : t_(rhs.t_) {
+  TensorBind(const TensorBind& rhs) : t_(rhs.t_) {
   }
 
-  TensorBind(const TensorBind& rhs) : t_(rhs.t_) {
+  TensorBind(TensorBind&& rhs) : t_(rhs.t_) {
   }
 
   TensorBind& operator=(TensorBind&& rhs) {
@@ -101,12 +101,14 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  TensorBind& operator=(const E& rhs) {
+  TensorBind& operator=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    apply<>::op([&,this](const Index& i) { eval(i) = rhs.eval(i); });
+    apply<>::op([&](Index i) {
+        eval(i) = rhs.eval(i);
+      });
     return *this;
   }
 
@@ -117,11 +119,12 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  TensorBind& operator+=(const E& rhs) {
+  TensorBind& operator+=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(util::is_equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
+    E e = std::move(rhs);
     apply<>::op([&,this](const Index& i) { eval(i) += rhs.eval(i); });
     return *this;
   }

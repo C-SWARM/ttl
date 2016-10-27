@@ -376,6 +376,15 @@ TEST(ExternalTensor, Ctor) {
   EXPECT_EQ(a[3], 3);
 }
 
+TEST(Tensor, CtorList) {
+  int a[4];
+  const ttl::Tensor<2, 2, int*> A = {a, {0, 1, 2, 3}};
+  EXPECT_EQ(a[0], 0);
+  EXPECT_EQ(a[1], 1);
+  EXPECT_EQ(a[2], 2);
+  EXPECT_EQ(a[3], 3);
+}
+
 TEST(ExternalTensor, CtorPointer) {
   int a[8] = {0,1,2,3,4,5,6,7};
   ttl::Tensor<2, 2, int*> A(&a[2]);

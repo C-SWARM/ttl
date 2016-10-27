@@ -51,7 +51,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   using hidden_type = intersection<typename traits<L>::free_type,
                                    typename traits<R>::free_type>;
  public:
-  TensorProduct(const L& lhs, const R& rhs) : lhs_(lhs), rhs_(rhs) {
+  TensorProduct(L lhs, R rhs) : lhs_(lhs), rhs_(rhs) {
   }
 
   /// The eval() operation for the product forwards to the contraction routine.
@@ -163,8 +163,8 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
     return contract_impl<Index, n>::op(*this, index);
   }
 
-  const L& lhs_;                             //!< The left-hand-side expression
-  const R& rhs_;                             //!< The right-hand-side expression
+  L lhs_;                                    //!< The left-hand-side expression
+  R rhs_;                                    //!< The right-hand-side expression
 };
 
 } // namespace expressions

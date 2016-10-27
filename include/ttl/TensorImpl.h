@@ -82,6 +82,12 @@ class TensorBase
     return expressions::TensorBind<Derived, Index>(derived());
   }
 
+  template <class E>
+  Derived& apply(E&& rhs) noexcept {
+    bind<expressions::free_type<E>>() = std::forward<E>(rhs);
+    return derived();
+  }
+
  public:
   /// Fill a tensor with a scalar value.
   ///
@@ -285,15 +291,66 @@ class Tensor : public TensorBase<R,D,S>
   }
 
   /// Allow initialization from expressions of compatible type.
+  ///
+  /// @code
+  ///   Tensor<R,D,S> A = B(i,j)
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
   template <class E>
-  Tensor(const expressions::Expression<E>&& rhs) {
-    // http://stackoverflow.com/questions/9289859/calling-template-function-of-template-base-class
-    this->template bind<expressions::free_type<E>>() = rhs;
+  Tensor(const expressions::Expression<E>&& rhs) noexcept {
+    this->apply(std::move(rhs));
+  }
+
+  /// Allow initialization from expressions of compatible type.
+  ///
+  /// @code
+  ///   auto b = B(i,j)
+  ///   Tensor<R,D,S> A = b
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
+  template <class E>
+  Tensor(const expressions::Expression<E>& rhs) noexcept {
+    this->apply(rhs);
   }
 
   /// Normal assignment and move operators.
   constexpr Tensor& operator=(const Tensor&) noexcept = default;
   constexpr Tensor& operator=(Tensor&&) noexcept = default;
+
+  /// Allow assignment from expressions of compatible type without explicit bind
+  ///
+  /// @code
+  ///   Tensor<R,D,S> A;
+  ///   A = B(i,j)
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
+  /// @returns          A reference to *this for chaining.
+  template <class E>
+  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+    return this->apply(std::move(rhs));
+  }
+
+  /// Allow assignment from expressions of compatible type without explicit bind
+  ///
+  /// @code
+  ///   auto b = B(i,j)
+  ///   Tensor<R,D,S> A;
+  ///   A = b
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
+  /// @returns          A reference to *this for chaining.
+  template <class E>
+  constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
+    return this->apply(rhs);
+  }
 
   // We remove the constness from the type for tensors so that we can use the
   // default constructor to leave the data uninitialized. If we don't do this
@@ -391,6 +448,53 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   Tensor(Tensor<R,D,T*>&& rhs) noexcept : data(std::move(rhs.data)) {
   }
 
+  /// Allow list initialization of tensors.
+  ///
+  /// @code
+  ///  int a[]
+  ///  Tensor<R,D,S*> T = {a , {...}};
+  /// @code
+  ///
+  /// @param       list The initializer list for the tensor.
+  Tensor(S* data, std::initializer_list<S> list) noexcept : Tensor(data) {
+    this->copy(list);
+  }
+
+  /// Allow initialization from expressions of compatible type.
+  ///
+  /// @code
+  ///   int a[]
+  ///   const Tensor<R,D,S*> A = {a, B(i,j)};
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param       data The external data buffer.
+  /// @param        rhs The right hand side expression.
+  template <class E>
+  Tensor(S* data, const expressions::Expression<E>&& rhs) noexcept
+      : Tensor(data)
+  {
+    this->apply(std::move(rhs));
+  }
+
+  /// Allow initialization from expressions of compatible type.
+  ///
+  /// @code
+  ///   auto b = B(i,j);
+  ///   int a[]
+  ///   const Tensor<R,D,S*> A = {a, b};
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param       data The external data buffer.
+  /// @param        rhs The right hand side expression.
+  template <class E>
+  Tensor(S* data, const expressions::Expression<E>& rhs) noexcept
+      : Tensor(data)
+  {
+    this->apply(rhs);
+  }
+
   /// Copy the data from the rhs.
   ///
   /// As opposed to construction, the copy operator actually copies the data
@@ -473,6 +577,39 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   template <class T>
   constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
     return this->copy(std::move(rhs));
+  }
+
+  /// Allow assignment from expressions of compatible type without explicit bind
+  ///
+  /// @code
+  ///   int a[]
+  ///   Tensor<R,D,S*> A(a);
+  ///   A = B(i,j)
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
+  /// @returns          A reference to *this for chaining.
+  template <class E>
+  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+    return this->apply(std::move(rhs));
+  }
+
+  /// Allow assignment from expressions of compatible type without explicit bind
+  ///
+  /// @code
+  ///   auto b = B(i,j);
+  ///   int a[]
+  ///   Tensor<R,D,S*> A(a);
+  ///   A = b
+  /// @code
+  ///
+  /// @tparam         E The type of the right-hand-side expression.
+  /// @param        rhs The right hand side expression.
+  /// @returns          A reference to *this for chaining.
+  template <class E>
+  constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
+    return this->apply(rhs);
   }
 
   S (&data)[Size];                              ///!< The external storage
