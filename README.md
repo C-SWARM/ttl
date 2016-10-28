@@ -15,6 +15,6 @@ $ cmake ../ttl -DCMAKE_INSTALL_PREFIX=$HOME/ttl-install
 $ make -j
 $ make test
 $ make install
-$ export C_INCLUDE_PATH="$HOMT/ttl-install/include:$C_INCLUDE_PATH"
-$ export CPLUS_INCLUDE_PATH="$HOMT/ttl-install/include:$CPLUS_INCLUDE_PATH"
+$ export C_INCLUDE_PATH="$HOME/ttl-install/include:$C_INCLUDE_PATH"
+$ export CPLUS_INCLUDE_PATH="$HOME/ttl-install/include:$CPLUS_INCLUDE_PATH"
 ```
