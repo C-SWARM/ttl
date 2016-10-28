@@ -97,18 +97,7 @@ TEST(Inverse, Expression_2_3) {
   EXPECT_EQ(B[8], 1);
 }
 
-// TEST(Inverse, Basic_2_3) {
-//   const ttl::Tensor<4,3,double> A = {1, 2, 3,
-//                                      4, 5, 6,
-//                                      7, 8, 10};
-//   const ttl::Tensor<4,3,double> B = ttl::inverse(A);
-//   EXPECT_EQ(B[0], -2/3.0);
-//   EXPECT_EQ(B[1], -(1.0 + 1/3.0));
-//   EXPECT_EQ(B[2], 1);
-//   EXPECT_EQ(B[3], -2/3.0);
-//   EXPECT_EQ(B[4], 3.0 + 2/3.0);
-//   EXPECT_EQ(B[5], -2);
-//   EXPECT_EQ(B[6], 1);
-//   EXPECT_EQ(B[7], -2);
-//   EXPECT_EQ(B[8], 1);
-// }
+TEST(Inverse, Basic_4xo_3) {
+  const ttl::Tensor<4,3,double> A = {};
+  auto B = ttl::inverse(A);
+}
