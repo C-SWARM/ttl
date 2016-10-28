@@ -2,12 +2,19 @@
 #ifndef TTL_LIBRARY_INVERSE_H
 #define TTL_LIBRARY_INVERSE_H
 
+#include <ttl/config.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/force.h>
 #include <ttl/Library/determinant.h>
 #include <ttl/util/pow.h>
+#if HAVE_LAPACKE
+#ifdef __INTEL_COMPILER
+#include <mkl.h>
+#else
 #include <lapacke.h>
+#endif
+#endif
 
 namespace ttl {
 namespace detail {
@@ -42,7 +49,8 @@ struct inverse_impl
     return LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,data,N,ipiv);
   }
 
-  template<class E>
+  template<class E,
+           class = typename std::enable_if<N & HAVE_LAPACKE>::type>
   static expressions::tensor_type<E> op(E&& e) {
     int ipiv[N];
     auto f = expressions::force(std::forward<E>(e));

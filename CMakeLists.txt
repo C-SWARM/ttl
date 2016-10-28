@@ -15,11 +15,16 @@ include(GTest)
 
 gtest()
 
-include_directories(include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(include)
 add_subdirectory(test)
 
-install(DIRECTORY include
-  DESTINATION ${CMAKE_INSTALL_PREFIX}
-  PATTERN "CMakeLists.txt" EXCLUDE)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include
+  DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+CHECK_SYMBOL_EXISTS(LAPACKE_dgetrf lapacke.h HAVE_LAPACKE)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/ttl/config.h)
