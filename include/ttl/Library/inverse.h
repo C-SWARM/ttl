@@ -11,11 +11,14 @@
 #if HAVE_MKL
 #include <mkl.h>
 static constexpr bool ENABLE_LAPACK = true;
+using ipiv_t = MKL_INT;
 #elif HAVE_LAPACKE
 #include <lapacke.h>
 static constexpr bool ENABLE_LAPACK = true;
+using ipiv_t = lapack_int;
 #else
 static constexpr bool ENABLE_LAPACK = false;
+using ipiv_t = int;
 #endif
 
 namespace ttl {
@@ -43,18 +46,18 @@ using square_dimension = std::integral_constant<int, util::pow(D, log2<N>::value
 template <int N>
 struct inverse_impl
 {
-  static constexpr int lu(double data[N*N], int ipiv[N]) {
+  static constexpr int lu(double data[N*N], ipiv_t ipiv[N]) {
     return LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,data,N,ipiv);
   }
 
-  static constexpr int inv(double data[N*N], int ipiv[N]) {
+  static constexpr int inv(double data[N*N], ipiv_t ipiv[N]) {
     return LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,data,N,ipiv);
   }
 
   template<class E,
            class = typename std::enable_if<N & ENABLE_LAPACK>::type>
   static expressions::tensor_type<E> op(E&& e) {
-    int ipiv[N];
+    ipiv_t ipiv[N];
     auto f = expressions::force(std::forward<E>(e));
     lu(f.data, ipiv);
     inv(f.data, ipiv);
