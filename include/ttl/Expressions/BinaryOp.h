@@ -58,7 +58,7 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
   static_assert(dimension<L>::value == dimension<R>::value,
                 "Cannot operate on expressions of differing dimension");
  public:
-  BinaryOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
+  constexpr BinaryOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
   }
 
   template <class Index>

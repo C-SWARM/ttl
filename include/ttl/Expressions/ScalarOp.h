@@ -43,7 +43,7 @@ class ScalarOp<Op, L, R, true> : public  Expression<ScalarOp<Op, L, R, true>>
 {
   static_assert(is_expression<R>::value, "Operand is not Expression");
  public:
-  ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
+  constexpr ScalarOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
   }
 
   template <class Index>
@@ -67,7 +67,7 @@ class ScalarOp<Op, L, R, false> : public Expression<ScalarOp<Op, L, R, false>>
   static_assert(is_expression<L>::value, "Operand is not Expression");
 
  public:
-  ScalarOp(L lhs, R rhs) : lhs_(lhs), rhs_(rhs), op_() {
+  constexpr ScalarOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
   }
 
   template <class Index>
