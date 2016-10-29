@@ -42,7 +42,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
   /// @tparam         t The underlying tensor.
-  TensorBind(Tensor& t) : t_(t) {
+  constexpr TensorBind(Tensor& t) noexcept : t_(t) {
   }
 
   /// Default assignment, move, and copy should work fine when the
@@ -52,10 +52,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @nb gcc is happy defaulting these but icc 16 won't
   /// @{
-  TensorBind(const TensorBind& rhs) : t_(rhs.t_) {
+  constexpr TensorBind(const TensorBind& rhs) noexcept : t_(rhs.t_) {
   }
 
-  TensorBind(TensorBind&& rhs) : t_(rhs.t_) {
+  constexpr TensorBind(TensorBind&& rhs) noexcept : t_(rhs.t_) {
   }
 
   TensorBind& operator=(TensorBind&& rhs) {

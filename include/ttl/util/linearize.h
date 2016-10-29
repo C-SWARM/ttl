@@ -19,16 +19,16 @@ namespace detail {
 template <int D, class T, int i = 0, int N = std::tuple_size<T>::value>
 struct linearize_impl
 {
-  static constexpr int op(T index) {
+  static constexpr int op(T index) noexcept {
     return head(index) + tail(index);
   }
 
  private:
-  static constexpr int head(T index) {
+  static constexpr int head(T index) noexcept {
     return int(std::get<i>(index)) * util::pow(D, N - i - 1);
   }
 
-  static constexpr int tail(T index) {
+  static constexpr int tail(T index) noexcept {
     return linearize_impl<D, T, i + 1, N>::op(index);
   }
 };
@@ -37,14 +37,14 @@ struct linearize_impl
 /// terms in the index.
 template <int D, class T, int N>
 struct linearize_impl<D, T, N, N> {
-  static constexpr int op(T) {
+  static constexpr int op(T) noexcept {
     return 0;
   }
 };
 } // namespace detail
 
 template <int D, class T>
-constexpr int linearize(T index) {
+constexpr int linearize(T index) noexcept {
   return detail::linearize_impl<D, T>::op(index);
 }
 

@@ -25,7 +25,7 @@ template <class Op, class E>
 class UnaryOp : public Expression<UnaryOp<Op, E>>
 {
  public:
-  UnaryOp(E e) : e_(e), op_() {
+  constexpr UnaryOp(E e) noexcept : e_(e), op_() {
   }
 
   template <class Index>

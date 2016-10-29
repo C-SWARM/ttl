@@ -52,7 +52,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   using hidden_type = intersection<typename traits<L>::free_type,
                                    typename traits<R>::free_type>;
  public:
-  TensorProduct(L lhs, R rhs) : lhs_(lhs), rhs_(rhs) {
+  constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
 
   /// The eval() operation for the product forwards to the contraction routine.
