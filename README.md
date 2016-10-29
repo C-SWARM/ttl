@@ -11,7 +11,7 @@ configuration sequence looks something like:
 $ git clone ttl
 $ mkdir ttl-build
 $ cd ttl-build
-$ cmake ../ttl -DCMAKE_INSTALL_PREFIX=$HOME/ttl-install
+$ cmake ../ttl -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/ttl-install
 $ make -j
 $ make test
 $ make install
