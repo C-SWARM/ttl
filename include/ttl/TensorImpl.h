@@ -43,7 +43,7 @@ class TensorBase
     return *static_cast<const Derived* const>(this);
   }
 
-  constexpr Derived& derived() noexcept {
+  /* c++14 constexpr */ Derived& derived() noexcept {
     return *static_cast<Derived* const>(this);
   }
 
@@ -127,7 +127,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          A reference to the scalar value at @p i.
-  constexpr Scalar& operator[](int i) noexcept {
+  /* c++14 constexpr */ Scalar& operator[](int i) noexcept {
     return derived().data[i];
   }
 
