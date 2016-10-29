@@ -2,6 +2,7 @@
 #ifndef TTL_H
 #define TTL_H
 
+#include <ttl/config.h>
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/TensorImpl.h>

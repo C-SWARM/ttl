@@ -8,12 +8,14 @@
 #include <ttl/Expressions/force.h>
 #include <ttl/Library/determinant.h>
 #include <ttl/util/pow.h>
-#if HAVE_LAPACKE
-#ifdef __INTEL_COMPILER
+#if HAVE_MKL
 #include <mkl.h>
-#else
+static constexpr bool ENABLE_LAPACK = true;
+#elif HAVE_LAPACKE
 #include <lapacke.h>
-#endif
+static constexpr bool ENABLE_LAPACK = true;
+#else
+static constexpr bool ENABLE_LAPACK = false;
 #endif
 
 namespace ttl {
@@ -50,7 +52,7 @@ struct inverse_impl
   }
 
   template<class E,
-           class = typename std::enable_if<N & HAVE_LAPACKE>::type>
+           class = typename std::enable_if<N & ENABLE_LAPACK>::type>
   static expressions::tensor_type<E> op(E&& e) {
     int ipiv[N];
     auto f = expressions::force(std::forward<E>(e));
