@@ -2,6 +2,8 @@
 #ifndef TTL_LIBRARY_EPSILON_H
 #define TTL_LIBRARY_EPSILON_H
 
+#include <array>
+
 namespace ttl {
 namespace detail {
 template <std::size_t N, class Op>
