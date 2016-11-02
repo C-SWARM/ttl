@@ -7,7 +7,9 @@
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/force.h>
 #include <ttl/Library/determinant.h>
+#include <ttl/util/log2.h>
 #include <ttl/util/pow.h>
+
 #if HAVE_MKL
 #include <mkl.h>
 static constexpr bool ENABLE_LAPACK = true;
@@ -23,25 +25,10 @@ using ipiv_t = int;
 
 namespace ttl {
 namespace detail {
-template <int N, int B = N%2>
-struct log2;
-
-template <int N>
-struct log2<N, 0>
-{
-  static constexpr int value = 1 + log2<N/2>::value;
-};
-
-template <>
-struct log2<1, 1>
-{
-  static constexpr int value = 0;
-};
-
 template <class E,
           int N = expressions::traits<expressions::rinse<E>>::rank::value,
           int D = expressions::traits<expressions::rinse<E>>::dimension::value>
-using square_dimension = std::integral_constant<int, util::pow(D, log2<N>::value)>;
+using square_dimension = std::integral_constant<int, util::pow(D, util::log2<N>::value)>;
 
 template <int N>
 struct inverse_impl
