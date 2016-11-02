@@ -1,4 +1,6 @@
 # Trivial example using gtest and gmock
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)
 add_executable(library Delta.cpp Epsilon.cpp Determinant.cpp Inverse.cpp)
@@ -22,5 +24,3 @@ add_test(NAME tensor_bind_test COMMAND tensor_bind)
 add_test(NAME index_map_test COMMAND index_map)
 add_test(NAME operators_test COMMAND operators)
 add_test(NAME trees_test COMMAND trees)
-
-set_property(GLOBAL PROPERTY CXX_STANDARD 11)
