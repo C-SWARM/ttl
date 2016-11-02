@@ -25,10 +25,14 @@ gtest()
 # -----------------------------------------------------------------------------
 CHECK_INCLUDE_FILES(mkl.h HAVE_MKL)
 option(ENABLE_MKL "Use Intel's mkl.h header instead of lapacke.h" ${HAVE_MKL})
+set(MKL_DEFS -DMKL_ILP64 CACHE STRING "Defines to set when including mkl")
+set(MKL_LIBS -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential CACHE STRING
+             "Libraries to link to set when including mkl")
 if (ENABLE_MKL)
-  set(LAPACK_LIBS mkl)
+  add_definitions(${MKL_DEFS})
+  set(LAPACK_LIBS ${MKL_LIBS})
 else (ENABLE_MKL)
-  set(LAPACK_LIBS lapacke)
+  set(LAPACK_LIBS -llapacke)
 endif (ENABLE_MKL)
 
 # -----------------------------------------------------------------------------
