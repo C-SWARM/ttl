@@ -1,2 +1,1 @@
-#cmakedefine01 HAVE_MKL
-#cmakedefine01 HAVE_LAPACKE
+#cmakedefine ENABLE_MKL

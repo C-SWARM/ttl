@@ -10,17 +10,12 @@
 #include <ttl/util/log2.h>
 #include <ttl/util/pow.h>
 
-#if HAVE_MKL
+#ifdef ENABLE_MKL
 #include <mkl.h>
-static constexpr bool ENABLE_LAPACK = true;
 using ipiv_t = MKL_INT;
-#elif HAVE_LAPACKE
-#include <lapacke.h>
-static constexpr bool ENABLE_LAPACK = true;
-using ipiv_t = lapack_int;
 #else
-static constexpr bool ENABLE_LAPACK = false;
-using ipiv_t = int;
+#include <lapacke.h>
+using ipiv_t = lapack_int;
 #endif
 
 namespace ttl {
@@ -28,7 +23,9 @@ namespace detail {
 template <class E,
           int N = expressions::traits<expressions::rinse<E>>::rank::value,
           int D = expressions::traits<expressions::rinse<E>>::dimension::value>
-using square_dimension = std::integral_constant<int, util::pow(D, util::log2<N>::value)>;
+struct square_dimension {
+  static constexpr int value = util::pow(D, util::log2<N>::value);
+};
 
 template <int N>
 struct inverse_impl
@@ -41,8 +38,7 @@ struct inverse_impl
     return LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,data,N,ipiv);
   }
 
-  template<class E,
-           class = typename std::enable_if<N & ENABLE_LAPACK>::type>
+  template<class E>
   static expressions::tensor_type<E> op(E&& e) {
     ipiv_t ipiv[N];
     auto f = expressions::force(std::forward<E>(e));
@@ -77,12 +73,12 @@ struct inverse_impl<3>
                                                        t20, -t21,  t22}(I0(),I1());
   }
 };
-}
+} // namespace detail
 
 template <class E>
 constexpr expressions::tensor_type<E> inverse(E&& e) {
   return detail::inverse_impl<detail::square_dimension<E>::value>::op(std::forward<E>(e));
 }
-}
+} // namespace ttl
 
 #endif // #ifndef TTL_LIBRARY_INVERSE_H
