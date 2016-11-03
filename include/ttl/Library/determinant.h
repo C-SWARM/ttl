@@ -4,6 +4,7 @@
 
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/force.h>
+#include <ttl/util/make_index.h>
 
 namespace ttl {
 namespace detail {
@@ -13,12 +14,11 @@ struct det;
 template <class S>
 struct det<2,2,S>
 {
-  using i = std::tuple<Index<'\0'>,Index<'\1'>>;
   template <class E>
   static S op(E&& e) {
     auto f = expressions::force(std::forward<E>(e));
-    auto t = f.eval(i{0,0})*f.eval(i{1,1});
-    auto s = f.eval(i{0,1})*f.eval(i{1,0});
+    auto t = f.eval(util::make_ij(0,0))*f.eval(util::make_ij(1,1));
+    auto s = f.eval(util::make_ij(0,1))*f.eval(util::make_ij(1,0));
     return t - s;
   }
 };
@@ -30,12 +30,12 @@ struct det<2, 3, S>
   template <class E>
   static S op(E&& e) {
     auto f = expressions::force(std::forward<E>(e));
-    auto t0 = f.eval(i{0,0})*f.eval(i{1,1})*f.eval(i{2,2});
-    auto t1 = f.eval(i{1,0})*f.eval(i{2,1})*f.eval(i{0,2});
-    auto t2 = f.eval(i{2,0})*f.eval(i{0,1})*f.eval(i{1,2});
-    auto s0 = f.eval(i{0,0})*f.eval(i{1,2})*f.eval(i{2,1});
-    auto s1 = f.eval(i{1,1})*f.eval(i{2,0})*f.eval(i{0,2});
-    auto s2 = f.eval(i{2,2})*f.eval(i{0,1})*f.eval(i{1,0});
+    auto t0 = f.eval(util::make_ij(0,0))*f.eval(util::make_ij(1,1))*f.eval(util::make_ij(2,2));
+    auto t1 = f.eval(util::make_ij(1,0))*f.eval(util::make_ij(2,1))*f.eval(util::make_ij(0,2));
+    auto t2 = f.eval(util::make_ij(2,0))*f.eval(util::make_ij(0,1))*f.eval(util::make_ij(1,2));
+    auto s0 = f.eval(util::make_ij(0,0))*f.eval(util::make_ij(1,2))*f.eval(util::make_ij(2,1));
+    auto s1 = f.eval(util::make_ij(1,1))*f.eval(util::make_ij(2,0))*f.eval(util::make_ij(0,2));
+    auto s2 = f.eval(util::make_ij(2,2))*f.eval(util::make_ij(0,1))*f.eval(util::make_ij(1,0));
     return (t0 + t1 + t2) - (s0 + s1 + s2);
   }
 };
