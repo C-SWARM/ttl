@@ -11,7 +11,7 @@
 #include <ttl/util/log2.h>
 #include <ttl/util/pow.h>
 
-#ifdef ENABLE_MKL
+#ifdef HAVE_MKL_H
 #include <mkl.h>
 using ipiv_t = MKL_INT;
 #else

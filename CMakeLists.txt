@@ -23,17 +23,8 @@ gtest()
 # -----------------------------------------------------------------------------
 # Figure out what form of lapack we're going to include and link to.
 # -----------------------------------------------------------------------------
-CHECK_INCLUDE_FILES(mkl.h HAVE_MKL)
-option(ENABLE_MKL "Use Intel's mkl.h header instead of lapacke.h" ${HAVE_MKL})
-set(MKL_DEFS -DMKL_ILP64 CACHE STRING "Defines to set when including mkl")
-set(MKL_LIBS -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential CACHE STRING
-             "Libraries to link to set when including mkl")
-if (ENABLE_MKL)
-  add_definitions(${MKL_DEFS})
-  set(LAPACK_LIBS ${MKL_LIBS})
-else (ENABLE_MKL)
-  set(LAPACK_LIBS -llapacke)
-endif (ENABLE_MKL)
+CHECK_INCLUDE_FILES(mkl.h HAVE_MKL_H)
+include(FindLAPACK)
 
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.
