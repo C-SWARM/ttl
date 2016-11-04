@@ -1,1 +1,1 @@
-#cmakedefine ENABLE_MKL
+#cmakedefine HAVE_MKL_H
