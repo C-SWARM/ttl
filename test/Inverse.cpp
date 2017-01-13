@@ -101,3 +101,65 @@ TEST(Inverse, Basic_4xo_3) {
   const ttl::Tensor<4,3,double> A = {};
   auto B = ttl::inverse(A);
 }
+
+TEST(Inverse, Basic_2_2) {
+  ttl::Index<'i'> i;
+  ttl::Index<'j'> j;
+  ttl::Index<'k'> k;
+
+  ttl::Tensor<2,2,double> A = {1, 2,   //init A
+			       3, 4};
+
+  ttl::Tensor<2,2,double> B = ttl::inverse(A);
+
+  //EXPECT_EQ(B[0], -2);
+  //EXPECT_EQ(B[1], 1);
+  //EXPECT_EQ(B[2], 1.5);
+  //EXPECT_EQ(B[3], -.5);
+
+  ttl::Tensor<2,2,double> AxB = {};
+  AxB(i,j) = A(i,k) * B(k,j);
+
+  //EXPECT_EQ(AxB[0], 1);
+  //EXPECT_EQ(AxB[1], 0);
+  //EXPECT_EQ(AxB[2], 0);
+  //EXPECT_EQ(AxB[3], 1);
+}
+
+TEST(Inverse, Basic_2_4) {
+  ttl::Index<'i'> i;
+  ttl::Index<'j'> j;
+  ttl::Index<'k'> k;
+
+  ttl::Tensor<2,4,double> A = {};
+
+  for (int i = 0; i < 16; i++){   //init A
+    A[i] = (rand()%10);
+  }
+
+  ttl::Tensor<2,4,double> B = ttl::inverse(A);
+  
+
+  ttl::Tensor<2,4,double> AxB = {};
+  AxB(i,j) = A(i,k) * B(k,j);
+
+}
+
+
+TEST(Inverse, Basic_2_9) {
+  ttl::Index<'i'> i;
+  ttl::Index<'j'> j;
+  ttl::Index<'k'> k;
+
+  ttl::Tensor<2,9,double> A = {};
+  
+  for (int i = 0; i < 81; i++){   //init A
+    A[i] = (rand()%10);
+  }
+
+  ttl::Tensor<2,9,double> B = ttl::inverse(A);
+  
+  ttl::Tensor<2,9,double> AxB = {};
+  AxB(i,j) = A(i,k) * B(k,j); 
+
+}

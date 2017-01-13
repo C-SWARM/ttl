@@ -37,7 +37,7 @@ struct inverse_impl
   }
 
   static constexpr int inv(double data[N*N], ipiv_t ipiv[N]) {
-    return LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,data,N,ipiv);
+    return LAPACKE_dgetri(LAPACK_ROW_MAJOR,N,data,N,ipiv);
   }
 
   template<class E>
