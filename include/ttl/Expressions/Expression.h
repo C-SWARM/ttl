@@ -2,6 +2,7 @@
 #ifndef TTL_EXPRESSIONS_EXPRESSION_H
 #define TTL_EXPRESSIONS_EXPRESSION_H
 
+#include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
 #include <type_traits>
 
@@ -30,6 +31,12 @@ class Expression {
   constexpr const IndexMap<E, std::tuple<I...>, free_type<E>> to(I...) const {
     return IndexMap<E, std::tuple<I...>,
                     free_type<E>>(static_cast<const E&>(*this));
+  }
+
+  constexpr operator scalar_type<E>() const {
+    static_assert(rank<E>::value == 0,
+                  "No available conversion to scalar type for expression.");
+    return force(*this)[0];
   }
 };
 
