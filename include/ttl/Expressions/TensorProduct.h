@@ -23,11 +23,11 @@ class TensorProduct;
 template <class L, class R>
 struct traits<TensorProduct<L, R>>
 {
-  using free_type = outer<typename traits<rinse<L>>::free_type,
-                          typename traits<rinse<R>>::free_type>;
+  using outer_type = set_xor<typename traits<L>::outer_type,
+                             typename traits<R>::outer_type>;
   using scalar_type = promote<L, R>;
   using dimension = typename traits<rinse<L>>::dimension;
-  using rank = typename std::tuple_size<free_type>::type;
+  using rank = typename std::tuple_size<outer_type>::type;
 };
 
 /// The TensorProduct expression implementation.
@@ -49,7 +49,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of get
-  using hidden_type = inner<free_type<L>, free_type<R>>;
+  using hidden_type = set_and<outer_type<L>, outer_type<R>>;
 
  public:
   constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
@@ -138,7 +138,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///
   /// The purpose of this operation is to provide the entry point for a sequence
   /// of summations. We're basically taking an index that is defined as a
-  /// superset of the free_type indices, and iterating over all of the
+  /// superset of the outer_type indices, and iterating over all of the
   /// contracted dimensions, accumulating their products.
   ///
   /// @code
@@ -147,7 +147,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///   for (i: 0..D-1)  // <-- this is performed by "evaluation" in TensorBind
   ///     for (k: 0..D-1)
   ///       C(i,k) = 0;       // <-- this is where contraction starts
-  //        for (j: 0..D-1)
+  ///       for (j: 0..D-1)
   ///         C(i,k) += A(i,j)*B(j,k)
   /// @code
   ///

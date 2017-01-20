@@ -83,7 +83,7 @@ class TensorBase
 
   template <class E>
   Derived& apply(E&& rhs) noexcept {
-    bind<expressions::free_type<E>>() = std::forward<E>(rhs);
+    bind<expressions::outer_type<E>>() = std::forward<E>(rhs);
     return derived();
   }
 

@@ -68,14 +68,14 @@ static_assert(  equivalent< l_ijk, j_ijk >::value, "failed");
 static_assert(  equivalent< l_ijk, j_kij >::value, "failed");
 
 // Create some intersections
-using i_empty1 = inner< l_i,   l_j   >;
-using     i_i1 = inner< l_i,   l_i   >;
-using     i_i2 = inner< l_i,   j_ij  >;
-using     i_i3 = inner< l_ji,  l_ik  >;
-using    i_ij1 = inner< j_ij,  l_ij  >;
-using    i_ij2 = inner< l_ij,  j_ji  >;
-using    i_ij3 = inner< l_ij,  j_ijk >;
-using    i_ij4 = inner< l_ijk, j_ji  >;
+using i_empty1 = set_and< l_i,   l_j   >;
+using     i_i1 = set_and< l_i,   l_i   >;
+using     i_i2 = set_and< l_i,   j_ij  >;
+using     i_i3 = set_and< l_ji,  l_ik  >;
+using    i_ij1 = set_and< j_ij,  l_ij  >;
+using    i_ij2 = set_and< l_ij,  j_ji  >;
+using    i_ij3 = set_and< l_ij,  j_ijk >;
+using    i_ij4 = set_and< l_ijk, j_ji  >;
 
 // Check intersections
 static_assert( std::is_same< i_empty1, l_empty >::value, "failed");
@@ -87,12 +87,12 @@ static_assert( std::is_same< i_ij3, l_ij >::value, "failed");
 static_assert( std::is_same< i_ij4, l_ij >::value, "failed");
 
 // Create some symmetric differences
-using x_empty1 = outer< l_i,   l_i   >;
-using x_empty2 = outer< l_ij,  l_ji  >;
-using x_empty3 = outer< l_ijk, j_kij >;
-using    x_ij1 = outer< l_i,   l_j   >;
-using    x_jk1 = outer< l_ji,  l_ik  >;
-using    x_jk2 = outer< l_ijk, l_i   >;
+using x_empty1 = set_xor< l_i,   l_i   >;
+using x_empty2 = set_xor< l_ij,  l_ji  >;
+using x_empty3 = set_xor< l_ijk, j_kij >;
+using    x_ij1 = set_xor< l_i,   l_j   >;
+using    x_jk1 = set_xor< l_ji,  l_ik  >;
+using    x_jk2 = set_xor< l_ijk, l_i   >;
 
 // Check symmetric differences
 static_assert( std::is_same< x_empty1, l_empty >::value, "failed");

@@ -53,7 +53,7 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
 {
   static_assert(is_expression<L>::value, "Operand is not Expression");
   static_assert(is_expression<R>::value, "Operand is not Expression");
-  static_assert(equivalent<free_type<L>, free_type<R>>::value,
+  static_assert(equivalent<outer_type<L>, outer_type<R>>::value,
                 "BinaryOp expressions do not have equivalent index types.");
   static_assert(dimension<L>::value == dimension<R>::value,
                 "Cannot operate on expressions of differing dimension");

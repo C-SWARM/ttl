@@ -40,13 +40,16 @@ class TensorBind;
 template <class Tensor, class Index>
 struct traits<TensorBind<Tensor, Index>> : public traits<rinse<Tensor>>
 {
-  using free_type = unique<Index>;
-  using innter_type = repeated<Index>;
+  using outer_type = unique<Index>;
 };
 
 template <class Tensor, class Index>
 class TensorBind : public Expression<TensorBind<Tensor, Index>>
 {
+  using Outer = unique<Index>;
+  using Inner = duplicate<Index>;
+  using Union = concat<Outer, Inner>;
+
  public:
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
@@ -94,12 +97,20 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @returns          The scalar value at the linearized offset.
   template <class I>
   constexpr scalar_type<Tensor> eval(I i) const {
+    // return contract(transform<Outer>(i));
     return t_.eval(transform<Index>(i));
   }
 
+  // /// Used as a leaf call during contraction.
+  // constexpr scalar_type<Tensor> apply(Union index) const {
+  //   return t_.eval(transform<Index>(i));
+  // }
+
   /// This eval operation is used during evaluation to set a left-hand-side
   /// element.
-  constexpr scalar_type<Tensor>& eval(Index index) {
+  constexpr scalar_type<Tensor>& eval(Outer index) {
+    static_assert(std::is_same<Outer, Index>::value,
+                  "LHS evaluation must not contain a contraction");
     return t_.eval(index);
   }
 
@@ -113,9 +124,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Outer, outer_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    apply<>::op([&](Index i) { eval(i) = rhs.eval(i); });
+    apply<>::op([&](Outer i) { eval(i) = rhs.eval(i); });
     return *this;
   }
 
@@ -129,10 +140,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator+=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Outer, outer_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
     E e = std::move(rhs);
-    apply<>::op([&,this](Index i) { eval(i) += rhs.eval(i); });
+    apply<>::op([&,this](Outer i) { eval(i) += rhs.eval(i); });
     return *this;
   }
 
@@ -161,7 +172,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @tparam           n The current dimension that we need to traverse.
   /// @tparam           M The total number of free indices to enumerate.
-  template <int n = 0, int M = free_size<TensorBind>::value>
+  template <int n = 0, int M = std::tuple_size<Outer>::value>
   struct apply
   {
     /// The evaluation routine just iterates through the values of the nth
@@ -170,7 +181,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @tparam      Op The lambda to evaluate for each index.
     /// @param    index The partially constructed index.
     template <class Op>
-    static void op(Op&& f, Index index = {}) {
+    static void op(Op&& f, Outer index = {}) {
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index) = i;
         apply<n + 1>::op(std::forward<Op>(f), index);
@@ -185,7 +196,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   struct apply<M, M>
   {
     template <class Op>
-    static void op(Op&& f, const Index& index) {
+    static void op(Op&& f, const Outer& index) {
       f(index);
     }
 
@@ -197,9 +208,34 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @code
     template <class Op>
     static void op(Op&& f) {
-      f(Index{});
+      f(Outer{});
     }
   };
+
+  // template <int n = std::tuple_size<Outer>::value, int M = std::tuple_size<Index>::value>
+  // struct contract_impl
+  // {
+  //   static scalar_type<TensorProduct> op(const TensorProduct& e, Index index) {
+  //     scalar_type<TensorProduct> s(0);
+  //     for (int i = 0; i < dimension<TensorProduct>::value; ++i) {
+  //       std::get<n>(index).set(i);
+  //       s += contract_impl<Index, n + 1>::op(e, index);
+  //     }
+  //     return s;
+  //   }
+  // };
+
+  // struct contract_impl<Index, N, N>
+  // {
+  //   static constexpr scalar_type<TensorProduct>
+  //   op(const TensorProduct& e, Index index) {
+  //     return e.apply(index);
+  //   }
+  // };
+
+  // constexpr scalar_type<Tensor> contract(Union index) const {
+  //   return contract_impl<Index, n>::op(*this, index);
+  // }
 
   Tensor& t_;                                   ///<! The underlying tensor.
 };

@@ -18,10 +18,8 @@ template <class Pack> struct cdr_impl;
 template <class L, class R> struct concat_impl;
 template <class L, class R> struct subset_impl;
 template <class T, class Pack> struct remove_impl;
-template <class Pack> struct strip_impl;
-template <class Pack> struct dedup_impl;
 template <class Pack> struct unique_impl;
-template <class Pack> struct repeated_impl;
+template <class Pack> struct duplicate_impl;
 template <int N, class T, class Pack> struct index_of_impl;
 } // namespace detail
 
@@ -47,33 +45,27 @@ template <class T, class Pack>
 using remove = typename detail::remove_impl<T, Pack>::type;
 
 template <class Pack>
-using strip = typename detail::strip_impl<Pack>::type;
-
-template <class Pack>
-using dedup = typename detail::dedup_impl<Pack>::type;
-
-template <class Pack>
 using unique = typename detail::unique_impl<Pack>::type;
 
 template <class Pack>
-using repeated = typename detail::repeated_impl<Pack>::type;
+using duplicate = typename detail::duplicate_impl<Pack>::type;
 
 /// Get the index of a type in a parameter pack.
 ///
 /// @tparam           T The type that we're searching for.
 /// @tparam...        U The pack that we're searching.
 template <class T, class Pack>
-using index_of = typename detail::index_of_impl<0, T, strip<Pack>>::type;
+using index_of = typename detail::index_of_impl<0, T, Pack>::type;
 
 /// Two packs are equivalent when they are subsets of each other.
 template <class L, class R>
 using equivalent = iif<subset<L, R>, subset<R, L>, std::false_type>;
 
 template <class L, class R>
-using outer = unique<strip<concat<L, R>>>;
+using set_xor = unique<concat<L, R>>;
 
 template <class L, class R>
-using inner = repeated<strip<concat<L, R>>>;
+using set_and = duplicate<concat<L, R>>;
 
 // -----------------------------------------------------------------------------
 // Implementations of the metaprogramming functions.
@@ -177,29 +169,6 @@ struct remove_impl
   using type = iif<typename std::is_same<T, head>::type, next, concat<head, next>>;
 };
 
-template <template <class...> class Pack, class... T>
-struct strip_impl<Pack<T...>>
-{
-  using type = Pack<typename std::remove_reference<T>::type...>;
-};
-
-template <template <class...> class Pack>
-struct dedup_impl<Pack<>>
-{
-  using type = Pack<>;                          // base case is empty list
-};
-
-template <class Pack>
-struct dedup_impl
-{
-  // process the tail, and then append the head if it does not yet appear in the
-  // tail
-  using head = car<Pack>;
-  using tail = cdr<Pack>;
-  using next = dedup<tail>;
-  using type = iif<subset<head, next>, next, concat<head, next>>;
-};
-
 template <template <class...> class Pack>
 struct unique_impl<Pack<>>
 {
@@ -220,21 +189,21 @@ struct unique_impl
 };
 
 template <template <class...> class Pack>
-struct repeated_impl<Pack<>>
+struct duplicate_impl<Pack<>>
 {
   using type = Pack<>;                          // base case is empty list
 };
 
 template <class Pack>
-struct repeated_impl
+struct duplicate_impl
 {
   // Filter out any instances of the head from the tail of the pack and find the
-  // repeated types in that restricted list. Then, for this version of the list,
+  // duplicate types in that restricted list. Then, for this version of the list,
   // if the head is in the tail then append it to the returned list, otherwise
   // just return the list.
   using head = car<Pack>;
   using tail = cdr<Pack>;
-  using next = repeated<remove<head, tail>>;
+  using next = duplicate<remove<head, tail>>;
   using type = iif<subset<head, tail>, concat<head, next>, next>;
 };
 
