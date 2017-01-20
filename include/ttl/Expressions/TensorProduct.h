@@ -49,8 +49,8 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of get
-  using hidden_type = inner<typename traits<L>::free_type,
-                            typename traits<R>::free_type>;
+  using hidden_type = inner<free_type<L>, free_type<R>>;
+
  public:
   constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }

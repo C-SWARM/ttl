@@ -1,10 +1,9 @@
 // -*- C++ -*-------------------------------------------------------------------
 /// This header includes some utility metafunctions to deal with type packs.
 // -----------------------------------------------------------------------------
-#ifndef TTL_UTIL_PACK_H
-#define TTL_UTIL_PACK_H
+#ifndef TTL_EXPRESSIONS_PACK_H
+#define TTL_EXPRESSIONS_PACK_H
 
-#include <ttl/Expressions/iif.h>
 #include <type_traits>
 
 namespace ttl {
@@ -13,6 +12,7 @@ namespace expressions {
 // Metaprogramming template declaration for dealing with packed parameters.
 // -----------------------------------------------------------------------------
 namespace detail {
+template <class B, class T, class U> struct iif_impl;
 template <class Pack> struct car_impl;
 template <class Pack> struct cdr_impl;
 template <class L, class R> struct concat_impl;
@@ -28,6 +28,9 @@ template <int N, class T, class Pack> struct index_of_impl;
 // -----------------------------------------------------------------------------
 // Convenience bindings for the metaprogramming templates.
 // -----------------------------------------------------------------------------
+template <class B, class T, class U>
+using iif = typename detail::iif_impl<B, T, U>::type;
+
 template <class Pack>
 using car = typename detail::car_impl<Pack>::type;
 
@@ -76,6 +79,16 @@ using inner = repeated<strip<concat<L, R>>>;
 // Implementations of the metaprogramming functions.
 // -----------------------------------------------------------------------------
 namespace detail {
+template <class B, class T, class U>
+struct iif_impl {
+  using type = T;
+};
+
+template <class T, class U>
+struct iif_impl<std::false_type, T, U> {
+  using type = U;
+};
+
 template <template <class...> class Pack>
 struct car_impl<Pack<>>
 {
@@ -245,4 +258,4 @@ struct index_of_impl
 } // namespace util
 } // namespace ttl
 
-#endif // #define TTL_UTIL_PACK_H
+#endif // #define TTL_EXPRESSIONS_PACK_H
