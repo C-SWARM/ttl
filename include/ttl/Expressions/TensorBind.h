@@ -1,17 +1,51 @@
-// -*- C++ -*-
+// -*- C++ -*-------------------------------------------------------------------
+/// This header includes the functionality for binding and evaluating tensor
+/// expressions.
+///
+/// Its primary template is the TensorBind expression which is generated using
+/// a Tensor's operator(), e.g., A(i,j). It also defines the Expression traits
+/// for the TensorBind expression, as well as some ::detail metafunctions to
+/// process type sets.
+// -----------------------------------------------------------------------------
 #ifndef TTL_EXPRESSIONS_TENSOR_BIND_H
 #define TTL_EXPRESSIONS_TENSOR_BIND_H
+
 
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/transform.h>
-#include <ttl/util/is_equivalent.h>
+#include <ttl/Expressions/iif.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/Expressions/transform.h>
 #include <utility>
 
 namespace ttl {
 namespace expressions {
+namespace detail {
+// -----------------------------------------------------------------------------
+/// A metafunction to split an index set into free and contracted types.
+///
+/// When the user binds a tensor to a set of indices they can specify self
+/// contraction by binding the same index to multiple slots. In this case, TTL
+/// needs to generate outer loops over the free indices and inner loops over the
+/// contracted indices.
+///
+/// @code
+///   A(j) = B(i,i,j);
+///
+///   for j:(0,D-1)
+///     for i:(0,D-1)
+///       A[j] += B[i][i][j]
+/// @code
+///
+/// @tparam           T The initial set of indices.
+/// @tparam           U The free indices in @p T.
+/// @tparam           V The contracted indices in @p T.
+// -----------------------------------------------------------------------------
+template <class T, class U, class V>
+struct split;
+}
 
 /// The expression that represents binding a Tensor to an Index map.
 ///
@@ -32,6 +66,10 @@ class TensorBind;
 template <class Tensor, class Index>
 struct traits<TensorBind<Tensor, Index>> : public traits<rinse<Tensor>>
 {
+  // using split = detail::split<Index, std::tuple<>, std::tuple<>>;
+  // static_assert(std::is_same<Index, typename split::free_type>::value, "not same");
+ // public:
+ //  using free_type = typename split::free_type;
   using free_type = Index;
 };
 
@@ -104,11 +142,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(util::is_equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    apply<>::op([&](Index i) {
-        eval(i) = rhs.eval(i);
-      });
+    apply<>::op([&](Index i) { eval(i) = rhs.eval(i); });
     return *this;
   }
 
@@ -122,10 +158,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator+=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(util::is_equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Index, free_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
     E e = std::move(rhs);
-    apply<>::op([&,this](const Index& i) { eval(i) += rhs.eval(i); });
+    apply<>::op([&,this](Index i) { eval(i) += rhs.eval(i); });
     return *this;
   }
 
@@ -197,6 +233,43 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   Tensor& t_;                                   ///<! The underlying tensor.
 };
 
+
+namespace detail {
+/// Base case for split is when we've processed all of the parameters.
+template <template <class...> class Pack, class U, class V>
+struct split<Pack<>, U, V> {
+  using free_type = U;
+  using contracted_type = V;
+};
+
+/// The implementation of the split metafunction.
+///
+/// This metafunction recursively splits the set @p T into two sets, @p U and @p
+/// V, where @p U is the set of free indices and @p V is the set of contracted
+/// indices. It does this using a template specialization that picks off the
+/// head type, T0, in @p T and checks to see if it appears again in the tail of
+/// @p T. If it is not repeated then it appends T0 to @p U and recurses on the
+/// tail of @p T. Otherwise, it appends T0 to @p V and recurses on the tail of
+/// @p T, after removing T0 from the tail.
+///
+/// @tparam         pack The class carrying the index pack (e.g., std::tuple).
+/// @tparam           T0 The next type to process.
+/// @tparam         T... The tail of the index set.
+/// @tparam         U... The current set of free indices.
+/// @tparam         V... The current set of contracted indices.
+// template <template <class...> class Pack, class T0, class... T, class U, class V>
+// struct split<Pack<T0, T...>, U, V> {
+//  private:
+//   using duplicate = util::contains<T0, T...>;
+//   using tail = difference<Pack<T...>, Pack<T0>>;
+//   using free = split<tail, util::append<T0, U>, V>;
+//   using contracted = split<tail, U, util::append<T0, V>>;
+//   using next = util::iif<duplicate, contracted, free>;
+
+//  public:
+//   using free_type = typename next::free_type;
+// };
+}
 } // namespace expressions
 } // namespace ttl
 

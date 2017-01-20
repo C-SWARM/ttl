@@ -3,9 +3,9 @@
 #define TTL_EXPRESSIONS_INDEX_MAP_H
 
 #include <ttl/Expressions/Expression.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
-#include <ttl/util/is_subset.h>
 
 namespace ttl {
 namespace expressions {
@@ -62,7 +62,7 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   ///                   index.
   template <class Index>
   constexpr scalar_type<IndexMap> eval(Index index) const {
-    static_assert(util::is_subset<OuterType, Index>::value,
+    static_assert(subset<OuterType, Index>::value,
                   "Unexpected outer type during index mapping");
     return e_.eval(transform<InnerType>(index));
   }

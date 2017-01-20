@@ -4,7 +4,6 @@
 
 #include <ttl/Tensor.h>
 #include <ttl/Expressions.h>
-// #include <ttl/Expressions/TensorBind.h>
 #include <ttl/util/linearize.h>
 #include <ttl/util/pow.h>
 #include <cassert>

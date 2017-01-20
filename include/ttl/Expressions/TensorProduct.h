@@ -3,7 +3,7 @@
 #define TTL_EXPRESSIONS_TENSOR_PRODUCT_H
 
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/index_type.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/promote.h>
 
 namespace ttl {
@@ -23,8 +23,8 @@ class TensorProduct;
 template <class L, class R>
 struct traits<TensorProduct<L, R>>
 {
-  using free_type = outer_type<typename traits<rinse<L>>::free_type,
-                               typename traits<rinse<R>>::free_type>;
+  using free_type = outer<typename traits<rinse<L>>::free_type,
+                          typename traits<rinse<R>>::free_type>;
   using scalar_type = promote<L, R>;
   using dimension = typename traits<rinse<L>>::dimension;
   using rank = typename std::tuple_size<free_type>::type;
@@ -49,8 +49,8 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of get
-  using hidden_type = intersection<typename traits<L>::free_type,
-                                   typename traits<R>::free_type>;
+  using hidden_type = inner<typename traits<L>::free_type,
+                            typename traits<R>::free_type>;
  public:
   constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
