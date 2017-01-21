@@ -10,7 +10,7 @@ static const ttl::Tensor<2,2,int> B = {0,1,2,3};
 static const ttl::Tensor<2,2,const int> C = {0,1,2,3};
 static const ttl::Tensor<2,2,const int*> E(e);
 
-TEST(TensorBind, InitializeRValue) {
+TEST(Bind, InitializeRValue) {
   ttl::Tensor<2,2,int> A = 2 * B(i,j);
   EXPECT_EQ(2 * B[0], A[0]);
   EXPECT_EQ(2 * B[1], A[1]);
@@ -18,7 +18,7 @@ TEST(TensorBind, InitializeRValue) {
   EXPECT_EQ(2 * B[3], A[3]);
 }
 
-TEST(TensorBind, InitializeLValue) {
+TEST(Bind, InitializeLValue) {
   auto e = 2 * B(i,j);
   ttl::Tensor<2,2,int> A = e;
   EXPECT_EQ(2 * B[0], A[0]);
@@ -27,7 +27,7 @@ TEST(TensorBind, InitializeLValue) {
   EXPECT_EQ(2 * B[3], A[3]);
 }
 
-TEST(TensorBind, Assign) {
+TEST(Bind, Assign) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = B(i,j);
   EXPECT_EQ(B[0], A[0]);
@@ -36,7 +36,7 @@ TEST(TensorBind, Assign) {
   EXPECT_EQ(B[3], A[3]);
 }
 
-TEST(TensorBind, AssignRValueExpression) {
+TEST(Bind, AssignRValueExpression) {
   ttl::Tensor<2,2,int> A;
   A = 2 * B(i,j);
   EXPECT_EQ(2 * B[0], A[0]);
@@ -45,7 +45,7 @@ TEST(TensorBind, AssignRValueExpression) {
   EXPECT_EQ(2 * B[3], A[3]);
 }
 
-TEST(TensorBind, AssignLValueExpression) {
+TEST(Bind, AssignLValueExpression) {
   auto b = 2 * B(i,j);
   ttl::Tensor<2,2,int> A;
   A = b;
@@ -55,7 +55,7 @@ TEST(TensorBind, AssignLValueExpression) {
   EXPECT_EQ(2 * B[3], A[3]);
 }
 
-TEST(TensorBind, Accumulate) {
+TEST(Bind, Accumulate) {
   ttl::Tensor<2,2,int> A = {};
   A(i,j) += B(i,j);
   EXPECT_EQ(B[0], A[0]);
@@ -64,7 +64,7 @@ TEST(TensorBind, Accumulate) {
   EXPECT_EQ(B[3], A[3]);
 }
 
-TEST(TensorBind, AssignFromConst) {
+TEST(Bind, AssignFromConst) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = C(i,j);
   EXPECT_EQ(C[0], A[0]);
@@ -73,7 +73,7 @@ TEST(TensorBind, AssignFromConst) {
   EXPECT_EQ(C[3], A[3]);
 }
 
-TEST(TensorBind, AssignFromExternal) {
+TEST(Bind, AssignFromExternal) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = E(i,j);
   EXPECT_EQ(e[0], A[0]);
@@ -82,7 +82,7 @@ TEST(TensorBind, AssignFromExternal) {
   EXPECT_EQ(e[3], A[3]);
 }
 
-TEST(TensorBind, AssignToExternal) {
+TEST(Bind, AssignToExternal) {
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
   A(i,j) = B(i,j);
@@ -92,7 +92,7 @@ TEST(TensorBind, AssignToExternal) {
   EXPECT_EQ(a[3], B[3]);
 }
 
-TEST(TensorBind, AssignExternal) {
+TEST(Bind, AssignExternal) {
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
   A(i,j) = E(i,j);
@@ -102,7 +102,7 @@ TEST(TensorBind, AssignExternal) {
   EXPECT_EQ(a[3], e[3]);
 }
 
-TEST(TensorBind, AssignPermute) {
+TEST(Bind, AssignPermute) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = B(j,i);
   EXPECT_EQ(B[0], A[0]);
@@ -111,7 +111,7 @@ TEST(TensorBind, AssignPermute) {
   EXPECT_EQ(B[3], A[3]);
 }
 
-TEST(TensorBind, AssignPermuteFromConst) {
+TEST(Bind, AssignPermuteFromConst) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = C(j,i);
   EXPECT_EQ(C[0], A[0]);
@@ -120,7 +120,7 @@ TEST(TensorBind, AssignPermuteFromConst) {
   EXPECT_EQ(C[3], A[3]);
 }
 
-TEST(TensorBind, AssignPermuteFromExternal) {
+TEST(Bind, AssignPermuteFromExternal) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = E(j,i);
   EXPECT_EQ(e[0], A[0]);
@@ -129,7 +129,7 @@ TEST(TensorBind, AssignPermuteFromExternal) {
   EXPECT_EQ(e[3], A[3]);
 }
 
-TEST(TensorBind, AssignPermuteToExternal) {
+TEST(Bind, AssignPermuteToExternal) {
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
   A(i,j) = B(j,i);
@@ -139,7 +139,7 @@ TEST(TensorBind, AssignPermuteToExternal) {
   EXPECT_EQ(a[3], B[3]);
 }
 
-TEST(TensorBind, AssignPermuteExternal) {
+TEST(Bind, AssignPermuteExternal) {
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
   A(i,j) = E(j,i);
@@ -150,7 +150,7 @@ TEST(TensorBind, AssignPermuteExternal) {
 }
 
 
-TEST(TensorBind, ExternalInitializeRValue) {
+TEST(Bind, ExternalInitializeRValue) {
   int a[4];
   const ttl::Tensor<2,2,int*> A = {a, 2 * B(i,j)};
   EXPECT_EQ(2 * B[0], a[0]);
@@ -159,7 +159,7 @@ TEST(TensorBind, ExternalInitializeRValue) {
   EXPECT_EQ(2 * B[3], a[3]);
 }
 
-TEST(TensorBind, ExternalInitializeLValue) {
+TEST(Bind, ExternalInitializeLValue) {
   auto e = 2 * B(i,j);
   int a[4];
   const ttl::Tensor<2,2,int*> A = {a, e};
@@ -169,7 +169,7 @@ TEST(TensorBind, ExternalInitializeLValue) {
   EXPECT_EQ(2 * B[3], a[3]);
 }
 
-TEST(TensorBind, ExternalAssignRValueExpression) {
+TEST(Bind, ExternalAssignRValueExpression) {
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
   A = 2 * B(i,j);
@@ -179,7 +179,7 @@ TEST(TensorBind, ExternalAssignRValueExpression) {
   EXPECT_EQ(2 * B[3], a[3]);
 }
 
-TEST(TensorBind, ExternalAssignLValueExpression) {
+TEST(Bind, ExternalAssignLValueExpression) {
   auto e = 2 * B(i,j);
   int a[4];
   ttl::Tensor<2,2,int*> A(a);
@@ -190,31 +190,31 @@ TEST(TensorBind, ExternalAssignLValueExpression) {
   EXPECT_EQ(2 * B[3], a[3]);
 }
 
-TEST(TensorBind, Trace2x2) {
+TEST(Bind, Trace2x2) {
   ttl::Tensor<2,2,int> A = {1,2,3,4};
   auto t = A(i,i);
   EXPECT_EQ(t, 5);
 }
 
-TEST(TensorBind, Trace2x3) {
+TEST(Bind, Trace2x3) {
   ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8,9};
   auto t = A(i,i);
   EXPECT_EQ(t, 15);
 }
 
-TEST(TensorBind, Trace3x2) {
+TEST(Bind, Trace3x2) {
   ttl::Tensor<3,2,int> A = {1,2,3,4,5,6,7,8};
   auto t = A(i,i,i);
   EXPECT_EQ(t, A[0] + A[7]);
 }
 
-TEST(TensorBind, ParallelContract) {
+TEST(Bind, ParallelContract) {
   ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
   auto t = A(i,i,j,j);
   EXPECT_EQ(t, A[0] + A[3] + A[12] + A[15]);
 }
 
-TEST(Trace, SequentialContract) {
+TEST(Bind, SequentialContract) {
   ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
   ttl::Tensor<2,2,int> B = A(i,i,j,k);
   auto t = B(j,j);

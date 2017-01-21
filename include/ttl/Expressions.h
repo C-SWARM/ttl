@@ -3,7 +3,7 @@
 #define TTL_EXPRESSIONS_EXPRESSIONS_H
 
 #include <ttl/Expressions/IndexMap.h>
-#include <ttl/Expressions/TensorBind.h>
+#include <ttl/Expressions/Bind.h>
 #include <ttl/Expressions/BinaryOp.h>
 #include <ttl/Expressions/UnaryOp.h>
 #include <ttl/Expressions/ScalarOp.h>

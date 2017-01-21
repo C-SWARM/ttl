@@ -2,9 +2,9 @@
 /// This header includes the functionality for binding and evaluating tensor
 /// expressions.
 ///
-/// Its primary template is the TensorBind expression which is generated using
+/// Its primary template is the Bind expression which is generated using
 /// a Tensor's operator(), e.g., A(i,j). It also defines the Expression traits
-/// for the TensorBind expression, as well as some ::detail metafunctions to
+/// for the Bind expression, as well as some ::detail metafunctions to
 /// process type sets.
 // -----------------------------------------------------------------------------
 #ifndef TTL_EXPRESSIONS_TENSOR_BIND_H
@@ -31,21 +31,21 @@ namespace expressions {
 /// @tparam      Tensor The tensor type.
 /// @tparam       Index The index map for this expression.
 template <class Tensor, class Index>
-class TensorBind;
+class Bind;
 
-/// The expression traits for TensorBind expressions.
+/// The expression traits for Bind expressions.
 ///
 /// @tparam      Tensor The class for the underlying tensor.
 /// @tparam       Index The indices bound to this expression.
 template <class Tensor, class Index>
-struct traits<TensorBind<Tensor, Index>> : public traits<rinse<Tensor>>
+struct traits<Bind<Tensor, Index>> : public traits<rinse<Tensor>>
 {
   using outer_type = unique<Index>;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
 template <class Tensor, class Index>
-class TensorBind : public Expression<TensorBind<Tensor, Index>>
+class Bind : public Expression<Bind<Tensor, Index>>
 {
   using Outer = unique<Index>;
   using Inner = duplicate<Index>;
@@ -53,10 +53,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   using Scalar = scalar_type<Tensor>;
 
  public:
-  /// A TensorBind expression just keeps a reference to the Tensor it wraps.
+  /// A Bind expression just keeps a reference to the Tensor it wraps.
   ///
   /// @tparam         t The underlying tensor.
-  constexpr TensorBind(Tensor& t) noexcept : t_(t) {
+  constexpr Bind(Tensor& t) noexcept : t_(t) {
   }
 
   /// Default assignment, move, and copy should work fine when the
@@ -66,18 +66,18 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @nb gcc is happy defaulting these but icc 16 won't
   /// @{
-  constexpr TensorBind(const TensorBind& rhs) noexcept : t_(rhs.t_) {
+  constexpr Bind(const Bind& rhs) noexcept : t_(rhs.t_) {
   }
 
-  constexpr TensorBind(TensorBind&& rhs) noexcept : t_(rhs.t_) {
+  constexpr Bind(Bind&& rhs) noexcept : t_(rhs.t_) {
   }
 
-  TensorBind& operator=(TensorBind&& rhs) {
+  Bind& operator=(Bind&& rhs) {
     t_ = rhs.t_;
     return *this;
   }
 
-  TensorBind& operator=(const TensorBind& rhs) {
+  Bind& operator=(const Bind& rhs) {
     t_ = rhs.t_;
     return *this;
   }
@@ -94,7 +94,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @code
   ///
   /// @param      index The index array, which must be the same length as the
-  ///                   Rank of this TensorBind.
+  ///                   Rank of this Bind.
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
@@ -120,7 +120,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  TensorBind& operator=(E&& rhs) {
+  Bind& operator=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<E>>::value,
@@ -136,7 +136,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  TensorBind& operator+=(E&& rhs) {
+  Bind& operator+=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<E>>::value,

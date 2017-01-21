@@ -70,15 +70,15 @@ class TensorBase
   }
 
   template <class Index>
-  constexpr const expressions::TensorBind<const Derived, Index> // c++11
+  constexpr const expressions::Bind<const Derived, Index> // c++11
   bind() const noexcept {
-    return expressions::TensorBind<const Derived, Index>(derived());
+    return expressions::Bind<const Derived, Index>(derived());
   }
 
   template <class Index>
-  constexpr expressions::TensorBind<Derived, Index> // c++11
+  constexpr expressions::Bind<Derived, Index> // c++11
   bind() noexcept {
-    return expressions::TensorBind<Derived, Index>(derived());
+    return expressions::Bind<Derived, Index>(derived());
   }
 
   template <class E>
@@ -163,7 +163,7 @@ class TensorBase
     return derived().data[util::linearize<D>(index)];
   }
 
-  /// Bind a TensorBind expression to a tensor.
+  /// Bind a Bind expression to a tensor.
   ///
   /// This is the core operation that provides the tensor syntax that we want to
   /// provide. The user binds a tensor to a set of indices, and the TTL
@@ -182,15 +182,15 @@ class TensorBase
   ///
   /// @tparam...      I The index types to bind to the tensor.
   /// @param     (anon) The index values are unimportant during binding.
-  /// @returns          A TensorBind expression that can serves as the leaf
+  /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... I, class = check_length<I...>/* c++11 */>
-  constexpr const expressions::TensorBind<const Derived, std::tuple<I...>> // c++11
+  constexpr const expressions::Bind<const Derived, std::tuple<I...>> // c++11
   operator()(I...) const noexcept {
     return bind<std::tuple<I...>>();
   }
 
-  /// Bind a TensorBind expression to a tensor.
+  /// Bind a Bind expression to a tensor.
   ///
   /// This is the core operation that provides the tensor syntax that we want to
   /// provide. The user binds a tensor to a set of indices, and the TTL
@@ -209,10 +209,10 @@ class TensorBase
   ///
   /// @tparam...      I The index types to bind to the tensor.
   /// @param     (anon) The index values are unimportant during binding.
-  /// @returns          A TensorBind expression that can serves as the leaf
+  /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... I, class = check_length<I...>/* c++11 */>
-  constexpr expressions::TensorBind<Derived, std::tuple<I...>> // c++11
+  constexpr expressions::Bind<Derived, std::tuple<I...>> // c++11
   operator()(I...) noexcept {
     return bind<std::tuple<I...>>();
   }

@@ -144,7 +144,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// @code
   ///   C(i,k) = A(i,j) * B(j,k);
   ///
-  ///   for (i: 0..D-1)  // <-- this is performed by "evaluation" in TensorBind
+  ///   for (i: 0..D-1)  // <-- this is performed by "evaluation" in Bind
   ///     for (k: 0..D-1)
   ///       C(i,k) = 0;       // <-- this is where contraction starts
   ///       for (j: 0..D-1)
