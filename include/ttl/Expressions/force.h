@@ -7,7 +7,7 @@
 namespace ttl {
 namespace expressions {
 template <class E>
-tensor_type<E> force(E&& e) {
+auto force(E&& e) {
   return tensor_type<E>(std::forward<E>(e));
 }
 }

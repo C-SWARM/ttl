@@ -17,7 +17,7 @@ struct transform_impl;
 template <template <class...> class Pack, class From>
 struct transform_impl<Pack<>, From>
 {
-  static constexpr Pack<> op(From) {
+  static constexpr auto op(From) noexcept {
     return Pack<>();
   }
 };
@@ -27,14 +27,14 @@ struct transform_impl<Pack<>, From>
 template <class To, class From>
 struct transform_impl
 {
-  static constexpr To op(From from) {
+  static constexpr auto op(From from) noexcept {
     return std::tuple_cat(head(from), tail::op(from));
   }
 
  private:
   static_assert(subset<To, From>::value, "Index space is incompatible");
 
-  static constexpr car<To> head(From from) {
+  static constexpr auto head(From from) noexcept {
     return car<To>(std::get<index_of<car<To>, From>::value>(from));
   }
 
@@ -43,7 +43,7 @@ struct transform_impl
 } // namespace detail
 
 template <class To, class From>
-constexpr To transform(From from) {
+constexpr To transform(From from) noexcept {
   return detail::transform_impl<To, From>::op(from);
 }
 

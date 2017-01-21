@@ -11,28 +11,27 @@ namespace ttl {
 namespace expressions {
 
 template <class L, class R>
-constexpr const AddOp<L, R> operator+(L lhs, R rhs) {
+constexpr const auto operator+(L lhs, R rhs) {
   return AddOp<L, R>(lhs, rhs);
 }
 
 template <class L, class R>
-constexpr const SubtractOp<L, R> operator-(L lhs, R rhs) {
+constexpr const auto operator-(L lhs, R rhs) {
   return SubtractOp<L, R>(lhs, rhs);
 }
 
 template <class L, class R>
-constexpr const DivideOp<L, R> operator/(L lhs, R rhs) {
+constexpr const auto operator/(L lhs, R rhs) {
   return DivideOp<L, R>(lhs, rhs);
 }
 
-
 template <class L, class R>
-constexpr const ModulusOp<L, R> operator%(L lhs, R rhs) {
+constexpr const auto operator%(L lhs, R rhs) {
   return ModulusOp<L, R>(lhs, rhs);
 }
 
 template <class R>
-constexpr const NegateOp<R> operator-(R rhs) {
+constexpr const auto operator-(R rhs) {
   return NegateOp<R>(rhs);
 }
 
@@ -50,7 +49,7 @@ struct ProductOp<L, R, false> {
 };
 
 template <class L, class R>
-constexpr const typename ProductOp<L, R>::type operator*(L lhs, R rhs) {
+constexpr const auto operator*(L lhs, R rhs) {
   return typename ProductOp<L, R>::type(lhs, rhs);
 }
 

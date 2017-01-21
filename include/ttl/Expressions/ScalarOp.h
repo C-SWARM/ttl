@@ -47,7 +47,7 @@ class ScalarOp<Op, L, R, true> : public  Expression<ScalarOp<Op, L, R, true>>
   }
 
   template <class Index>
-  constexpr scalar_type<ScalarOp> eval(Index index) const {
+  constexpr auto eval(Index index) const noexcept {
     return op_(lhs_, rhs_.eval(index));
   }
 
@@ -71,7 +71,7 @@ class ScalarOp<Op, L, R, false> : public Expression<ScalarOp<Op, L, R, false>>
   }
 
   template <class Index>
-  constexpr scalar_type<ScalarOp> eval(Index index) const {
+  constexpr auto eval(Index index) const noexcept {
     return op_(lhs_.eval(index), rhs_);
   }
 

@@ -46,12 +46,6 @@ class Product : public Expression<Product<L, R>>
   static_assert(is_expression<L>::value, "Operand is not Expression");
   static_assert(is_expression<R>::value, "Operand is not Expression");
 
-  /// The type of the inner dimensions, needed during contraction.
-  ///
-  /// @todo C++14 scope this inside of get
-  using Inner = set_and<outer_type<L>, outer_type<R>>;
-  using Scalar = scalar_type<Product>;
-
  public:
   constexpr Product(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
@@ -68,13 +62,14 @@ class Product : public Expression<Product<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class Index>
-  constexpr Scalar eval(Index i) const {
+  constexpr auto eval(Index i) const {
+    using Inner = set_and<outer_type<L>, outer_type<R>>;
     return contract<std::tuple_size<Index>::value>(std::tuple_cat(i, Inner{}));
   }
 
   /// Used as a leaf call during contraction.
   template <class Index>
-  constexpr Scalar apply(Index index) const {
+  constexpr auto apply(Index index) const {
     return lhs_.eval(index) * rhs_.eval(index);
   }
 
@@ -100,8 +95,8 @@ class Product : public Expression<Product<L, R>>
     ///
     /// @param        e The tensor product expression.
     /// @param    index The partially generated index to fill in.
-    static Scalar op(const Product& e, Index index) {
-      Scalar s{};
+    static auto op(const Product& e, Index index) {
+      decltype(contract_impl<Index, n + 1>::op(e, index)) s{};
       for (int i = 0; i < dimension<Product>::value; ++i) {
         std::get<n>(index).set(i);
         s += contract_impl<Index, n + 1>::op(e, index);
@@ -129,7 +124,7 @@ class Product : public Expression<Product<L, R>>
     ///
     /// @param        e The actual product expression.
     /// @param    index The fully generated index to evaluate.
-    static constexpr Scalar op(const Product& e, Index index) {
+    static constexpr auto op(const Product& e, Index index) {
       return e.apply(index);
     }
   };
@@ -160,7 +155,7 @@ class Product : public Expression<Product<L, R>>
   ///
   /// @returns            The contracted scalar.
   template <int n, class Index>
-  constexpr Scalar contract(Index index) const {
+  constexpr auto contract(Index index) const {
     return contract_impl<Index, n>::op(*this, index);
   }
 

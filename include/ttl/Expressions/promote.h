@@ -17,7 +17,12 @@ template <class L, class R,
           bool = std::is_arithmetic<L>::value,
           bool = std::is_arithmetic<R>::value>
 struct promote_impl;
+}
 
+template <class L, class R>
+using promote = typename detail::promote_impl<L, R>::type;
+
+namespace detail {
 template <class L, class R>
 struct promote_impl<L, R, true, true>
 {
@@ -27,25 +32,21 @@ struct promote_impl<L, R, true, true>
 template <class L, class R>
 struct promote_impl<L, R, true, false>
 {
-  using type = typename promote_impl<L, scalar_type<R>>::type;
+  using type = promote<L, scalar_type<R>>;
 };
 
 template <class L, class R>
 struct promote_impl<L, R, false, true>
 {
-  using type = typename promote_impl<scalar_type<L>, R>::type;
+  using type = promote<scalar_type<L>, R>;
 };
 
 template <class L, class R>
 struct promote_impl<L, R, false, false>
 {
-  using type = typename promote_impl<scalar_type<L>,
-                                     scalar_type<R>>::type;
+  using type = promote<scalar_type<L>, scalar_type<R>>;
 };
 } // namespace detail
-
-template <class L, class R>
-using promote = typename detail::promote_impl<L, R>::type;
 
 } // namespace expressions
 } // namespace ttl

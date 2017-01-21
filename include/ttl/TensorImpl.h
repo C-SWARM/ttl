@@ -23,32 +23,20 @@ namespace ttl {
 template <int R, int D, class S>
 class TensorBase
 {
-  // These two typedefs are really only necessary because we don't have c++14
-  // and can't really effectively infer return types.
-  using Derived = Tensor<R,D,S>;
-  using Scalar = typename std::remove_pointer<S>::type;
-
-  // These typedefs are used to workaround the fact that constexpr can only have
-  // a return value and not static_asserts.
-  template <class I>
-  using check_tuple_length = typename std::enable_if<R == std::tuple_size<I>::value>::type;
-  template <class... I>
-  using check_length = typename std::enable_if<R == sizeof...(I)>::type;
-
  private:
   static constexpr std::size_t Size = util::pow(D,R); ///!< Number of elements
 
-  constexpr const Derived& derived() const noexcept {
-    return *static_cast<const Derived* const>(this);
+  constexpr const auto& derived() const noexcept {
+    return *static_cast<const Tensor<R,D,S>* const>(this);
   }
 
-  /* c++14 constexpr */ Derived& derived() noexcept {
-    return *static_cast<Derived* const>(this);
+  constexpr auto& derived() noexcept {
+    return *static_cast<Tensor<R,D,S>* const>(this);
   }
 
  protected:
   template <class T>
-  Derived& copy(std::initializer_list<T> list) noexcept {
+  auto& copy(std::initializer_list<T> list) noexcept {
     // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
     auto size = Size;
     std::size_t min = std::min(size, list.size());
@@ -58,31 +46,29 @@ class TensorBase
   }
 
   template <class T>
-  Derived& copy(const Tensor<R,D,T>& rhs) noexcept {
+  auto& copy(const Tensor<R,D,T>& rhs) noexcept {
     std::copy_n(rhs.data, Size, derived().data);
     return derived();
   }
 
   template <class T>
-  Derived& copy(Tensor<R,D,T>&& rhs) noexcept {
+  auto& copy(Tensor<R,D,T>&& rhs) noexcept {
     std::copy_n(std::move(rhs.data), Size, derived().data);
     return derived();
   }
 
   template <class Index>
-  constexpr const expressions::Bind<const Derived, Index> // c++11
-  bind() const noexcept {
-    return expressions::Bind<const Derived, Index>(derived());
+  constexpr const auto bind() const noexcept {
+    return expressions::Bind<const Tensor<R,D,S>, Index>(derived());
   }
 
   template <class Index>
-  constexpr expressions::Bind<Derived, Index> // c++11
-  bind() noexcept {
-    return expressions::Bind<Derived, Index>(derived());
+  constexpr auto bind() noexcept {
+    return expressions::Bind<Tensor<R,D,S>, Index>(derived());
   }
 
   template <class E>
-  Derived& apply(E&& rhs) noexcept {
+  auto& apply(E&& rhs) noexcept {
     bind<expressions::outer_type<E>>() = std::forward<E>(rhs);
     return derived();
   }
@@ -99,7 +85,7 @@ class TensorBase
   /// @returns          A reference to the tensor so that fill() can be
   ///                   chained.
   template <class T>
-  Derived& fill(T scalar) noexcept {
+  auto& fill(T scalar) noexcept {
     std::fill_n(derived().data, Size, scalar);
     return derived();
   }
@@ -113,7 +99,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          The scalar value at @p i.
-  constexpr const Scalar operator[](int i) const noexcept {
+  constexpr const auto operator[](int i) const noexcept {
     return derived().data[i];
   }
 
@@ -126,7 +112,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          A reference to the scalar value at @p i.
-  /* c++14 constexpr */ Scalar& operator[](int i) noexcept {
+  constexpr auto& operator[](int i) noexcept {
     return derived().data[i];
   }
 
@@ -141,8 +127,10 @@ class TensorBase
   /// @tparam     Index The tuple type for the index.
   /// @param      index The multidimension index to access.
   /// @returns          The scalar value at the linearized @p index.
-  template <class Index, class = check_tuple_length<Index>>
-  constexpr const Scalar eval(Index index) const noexcept {
+  template <class Index>
+  constexpr const auto eval(Index index) const noexcept {
+    using NIndex = std::tuple_size<Index>;
+    static_assert(R == NIndex::value, "Index size does not match tensor rank");
     return derived().data[util::linearize<D>(index)];
   }
 
@@ -158,8 +146,10 @@ class TensorBase
   /// @param      index The multidimension index to access.
   /// @returns          The a reference to the scalar value at the linearized @p
   ///                   index.
-  template <class Index, class = check_tuple_length<Index>>
-  constexpr Scalar& eval(Index index) noexcept {
+  template <class Index>
+  constexpr auto& eval(Index index) noexcept {
+    using NIndex = std::tuple_size<Index>;
+    static_assert(R == NIndex::value, "Index size does not match tensor rank");
     return derived().data[util::linearize<D>(index)];
   }
 
@@ -184,9 +174,9 @@ class TensorBase
   /// @param     (anon) The index values are unimportant during binding.
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
-  template <class... I, class = check_length<I...>/* c++11 */>
-  constexpr const expressions::Bind<const Derived, std::tuple<I...>> // c++11
-  operator()(I...) const noexcept {
+  template <class... I>
+  constexpr const auto operator()(I...) const noexcept {
+    static_assert(R == sizeof...(I), "Index size does not match tensor rank");
     return bind<std::tuple<I...>>();
   }
 
@@ -211,9 +201,9 @@ class TensorBase
   /// @param     (anon) The index values are unimportant during binding.
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
-  template <class... I, class = check_length<I...>/* c++11 */>
-  constexpr expressions::Bind<Derived, std::tuple<I...>> // c++11
-  operator()(I...) noexcept {
+  template <class... I>
+  constexpr auto operator()(I...) noexcept {
+    static_assert(R == sizeof...(I), "Index size does not match tensor rank");
     return bind<std::tuple<I...>>();
   }
 };
@@ -354,8 +344,7 @@ class Tensor : public TensorBase<R,D,S>
   // We remove the constness from the type for tensors so that we can use the
   // default constructor to leave the data uninitialized. If we don't do this
   // then expressions like Tensor<R,D,const S> T = {}; don't work.
-
-  typename std::remove_const<S>::type data[util::pow(D,R)]; ///!< scalar storage
+  std::remove_const_t<S> data[util::pow(D,R)];  ///!< scalar storage
 };
 
 /// The tensor specialization for external storage.

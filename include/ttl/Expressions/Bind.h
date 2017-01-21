@@ -50,7 +50,6 @@ class Bind : public Expression<Bind<Tensor, Index>>
   using Outer = unique<Index>;
   using Inner = duplicate<Index>;
   using Union = concat<Outer, Inner>;
-  using Scalar = scalar_type<Tensor>;
 
  public:
   /// A Bind expression just keeps a reference to the Tensor it wraps.
@@ -98,7 +97,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  constexpr Scalar eval(I i) const {
+  constexpr auto eval(I i) const {
     return contract<>::op(std::tuple_cat(transform<Outer>(i), Inner{}),
                           [&](Union i){
                             return t_.eval(transform<Index>(i));
@@ -107,7 +106,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
 
   /// This eval operation is used during evaluation to set a left-hand-side
   /// element.
-  constexpr Scalar& eval(Outer index) {
+  constexpr auto& eval(Outer index) {
     static_assert(std::is_same<Outer, Index>::value,
                   "LHS evaluation must not contain a contraction");
     return t_.eval(index);
@@ -234,8 +233,8 @@ class Bind : public Expression<Bind<Tensor, Index>>
     ///
     /// @returns        The contracted scalar for this level of the loop.
     template <class Op>
-    static Scalar op(Union index, Op&& f) {
-      Scalar s{};
+    static auto op(Union index, Op&& f) {
+      decltype(f(index)) s{};
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index).set(i);
         s += contract<n+1>::op(index, std::forward<Op>(f));
@@ -248,7 +247,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
   struct contract<M,M>
   {
     template <class Op>
-    static Scalar op(Union index, Op&& f) {
+    static auto op(Union index, Op&& f) {
       return f(index);
     }
   };

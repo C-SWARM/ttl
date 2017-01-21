@@ -42,7 +42,7 @@ struct det<2, 3, S>
 } // namespace detail
 
 template <class E>
-constexpr expressions::scalar_type<E> det(E&& e) {
+constexpr auto det(E&& e) {
   return detail::det<expressions::rank<E>::value,
                      expressions::dimension<E>::value,
                      expressions::scalar_type<E>>::op(std::forward<E>(e));

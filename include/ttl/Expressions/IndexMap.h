@@ -61,9 +61,8 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   /// @returns          The scalar computed by the child expression for this
   ///                   index.
   template <class Index>
-  constexpr scalar_type<IndexMap> eval(Index index) const {
-    static_assert(subset<OuterType, Index>::value,
-                  "Unexpected outer type during index mapping");
+  constexpr auto eval(Index index) const noexcept {
+    static_assert(subset<OuterType, Index>::value, "Unexpected outer type during index mapping");
     return e_.eval(transform<InnerType>(index));
   }
 

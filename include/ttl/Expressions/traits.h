@@ -39,13 +39,13 @@ struct traits<Tensor<R, D, S>>
 {
   using outer_type = std::tuple<>;
   using inner_type = std::tuple<>;
-  using scalar_type = typename std::remove_pointer<S>::type;
+  using scalar_type = std::remove_pointer_t<S>;
   using dimension = std::integral_constant<int, D>;
   using rank = std::integral_constant<int, R>;
 };
 
 template <class E>
-using rinse = typename std::remove_cv<typename std::remove_reference<E>::type>::type;
+using rinse = std::remove_cv_t<std::remove_reference_t<E>>;
 
 /// The following traits are required for all expression types.
 template <class E>

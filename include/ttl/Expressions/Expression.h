@@ -23,12 +23,12 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  constexpr scalar_type<E> eval(I index) const {
+  constexpr auto eval(I index) const {
     return static_cast<const E*>(this)->eval(index);
   }
 
   template <class... I>
-  constexpr const IndexMap<E, std::tuple<I...>, outer_type<E>> to(I...) const {
+  constexpr const auto to(I...) const {
     return IndexMap<E, std::tuple<I...>,
                     outer_type<E>>(static_cast<const E&>(*this));
   }

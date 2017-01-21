@@ -29,7 +29,7 @@ class UnaryOp : public Expression<UnaryOp<Op, E>>
   }
 
   template <class Index>
-  constexpr scalar_type<UnaryOp> eval(Index index) const {
+  constexpr auto eval(Index index) const noexcept {
     return op_(e_.eval(index));
   }
 

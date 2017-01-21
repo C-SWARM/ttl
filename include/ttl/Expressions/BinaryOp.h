@@ -62,7 +62,7 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
   }
 
   template <class Index>
-  constexpr scalar_type<BinaryOp> eval(Index index) const {
+  constexpr auto eval(Index index) const noexcept {
     return op_(lhs_.eval(index), rhs_.eval(index));
   }
 
