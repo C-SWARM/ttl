@@ -28,9 +28,9 @@ class Expression {
   }
 
   template <class... I>
-  constexpr const IndexMap<E, std::tuple<I...>, free_type<E>> to(I...) const {
+  constexpr const IndexMap<E, std::tuple<I...>, outer_type<E>> to(I...) const {
     return IndexMap<E, std::tuple<I...>,
-                    free_type<E>>(static_cast<const E&>(*this));
+                    outer_type<E>>(static_cast<const E&>(*this));
   }
 
   constexpr operator scalar_type<E>() const {

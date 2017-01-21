@@ -1,18 +1,26 @@
-// -*- C++ -*-
+// -*- C++ -*-------------------------------------------------------------------
+/// This header includes the functionality for binding and evaluating tensor
+/// expressions.
+///
+/// Its primary template is the TensorBind expression which is generated using
+/// a Tensor's operator(), e.g., A(i,j). It also defines the Expression traits
+/// for the TensorBind expression, as well as some ::detail metafunctions to
+/// process type sets.
+// -----------------------------------------------------------------------------
 #ifndef TTL_EXPRESSIONS_TENSOR_BIND_H
 #define TTL_EXPRESSIONS_TENSOR_BIND_H
+
 
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/transform.h>
-#include <ttl/util/is_equivalent.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/Expressions/transform.h>
 #include <utility>
 
 namespace ttl {
 namespace expressions {
-
 /// The expression that represents binding a Tensor to an Index map.
 ///
 /// This expression is the leaf expression for all tensor operations, and
@@ -32,12 +40,18 @@ class TensorBind;
 template <class Tensor, class Index>
 struct traits<TensorBind<Tensor, Index>> : public traits<rinse<Tensor>>
 {
-  using free_type = Index;
+  using outer_type = unique<Index>;
+  using rank = typename std::tuple_size<outer_type>::type;
 };
 
 template <class Tensor, class Index>
 class TensorBind : public Expression<TensorBind<Tensor, Index>>
 {
+  using Outer = unique<Index>;
+  using Inner = duplicate<Index>;
+  using Union = concat<Outer, Inner>;
+  using Scalar = scalar_type<Tensor>;
+
  public:
   /// A TensorBind expression just keeps a reference to the Tensor it wraps.
   ///
@@ -84,13 +98,18 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  constexpr scalar_type<Tensor> eval(I i) const {
-    return t_.eval(transform<Index>(i));
+  constexpr Scalar eval(I i) const {
+    return contract<>::op(std::tuple_cat(transform<Outer>(i), Inner{}),
+                          [&](Union i){
+                            return t_.eval(transform<Index>(i));
+                          });
   }
 
   /// This eval operation is used during evaluation to set a left-hand-side
   /// element.
-  constexpr scalar_type<Tensor>& eval(Index index) {
+  constexpr Scalar& eval(Outer index) {
+    static_assert(std::is_same<Outer, Index>::value,
+                  "LHS evaluation must not contain a contraction");
     return t_.eval(index);
   }
 
@@ -104,11 +123,9 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(util::is_equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Outer, outer_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    apply<>::op([&](Index i) {
-        eval(i) = rhs.eval(i);
-      });
+    apply<>::op(Outer{}, [&](Outer i) { eval(i) = rhs.eval(i); });
     return *this;
   }
 
@@ -122,10 +139,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   TensorBind& operator+=(E&& rhs) {
     static_assert(dimension<E>::value == dimension<Tensor>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(util::is_equivalent<Index, free_type<E>>::value,
+    static_assert(equivalent<Outer, outer_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
     E e = std::move(rhs);
-    apply<>::op([&,this](const Index& i) { eval(i) += rhs.eval(i); });
+    apply<>::op(Outer{}, [&,this](Outer i) { eval(i) += rhs.eval(i); });
     return *this;
   }
 
@@ -154,7 +171,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   ///
   /// @tparam           n The current dimension that we need to traverse.
   /// @tparam           M The total number of free indices to enumerate.
-  template <int n = 0, int M = free_size<TensorBind>::value>
+  template <int n = 0, int M = std::tuple_size<Outer>::value>
   struct apply
   {
     /// The evaluation routine just iterates through the values of the nth
@@ -163,10 +180,10 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @tparam      Op The lambda to evaluate for each index.
     /// @param    index The partially constructed index.
     template <class Op>
-    static void op(Op&& f, Index index = {}) {
+    static void op(Outer index, Op&& f) {
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
         std::get<n>(index) = i;
-        apply<n + 1>::op(std::forward<Op>(f), index);
+        apply<n + 1>::op(index, std::forward<Op>(f));
       }
     }
   };
@@ -178,7 +195,7 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
   struct apply<M, M>
   {
     template <class Op>
-    static void op(Op&& f, const Index& index) {
+    static void op(Outer index, Op&& f) {
       f(index);
     }
 
@@ -190,13 +207,54 @@ class TensorBind : public Expression<TensorBind<Tensor, Index>>
     /// @code
     template <class Op>
     static void op(Op&& f) {
-      f(Index{});
+      f(Outer{});
+    }
+  };
+
+  /// A template to assist with internal template contraction.
+  ///
+  /// This template expands to iterate over one loop index for the Inner
+  /// type. It will recursively call itself for the next Inner type, until it
+  /// hits the base case where all indices have been iterated over.
+  ///
+  /// @tparam         n The offset of the current slot we're iterating over.
+  /// @tparam         M The index of the last slot we iterate over.
+  template <int n = std::tuple_size<Outer>::value,
+            int M = std::tuple_size<Union>::value>
+  struct contract
+  {
+    /// Perform the contraction for this loop.
+    ///
+    /// We contract into a local scalar on the stack and then pass that back up
+    /// to the caller once it has
+    ///
+    /// @tparam      Op The type of the inner operator.
+    /// @param    index The current, partially filled index set.
+    /// @param       op The operator to execute in the inner loop.
+    ///
+    /// @returns        The contracted scalar for this level of the loop.
+    template <class Op>
+    static Scalar op(Union index, Op&& f) {
+      Scalar s{};
+      for (int i = 0; i < dimension<Tensor>::value; ++i) {
+        std::get<n>(index).set(i);
+        s += contract<n+1>::op(index, std::forward<Op>(f));
+      }
+      return s;
+    }
+  };
+
+  template <int M>
+  struct contract<M,M>
+  {
+    template <class Op>
+    static Scalar op(Union index, Op&& f) {
+      return f(index);
     }
   };
 
   Tensor& t_;                                   ///<! The underlying tensor.
 };
-
 } // namespace expressions
 } // namespace ttl
 

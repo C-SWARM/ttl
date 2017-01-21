@@ -3,9 +3,9 @@
 #define TTL_EXPRESSIONS_INDEX_MAP_H
 
 #include <ttl/Expressions/Expression.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
-#include <ttl/util/is_subset.h>
 
 namespace ttl {
 namespace expressions {
@@ -13,22 +13,22 @@ namespace expressions {
 template <class E, class OuterType, class InnerType>
 class IndexMap;
 
-/// The IndexMap just masks the child's free_type trait with the OuterType.
+/// The IndexMap just masks the child's outer_type trait with the OuterType.
 template <class E, class OuterType, class InnerType>
 struct traits<IndexMap<E, OuterType, InnerType>> : public traits<E>
 {
-  using free_type = OuterType;
+  using outer_type = OuterType;
 };
 
 /// The IndexMap implementation.
 ///
-/// The basic purpose of this expression is to shuffle the free_type of its child
-/// expression into a compatible free_type for the parent expression.
+/// The basic purpose of this expression is to shuffle the outer_type of its child
+/// expression into a compatible outer_type for the parent expression.
 ///
 /// @tparam           T The type of the child expression.
 /// @tparam   OuterType The type of the index space to export.
 /// @tparam   InnerType The type of the child index space.
-template <class E, class OuterType, class InnerType = free_type<E>>
+template <class E, class OuterType, class InnerType = outer_type<E>>
 class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
  public:
   /// The index map is simply initialized with its child expression.
@@ -62,7 +62,7 @@ class IndexMap : public Expression<IndexMap<E, OuterType, InnerType>> {
   ///                   index.
   template <class Index>
   constexpr scalar_type<IndexMap> eval(Index index) const {
-    static_assert(util::is_subset<OuterType, Index>::value,
+    static_assert(subset<OuterType, Index>::value,
                   "Unexpected outer type during index mapping");
     return e_.eval(transform<InnerType>(index));
   }

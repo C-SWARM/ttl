@@ -3,7 +3,7 @@
 #define TTL_EXPRESSIONS_TENSOR_PRODUCT_H
 
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/index_type.h>
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/promote.h>
 
 namespace ttl {
@@ -23,11 +23,11 @@ class TensorProduct;
 template <class L, class R>
 struct traits<TensorProduct<L, R>>
 {
-  using free_type = outer_type<typename traits<rinse<L>>::free_type,
-                               typename traits<rinse<R>>::free_type>;
+  using outer_type = set_xor<typename traits<L>::outer_type,
+                             typename traits<R>::outer_type>;
   using scalar_type = promote<L, R>;
   using dimension = typename traits<rinse<L>>::dimension;
-  using rank = typename std::tuple_size<free_type>::type;
+  using rank = typename std::tuple_size<outer_type>::type;
 };
 
 /// The TensorProduct expression implementation.
@@ -49,8 +49,9 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// The type of the inner dimensions, needed during contraction.
   ///
   /// @todo C++14 scope this inside of get
-  using hidden_type = intersection<typename traits<L>::free_type,
-                                   typename traits<R>::free_type>;
+  using Inner = set_and<outer_type<L>, outer_type<R>>;
+  using Scalar = scalar_type<TensorProduct>;
+
  public:
   constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
@@ -67,13 +68,13 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class Index>
-  constexpr scalar_type<TensorProduct> eval(Index i) const {
-    return contract<std::tuple_size<Index>::value>(std::tuple_cat(i, hidden_type()));
+  constexpr Scalar eval(Index i) const {
+    return contract<std::tuple_size<Index>::value>(std::tuple_cat(i, Inner{}));
   }
 
   /// Used as a leaf call during contraction.
   template <class Index>
-  constexpr scalar_type<TensorProduct> apply(Index index) const {
+  constexpr Scalar apply(Index index) const {
     return lhs_.eval(index) * rhs_.eval(index);
   }
 
@@ -99,8 +100,8 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
     ///
     /// @param        e The tensor product expression.
     /// @param    index The partially generated index to fill in.
-    static scalar_type<TensorProduct> op(const TensorProduct& e, Index index) {
-      scalar_type<TensorProduct> s(0);
+    static Scalar op(const TensorProduct& e, Index index) {
+      Scalar s{};
       for (int i = 0; i < dimension<TensorProduct>::value; ++i) {
         std::get<n>(index).set(i);
         s += contract_impl<Index, n + 1>::op(e, index);
@@ -128,8 +129,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
     ///
     /// @param        e The actual product expression.
     /// @param    index The fully generated index to evaluate.
-    static constexpr scalar_type<TensorProduct>
-    op(const TensorProduct& e, Index index) {
+    static constexpr Scalar op(const TensorProduct& e, Index index) {
       return e.apply(index);
     }
   };
@@ -138,7 +138,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///
   /// The purpose of this operation is to provide the entry point for a sequence
   /// of summations. We're basically taking an index that is defined as a
-  /// superset of the free_type indices, and iterating over all of the
+  /// superset of the outer_type indices, and iterating over all of the
   /// contracted dimensions, accumulating their products.
   ///
   /// @code
@@ -147,7 +147,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///   for (i: 0..D-1)  // <-- this is performed by "evaluation" in TensorBind
   ///     for (k: 0..D-1)
   ///       C(i,k) = 0;       // <-- this is where contraction starts
-  //        for (j: 0..D-1)
+  ///       for (j: 0..D-1)
   ///         C(i,k) += A(i,j)*B(j,k)
   /// @code
   ///
@@ -160,7 +160,7 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///
   /// @returns            The contracted scalar.
   template <int n, class Index>
-  constexpr scalar_type<TensorProduct> contract(Index index) const {
+  constexpr Scalar contract(Index index) const {
     return contract_impl<Index, n>::op(*this, index);
   }
 

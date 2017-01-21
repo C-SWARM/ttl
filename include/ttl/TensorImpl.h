@@ -4,7 +4,6 @@
 
 #include <ttl/Tensor.h>
 #include <ttl/Expressions.h>
-// #include <ttl/Expressions/TensorBind.h>
 #include <ttl/util/linearize.h>
 #include <ttl/util/pow.h>
 #include <cassert>
@@ -84,7 +83,7 @@ class TensorBase
 
   template <class E>
   Derived& apply(E&& rhs) noexcept {
-    bind<expressions::free_type<E>>() = std::forward<E>(rhs);
+    bind<expressions::outer_type<E>>() = std::forward<E>(rhs);
     return derived();
   }
 
