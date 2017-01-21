@@ -46,7 +46,7 @@ struct ProductOp {
 
 template <class L, class R>
 struct ProductOp<L, R, false> {
-  using type = TensorProduct<L, R>;
+  using type = Product<L, R>;
 };
 
 template <class L, class R>

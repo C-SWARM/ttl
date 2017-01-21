@@ -11,9 +11,9 @@ namespace expressions {
 
 /// Forward declare the tensor product for the traits implementation.
 template <class L, class R>
-class TensorProduct;
+class Product;
 
-/// The expression Traits for TensorProduct.
+/// The expression Traits for Product.
 ///
 /// The tensor product promotes the scalar type from its left and right hand
 /// sides, and performs a set disjoint union to expose its free_type.
@@ -21,7 +21,7 @@ class TensorProduct;
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
-struct traits<TensorProduct<L, R>>
+struct traits<Product<L, R>>
 {
   using outer_type = set_xor<typename traits<L>::outer_type,
                              typename traits<R>::outer_type>;
@@ -30,7 +30,7 @@ struct traits<TensorProduct<L, R>>
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
-/// The TensorProduct expression implementation.
+/// The Product expression implementation.
 ///
 /// A tensor product combines two expressions using multiplication, potentially
 /// mixed with contraction (accumulation) over some shared dimensions of the two
@@ -39,7 +39,7 @@ struct traits<TensorProduct<L, R>>
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
 template <class L, class R>
-class TensorProduct : public Expression<TensorProduct<L, R>>
+class Product : public Expression<Product<L, R>>
 {
   static_assert(dimension<L>::value == dimension<R>::value,
                 "Cannot combine expressions with different dimensionality");
@@ -50,10 +50,10 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   ///
   /// @todo C++14 scope this inside of get
   using Inner = set_and<outer_type<L>, outer_type<R>>;
-  using Scalar = scalar_type<TensorProduct>;
+  using Scalar = scalar_type<Product>;
 
  public:
-  constexpr TensorProduct(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
+  constexpr Product(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
 
   /// The eval() operation for the product forwards to the contraction routine.
@@ -100,9 +100,9 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
     ///
     /// @param        e The tensor product expression.
     /// @param    index The partially generated index to fill in.
-    static Scalar op(const TensorProduct& e, Index index) {
+    static Scalar op(const Product& e, Index index) {
       Scalar s{};
-      for (int i = 0; i < dimension<TensorProduct>::value; ++i) {
+      for (int i = 0; i < dimension<Product>::value; ++i) {
         std::get<n>(index).set(i);
         s += contract_impl<Index, n + 1>::op(e, index);
       }
@@ -123,13 +123,13 @@ class TensorProduct : public Expression<TensorProduct<L, R>>
   {
     /// The leaf operation for contraction.
     ///
-    /// This leaf simply evaluates the TensorProduct expression (which could be
+    /// This leaf simply evaluates the Product expression (which could be
     /// quite complex and evaluated through recursive expansion) for this @p
     /// index.
     ///
     /// @param        e The actual product expression.
     /// @param    index The fully generated index to evaluate.
-    static constexpr Scalar op(const TensorProduct& e, Index index) {
+    static constexpr Scalar op(const Product& e, Index index) {
       return e.apply(index);
     }
   };
