@@ -4,8 +4,10 @@
 const int e[] = {0,1,2,3,4,5,6,7};
 static constexpr ttl::Index<'i'> i;
 static constexpr ttl::Index<'j'> j;
-static const ttl::Tensor<2,2,int> B = {0, 1, 2, 3};
-static const ttl::Tensor<2,2,const int> C = {0, 1, 2, 3};
+static constexpr ttl::Index<'k'> k;
+
+static const ttl::Tensor<2,2,int> B = {0,1,2,3};
+static const ttl::Tensor<2,2,const int> C = {0,1,2,3};
 static const ttl::Tensor<2,2,const int*> E(e);
 
 TEST(TensorBind, InitializeRValue) {
@@ -186,4 +188,35 @@ TEST(TensorBind, ExternalAssignLValueExpression) {
   EXPECT_EQ(2 * B[1], a[1]);
   EXPECT_EQ(2 * B[2], a[2]);
   EXPECT_EQ(2 * B[3], a[3]);
+}
+
+TEST(TensorBind, Trace2x2) {
+  ttl::Tensor<2,2,int> A = {1,2,3,4};
+  auto t = A(i,i);
+  EXPECT_EQ(t, 5);
+}
+
+TEST(TensorBind, Trace2x3) {
+  ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8,9};
+  auto t = A(i,i);
+  EXPECT_EQ(t, 15);
+}
+
+TEST(TensorBind, Trace3x2) {
+  ttl::Tensor<3,2,int> A = {1,2,3,4,5,6,7,8};
+  auto t = A(i,i,i);
+  EXPECT_EQ(t, A[0] + A[7]);
+}
+
+TEST(TensorBind, ParallelContract) {
+  ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+  auto t = A(i,i,j,j);
+  EXPECT_EQ(t, A[0] + A[3] + A[12] + A[15]);
+}
+
+TEST(Trace, SequentialContract) {
+  ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+  ttl::Tensor<2,2,int> B = A(i,i,j,k);
+  auto t = B(j,j);
+  EXPECT_EQ(t, B[0] + B[3]);
 }
