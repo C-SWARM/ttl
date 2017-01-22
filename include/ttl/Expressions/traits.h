@@ -52,6 +52,9 @@ template <class E>
 using outer_type = typename traits<rinse<E>>::outer_type;
 
 template <class E>
+using inner_type = typename traits<rinse<E>>::inner_type;
+
+template <class E>
 using scalar_type = typename traits<rinse<E>>::scalar_type;
 
 template <class E>

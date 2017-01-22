@@ -14,6 +14,7 @@
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/Expression.h>
+#include <ttl/Expressions/contract.h>
 #include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
@@ -41,6 +42,7 @@ template <class Tensor, class Index>
 struct traits<Bind<Tensor, Index>> : public traits<rinse<Tensor>>
 {
   using outer_type = unique<Index>;
+  using inner_type = duplicate<Index>;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
@@ -48,8 +50,6 @@ template <class Tensor, class Index>
 class Bind : public Expression<Bind<Tensor, Index>>
 {
   using Outer = unique<Index>;
-  using Inner = duplicate<Index>;
-  using Union = concat<Outer, Inner>;
 
  public:
   /// A Bind expression just keeps a reference to the Tensor it wraps.
@@ -98,10 +98,11 @@ class Bind : public Expression<Bind<Tensor, Index>>
   /// @returns          The scalar value at the linearized offset.
   template <class I>
   constexpr auto eval(I i) const {
-    return contract<>::op(std::tuple_cat(transform<Outer>(i), Inner{}),
-                          [&](Union i){
-                            return t_.eval(transform<Index>(i));
-                          });
+    return contract<Bind>(i, [&](auto index) {
+        // intel 16.0 can't handle the "transform" symbol here without the
+        // namespace
+        return t_.eval(ttl::expressions::transform<Index>(index));
+      });
   }
 
   /// This eval operation is used during evaluation to set a left-hand-side
@@ -207,48 +208,6 @@ class Bind : public Expression<Bind<Tensor, Index>>
     template <class Op>
     static void op(Op&& f) {
       f(Outer{});
-    }
-  };
-
-  /// A template to assist with internal template contraction.
-  ///
-  /// This template expands to iterate over one loop index for the Inner
-  /// type. It will recursively call itself for the next Inner type, until it
-  /// hits the base case where all indices have been iterated over.
-  ///
-  /// @tparam         n The offset of the current slot we're iterating over.
-  /// @tparam         M The index of the last slot we iterate over.
-  template <int n = std::tuple_size<Outer>::value,
-            int M = std::tuple_size<Union>::value>
-  struct contract
-  {
-    /// Perform the contraction for this loop.
-    ///
-    /// We contract into a local scalar on the stack and then pass that back up
-    /// to the caller once it has
-    ///
-    /// @tparam      Op The type of the inner operator.
-    /// @param    index The current, partially filled index set.
-    /// @param       op The operator to execute in the inner loop.
-    ///
-    /// @returns        The contracted scalar for this level of the loop.
-    template <class Op>
-    static auto op(Union index, Op&& f) {
-      decltype(f(index)) s{};
-      for (int i = 0; i < dimension<Tensor>::value; ++i) {
-        std::get<n>(index).set(i);
-        s += contract<n+1>::op(index, std::forward<Op>(f));
-      }
-      return s;
-    }
-  };
-
-  template <int M>
-  struct contract<M,M>
-  {
-    template <class Op>
-    static auto op(Union index, Op&& f) {
-      return f(index);
     }
   };
 
