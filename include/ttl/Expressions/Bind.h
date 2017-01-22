@@ -55,32 +55,8 @@ class Bind : public Expression<Bind<Tensor, Index>>
   /// A Bind expression just keeps a reference to the Tensor it wraps.
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(Tensor& t) noexcept : t_(t) {
+  constexpr Bind(Tensor& t) noexcept : i_(), t_(t) {
   }
-
-  /// Default assignment, move, and copy should work fine when the
-  /// right-hand-side is a tensor expression of the same type, meaning it has
-  /// the same underlying tensor shape (Rank, Dimension, and Scalar type) and is
-  /// being indexed through the same indices.
-  ///
-  /// @nb gcc is happy defaulting these but icc 16 won't
-  /// @{
-  constexpr Bind(const Bind& rhs) noexcept : t_(rhs.t_) {
-  }
-
-  constexpr Bind(Bind&& rhs) noexcept : t_(rhs.t_) {
-  }
-
-  Bind& operator=(Bind&& rhs) {
-    t_ = rhs.t_;
-    return *this;
-  }
-
-  Bind& operator=(const Bind& rhs) {
-    t_ = rhs.t_;
-    return *this;
-  }
-  /// @}
 
   /// The index operator maps the index array using the normal interpretation of
   /// multidimensional indexing, using index 0 as the most-significant-index.
@@ -211,6 +187,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
     }
   };
 
+  Index i_;
   Tensor& t_;                                   ///<! The underlying tensor.
 };
 } // namespace expressions
