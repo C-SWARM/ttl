@@ -117,7 +117,6 @@ class Bind : public Expression<Bind<Tensor, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<E>>::value,
                   "Attempted assignment of incompatible Tensors");
-    E e = std::move(rhs);
     apply<>::op(Outer{}, [&,this](Outer i) { eval(i) += rhs.eval(i); });
     return *this;
   }
@@ -158,7 +157,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
     template <class Op>
     static void op(Outer index, Op&& f) {
       for (int i = 0; i < dimension<Tensor>::value; ++i) {
-        std::get<n>(index) = i;
+        std::get<n>(index).set(i);
         apply<n + 1>::op(index, std::forward<Op>(f));
       }
     }
