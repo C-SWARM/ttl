@@ -34,9 +34,9 @@ class Expression {
   }
 
   constexpr operator scalar_type<E>() const {
-    static_assert(rank<E>::value == 0,
-                  "No available conversion to scalar type for expression.");
-    return force(*this)[0];
+    static_assert(std::tuple_size<outer_type<E>>::value == 0,
+                  "Cannot use Tensor as scalar");
+    return static_cast<const E*>(this)->eval(std::tuple<>{});
   }
 };
 

@@ -5,12 +5,14 @@
 #include <ttl/Tensor.h>
 #include <ttl/Expressions.h>
 #include <ttl/util/linearize.h>
+#include <ttl/util/multi_array.h>
 #include <ttl/util/pow.h>
 #include <cassert>
 #include <tuple>
 #include <algorithm>
 
 namespace ttl {
+
 /// Common functionality for the tensor specializations.
 ///
 /// The TensorBase implements a quasi-CRTP pattern in order to statically
@@ -99,7 +101,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          The scalar value at @p i.
-  constexpr const auto operator[](int i) const noexcept {
+  constexpr const auto get(int i) const noexcept {
     return derived().data[i];
   }
 
@@ -112,7 +114,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          A reference to the scalar value at @p i.
-  constexpr auto& operator[](int i) noexcept {
+  constexpr auto& get(int i) noexcept {
     return derived().data[i];
   }
 
@@ -339,6 +341,19 @@ class Tensor : public TensorBase<R,D,S>
   template <class E>
   constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
     return this->apply(rhs);
+  }
+
+  constexpr auto operator[](int i) const noexcept {
+    using Multi = util::multi_array<R,D,const S>;
+    return (*reinterpret_cast<const Multi*>(&data))[i];
+  }
+
+  /// Direct multidimensional array access to the data.
+  constexpr auto operator[](int i) noexcept
+    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
+  {
+    using Multi = util::multi_array<R,D,S>;
+    return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
   // We remove the constness from the type for tensors so that we can use the
@@ -600,7 +615,40 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
     return this->apply(rhs);
   }
 
+  /// Direct multidimensional array access to the data.
+  constexpr const auto operator[](int i) const noexcept {
+    using Multi = util::multi_array<R,D,const S>;
+    return (*reinterpret_cast<const Multi*>(&data))[i];
+  }
+
+  constexpr auto operator[](int i) noexcept
+    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
+  {
+    using Multi = util::multi_array<R,D,S>;
+    return (*reinterpret_cast<Multi*>(&data))[i];
+  }
+
   S (&data)[Size];                              ///!< The external storage
+};
+
+/// Special-case Rank 0 tensors.
+///
+/// They are basically just scalars and should be treated as such wherever
+/// possible.
+template <int D, class S>
+class Tensor<0,D,S>
+{
+ public:
+  auto& operator()() {
+    return data;
+  }
+
+  auto& operator[](int i) {
+    assert(i==0);
+    return data;
+  }
+
+  S data;
 };
 
 } // namespace ttl

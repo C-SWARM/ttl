@@ -7,7 +7,6 @@
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/force.h>
 #include <ttl/Library/determinant.h>
-#include <ttl/util/make_index.h>
 #include <ttl/util/log2.h>
 #include <ttl/util/pow.h>
 
@@ -57,37 +56,36 @@ struct inverse_impl<2>
   template<class E>
   static expressions::tensor_type<E> op(E&& e) {
     auto f = expressions::force(std::forward<E>(e));
-    auto t00 = f.eval(util::make_ij(1,1)) ; //a11
-    auto t01 = f.eval(util::make_ij(0,1)) ; //a01
-    auto t10 = f.eval(util::make_ij(1,0)) ; //a10
-    auto t11 = f.eval(util::make_ij(0,0)) ; //a00
+    auto t00 = f[1][1]; //a11
+    auto t01 = f[0][1]; //a01
+    auto t10 = f[1][0]; //a10
+    auto t11 = f[0][0]; //a00
     return 1/ttl::det(f) * expressions::tensor_type<E>{t00, -t01,
                                                       -t10,  t11}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
   }
 };
 
-
-  /// Analytically expand 3x3 inverse.
-  template <>
-  struct inverse_impl<3>
-  {
-    template<class E>
-    static expressions::tensor_type<E> op(E&& e) {
-      auto f = expressions::force(std::forward<E>(e));
-      auto t00 = f.eval(util::make_ij(2,2))*f.eval(util::make_ij(1,1)) - f.eval(util::make_ij(2,1))*f.eval(util::make_ij(1,2)); //a22a11-a21a12
-      auto t01 = f.eval(util::make_ij(2,2))*f.eval(util::make_ij(0,1)) - f.eval(util::make_ij(2,1))*f.eval(util::make_ij(0,2)); //a22a01-a21a02
-      auto t02 = f.eval(util::make_ij(1,2))*f.eval(util::make_ij(0,1)) - f.eval(util::make_ij(1,1))*f.eval(util::make_ij(0,2)); //a12a01-a11a02
-      auto t10 = f.eval(util::make_ij(2,2))*f.eval(util::make_ij(1,0)) - f.eval(util::make_ij(2,0))*f.eval(util::make_ij(1,2)); //a22a10-a20a12
-      auto t11 = f.eval(util::make_ij(2,2))*f.eval(util::make_ij(0,0)) - f.eval(util::make_ij(2,0))*f.eval(util::make_ij(0,2)); //a22a00-a20a02
-      auto t12 = f.eval(util::make_ij(1,2))*f.eval(util::make_ij(0,0)) - f.eval(util::make_ij(1,0))*f.eval(util::make_ij(0,2)); //a12a00-a10a02
-      auto t20 = f.eval(util::make_ij(2,1))*f.eval(util::make_ij(1,0)) - f.eval(util::make_ij(2,0))*f.eval(util::make_ij(1,1)); //a21a10-a20a11
-      auto t21 = f.eval(util::make_ij(2,1))*f.eval(util::make_ij(0,0)) - f.eval(util::make_ij(2,0))*f.eval(util::make_ij(0,1)); //a21a00-a20a01
-      auto t22 = f.eval(util::make_ij(1,1))*f.eval(util::make_ij(0,0)) - f.eval(util::make_ij(1,0))*f.eval(util::make_ij(0,1)); //a11a00-a10a01
-      return 1/ttl::det(f) * expressions::tensor_type<E>{t00, -t01,  t02,
-                                                        -t10,  t11, -t12,
-                                                         t20, -t21,  t22}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
-    }
-  };
+/// Analytically expand 3x3 inverse.
+template <>
+struct inverse_impl<3>
+{
+  template<class E>
+  static expressions::tensor_type<E> op(E&& e) {
+    auto f = expressions::force(std::forward<E>(e));
+    auto t00 = f[2][2]*f[1][1] - f[2][1]*f[1][2]; //a22a11-a21a12
+    auto t01 = f[2][2]*f[0][1] - f[2][1]*f[0][2]; //a22a01-a21a02
+    auto t02 = f[1][2]*f[0][1] - f[1][1]*f[0][2]; //a12a01-a11a02
+    auto t10 = f[2][2]*f[1][0] - f[2][0]*f[1][2]; //a22a10-a20a12
+    auto t11 = f[2][2]*f[0][0] - f[2][0]*f[0][2]; //a22a00-a20a02
+    auto t12 = f[1][2]*f[0][0] - f[1][0]*f[0][2]; //a12a00-a10a02
+    auto t20 = f[2][1]*f[1][0] - f[2][0]*f[1][1]; //a21a10-a20a11
+    auto t21 = f[2][1]*f[0][0] - f[2][0]*f[0][1]; //a21a00-a20a01
+    auto t22 = f[1][1]*f[0][0] - f[1][0]*f[0][1]; //a11a00-a10a01
+    return 1/ttl::det(f) * expressions::tensor_type<E>{t00, -t01,  t02,
+                                                      -t10,  t11, -t12,
+                                                       t20, -t21,  t22}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
+  }
+};
 
 
 
