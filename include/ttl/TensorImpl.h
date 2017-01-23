@@ -5,34 +5,13 @@
 #include <ttl/Tensor.h>
 #include <ttl/Expressions.h>
 #include <ttl/util/linearize.h>
+#include <ttl/util/multi_array.h>
 #include <ttl/util/pow.h>
 #include <cassert>
 #include <tuple>
 #include <algorithm>
 
 namespace ttl {
-namespace detail {
-template <int R, int D, class S>
-struct multi_array_t_impl
-{
-  using type = typename multi_array_t_impl<R-1,D,S>::type[D];
-};
-
-template <int D, class S>
-struct multi_array_t_impl<0,D,S>
-{
-  using type = S;
-};
-
-template <int D, class S>
-struct multi_array_t_impl<-1,D,S>
-{
-  using type = void;
-};
-}
-
-template <int R, int D, class S>
-using multi_array_t = typename detail::multi_array_t_impl<R,D,S>::type;
 
 /// Common functionality for the tensor specializations.
 ///
@@ -364,13 +343,16 @@ class Tensor : public TensorBase<R,D,S>
     return this->apply(rhs);
   }
 
-  auto operator[](int i) const {
-    using Multi = multi_array_t<R,D,const S>;
+  constexpr auto operator[](int i) const noexcept {
+    using Multi = util::multi_array<R,D,const S>;
     return (*reinterpret_cast<const Multi*>(&data))[i];
   }
 
-  auto& operator[](int i) {
-    using Multi = multi_array_t<R,D,S>;
+  /// Direct multidimensional array access to the data.
+  constexpr auto operator[](int i) noexcept
+    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
+  {
+    using Multi = util::multi_array<R,D,S>;
     return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
@@ -633,13 +615,16 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
     return this->apply(rhs);
   }
 
-  const auto operator[](int i) const {
-    using Multi = multi_array_t<R,D,const S>;
+  /// Direct multidimensional array access to the data.
+  constexpr const auto operator[](int i) const noexcept {
+    using Multi = util::multi_array<R,D,const S>;
     return (*reinterpret_cast<const Multi*>(&data))[i];
   }
 
-  auto& operator[](int i) {
-    using Multi = multi_array_t<R,D,S>;
+  constexpr auto operator[](int i) noexcept
+    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
+  {
+    using Multi = util::multi_array<R,D,S>;
     return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
