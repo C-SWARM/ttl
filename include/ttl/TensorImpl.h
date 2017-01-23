@@ -99,7 +99,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          The scalar value at @p i.
-  constexpr const auto operator[](int i) const noexcept {
+  constexpr const auto get(int i) const noexcept {
     return derived().data[i];
   }
 
@@ -112,7 +112,7 @@ class TensorBase
   ///
   /// @param          i The index to access.
   /// @returns          A reference to the scalar value at @p i.
-  constexpr auto& operator[](int i) noexcept {
+  constexpr auto& get(int i) noexcept {
     return derived().data[i];
   }
 

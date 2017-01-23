@@ -44,7 +44,7 @@ Tensor<R, D, T> make_delta(Tensor<R, D, T>&& tensor, U scalar, int n = 0) {
   if (n == D) {
     return tensor;                              /// recursive base case
   }
-  tensor[diagonal<D, R>(n)] = scalar;
+  tensor.get(diagonal<D, R>(n)) = scalar;
   return make_delta(std::forward<Tensor<R, D, T>>(tensor), scalar, n + 1);
 }
 } // namespace detail

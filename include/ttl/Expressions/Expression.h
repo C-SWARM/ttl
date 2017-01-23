@@ -36,7 +36,7 @@ class Expression {
   constexpr operator scalar_type<E>() const {
     static_assert(rank<E>::value == 0,
                   "No available conversion to scalar type for expression.");
-    return force(*this)[0];
+    return force(*this).get(0);
   }
 };
 

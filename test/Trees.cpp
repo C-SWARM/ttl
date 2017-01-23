@@ -14,10 +14,10 @@ TEST(Trees, LazyTensorProduct) {
   auto t0 = A(i,k);
   auto t1 = B(k,j);
   C(i,j) = t0 * t1;
-  EXPECT_EQ(C[0], 10);
-  EXPECT_EQ(C[1], 13);
-  EXPECT_EQ(C[2], 22);
-  EXPECT_EQ(C[3], 29);
+  EXPECT_EQ(C.get(0), 10);
+  EXPECT_EQ(C.get(1), 13);
+  EXPECT_EQ(C.get(2), 22);
+  EXPECT_EQ(C.get(3), 29);
 }
 
 TEST(Trees, LazyTensorProductComplex) {
@@ -29,8 +29,8 @@ TEST(Trees, LazyTensorProductComplex) {
   auto t0 = A(i,j) * B(j,k);
   auto t1 = C(k,l) * D(l,m);
   E(i,m) = t0 * t1;
-  EXPECT_EQ(E[0], 1088);
-  EXPECT_EQ(E[1], 1301);
-  EXPECT_EQ(E[2], 2416);
-  EXPECT_EQ(E[3], 2889);
+  EXPECT_EQ(E.get(0), 1088);
+  EXPECT_EQ(E.get(1), 1301);
+  EXPECT_EQ(E.get(2), 2416);
+  EXPECT_EQ(E.get(3), 2889);
 }
