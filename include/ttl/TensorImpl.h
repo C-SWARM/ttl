@@ -11,6 +11,29 @@
 #include <algorithm>
 
 namespace ttl {
+namespace detail {
+template <int R, int D, class S>
+struct multi_array_t_impl
+{
+  using type = typename multi_array_t_impl<R-1,D,S>::type[D];
+};
+
+template <int D, class S>
+struct multi_array_t_impl<0,D,S>
+{
+  using type = S;
+};
+
+template <int D, class S>
+struct multi_array_t_impl<-1,D,S>
+{
+  using type = void;
+};
+}
+
+template <int R, int D, class S>
+using multi_array_t = typename detail::multi_array_t_impl<R,D,S>::type;
+
 /// Common functionality for the tensor specializations.
 ///
 /// The TensorBase implements a quasi-CRTP pattern in order to statically
@@ -341,6 +364,16 @@ class Tensor : public TensorBase<R,D,S>
     return this->apply(rhs);
   }
 
+  auto operator[](int i) const {
+    using Multi = multi_array_t<R,D,const S>;
+    return (*reinterpret_cast<const Multi*>(&data))[i];
+  }
+
+  auto& operator[](int i) {
+    using Multi = multi_array_t<R,D,S>;
+    return (*reinterpret_cast<Multi*>(&data))[i];
+  }
+
   // We remove the constness from the type for tensors so that we can use the
   // default constructor to leave the data uninitialized. If we don't do this
   // then expressions like Tensor<R,D,const S> T = {}; don't work.
@@ -598,6 +631,16 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   template <class E>
   constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
     return this->apply(rhs);
+  }
+
+  const auto operator[](int i) const {
+    using Multi = multi_array_t<R,D,const S>;
+    return (*reinterpret_cast<const Multi*>(&data))[i];
+  }
+
+  auto& operator[](int i) {
+    using Multi = multi_array_t<R,D,S>;
+    return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
   S (&data)[Size];                              ///!< The external storage
