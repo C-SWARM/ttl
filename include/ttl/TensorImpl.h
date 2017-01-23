@@ -646,6 +646,26 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   S (&data)[Size];                              ///!< The external storage
 };
 
+/// Special-case Rank 0 tensors.
+///
+/// They are basically just scalars and should be treated as such wherever
+/// possible.
+template <int D, class S>
+class Tensor<0,D,S>
+{
+ public:
+  auto& operator()() {
+    return data;
+  }
+
+  auto& operator[](int i) {
+    assert(i==0);
+    return data;
+  }
+
+  S data;
+};
+
 } // namespace ttl
 
 #endif // #ifndef TTL_TENSOR_IMPL_H
