@@ -52,10 +52,10 @@ class Bind : public Expression<Bind<Tensor, Index>>
   using Outer = unique<Index>;
 
  public:
-  /// A Bind expression just keeps a reference to the Tensor it wraps.
+  /// A Bind expression keeps a reference to the Tensor it wraps, and a
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(Tensor& t) noexcept : i_(), t_(t) {
+  constexpr Bind(Tensor& t, const Index i) noexcept : t_(t), i_(i) {
   }
 
   /// The index operator maps the index array using the normal interpretation of
@@ -186,9 +186,15 @@ class Bind : public Expression<Bind<Tensor, Index>>
     }
   };
 
-  Index i_;
   Tensor& t_;                                   ///<! The underlying tensor.
+  const Index i_;                               ///<! The bound index.
 };
+
+template <class T, class Index>
+Bind<T, Index> make_bind(T& t, const Index i) {
+  return Bind<T,Index>(t, i);
+}
+
 } // namespace expressions
 } // namespace ttl
 

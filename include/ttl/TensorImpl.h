@@ -59,19 +59,19 @@ class TensorBase
     return derived();
   }
 
-  template <class Index>
-  constexpr const auto bind() const noexcept {
-    return expressions::Bind<const Tensor<R,D,S>, Index>(derived());
+  template <class Index>                        // required for icc 16
+  constexpr const auto bind(const Index index) const noexcept {
+    return expressions::make_bind(derived(), index);
   }
 
-  template <class Index>
-  constexpr auto bind() noexcept {
-    return expressions::Bind<Tensor<R,D,S>, Index>(derived());
+  template <class Index>                        // required for icc 16
+  constexpr auto bind(const Index index) noexcept {
+    return expressions::make_bind(derived(), index);
   }
 
   template <class E>
   auto& apply(E&& rhs) noexcept {
-    bind<expressions::outer_type<E>>() = std::forward<E>(rhs);
+    bind(expressions::outer_type<E>{}) = std::forward<E>(rhs);
     return derived();
   }
 
@@ -173,13 +173,13 @@ class TensorBase
   /// @code
   ///
   /// @tparam...      I The index types to bind to the tensor.
-  /// @param     (anon) The index values are unimportant during binding.
+  /// @param... indices The index values.
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... I>
-  constexpr const auto operator()(I...) const noexcept {
+  constexpr const auto operator()(I... indices) const noexcept {
     static_assert(R == sizeof...(I), "Index size does not match tensor rank");
-    return bind<std::tuple<I...>>();
+    return bind(std::make_tuple(indices...));
   }
 
   /// Bind a Bind expression to a tensor.
@@ -200,13 +200,13 @@ class TensorBase
   /// @code
   ///
   /// @tparam...      I The index types to bind to the tensor.
-  /// @param     (anon) The index values are unimportant during binding.
+  /// @param... indices The index values.
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... I>
-  constexpr auto operator()(I...) noexcept {
+  constexpr auto operator()(I... indices) noexcept {
     static_assert(R == sizeof...(I), "Index size does not match tensor rank");
-    return bind<std::tuple<I...>>();
+    return bind(std::make_tuple(indices...));
   }
 };
 

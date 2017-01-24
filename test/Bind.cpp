@@ -219,3 +219,9 @@ TEST(Bind, SequentialContract) {
   auto t = B(j,j);
   EXPECT_EQ(t, B.get(0) + B.get(3));
 }
+
+// TEST(Bind, Projection) {
+//   ttl::Tensor<1,2,int> A = {0,1};
+//   int i = A(1);
+//   EXPECT_EQ(i, 1);
+// }
