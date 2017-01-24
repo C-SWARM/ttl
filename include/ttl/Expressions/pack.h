@@ -18,6 +18,7 @@ template <class Pack> struct cdr_impl;
 template <class L, class R> struct concat_impl;
 template <class L, class R> struct subset_impl;
 template <class T, class Pack> struct remove_impl;
+template <class Pacl> struct non_integral_impl;
 template <class Pack> struct unique_impl;
 template <class Pack> struct duplicate_impl;
 template <int N, class T, class Pack> struct index_of_impl;
@@ -43,6 +44,9 @@ using subset = typename detail::subset_impl<L, R>::type;
 
 template <class T, class Pack>
 using remove = typename detail::remove_impl<T, Pack>::type;
+
+template <class Pack>
+using non_integral = typename detail::non_integral_impl<Pack>::type;
 
 template <class Pack>
 using unique = typename detail::unique_impl<Pack>::type;
@@ -167,6 +171,21 @@ struct remove_impl
   using tail = cdr<Pack>;
   using next = remove<T, tail>;
   using type = iif<typename std::is_same<T, head>::type, next, concat<head, next>>;
+};
+
+template <template <class...> class Pack>
+struct non_integral_impl<Pack<>>
+{
+  using type = Pack<>;
+};
+
+template <class Pack>
+struct non_integral_impl
+{
+  using head = car<Pack>;
+  using tail = cdr<Pack>;
+  using next = non_integral<tail>;
+  using type = iif<std::is_integral<head>, concat<head, next>, next>;
 };
 
 template <template <class...> class Pack>

@@ -2,7 +2,9 @@
 #ifndef TTL_EXPRESSIONS_CONTRACT_H
 #define TTL_EXPRESSIONS_CONTRACT_H
 
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/Expressions/transform.h>
 
 namespace ttl {
 namespace expressions {

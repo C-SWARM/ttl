@@ -22,40 +22,35 @@
 
 namespace ttl {
 namespace expressions {
-/// The expression that represents binding a Tensor to an Index map.
+/// The expression that represents binding an index space to a subtree.
 ///
-/// This expression is the leaf expression for all tensor operations, and
-/// results from expressions that look like `x(i)`, `A(j, k, l)`, etc. It allows
-/// multidimensional indexing into tensors, tensor assignment, and natively
-/// supports shuffle operations.
-///
-/// @tparam      Tensor The tensor type.
+/// @tparam           E The subtree type.
 /// @tparam       Index The index map for this expression.
-template <class Tensor, class Index>
+template <class E, class Index>
 class Bind;
 
 /// The expression traits for Bind expressions.
 ///
-/// @tparam      Tensor The class for the underlying tensor.
+/// @tparam           E The subtree expression type.
 /// @tparam       Index The indices bound to this expression.
-template <class Tensor, class Index>
-struct traits<Bind<Tensor, Index>> : public traits<rinse<Tensor>>
+template <class E, class Index>
+struct traits<Bind<E, Index>> : public traits<rinse<E>>
 {
-  using outer_type = unique<Index>;
-  using inner_type = duplicate<Index>;
+  using outer_type = unique<non_integral<Index>>;
+  using inner_type = duplicate<non_integral<Index>>;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
-template <class Tensor, class Index>
-class Bind : public Expression<Bind<Tensor, Index>>
+template <class E, class Index>
+class Bind : public Expression<Bind<E, Index>>
 {
   using Outer = unique<Index>;
 
  public:
-  /// A Bind expression keeps a reference to the Tensor it wraps, and a
+  /// A Bind expression keeps a reference to the E it wraps, and a
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(Tensor& t, const Index i) noexcept : t_(t), i_(i) {
+  constexpr Bind(E& t, const Index i) noexcept : t_(t), i_(i) {
   }
 
   /// The index operator maps the index array using the normal interpretation of
@@ -92,15 +87,15 @@ class Bind : public Expression<Bind<Tensor, Index>>
   /// Assignment from any right hand side expression that has an equivalent
   /// index pack.
   ///
-  /// @tparam         E Type of the Right-hand-side expression.
+  /// @tparam       RHS Type of the Right-hand-side expression.
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
-  template <class E>
-  Bind& operator=(E&& rhs) {
-    static_assert(dimension<E>::value == dimension<Tensor>::value,
+  template <class RHS>
+  Bind& operator=(RHS&& rhs) {
+    static_assert(dimension<E>::value == dimension<RHS>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<Outer, outer_type<E>>::value,
-                  "Attempted assignment of incompatible Tensors");
+    static_assert(equivalent<Outer, outer_type<RHS>>::value,
+                  "Attempted assignment of incompatible Expressions");
     apply<>::op(Outer{}, [&](Outer i) { eval(i) = rhs.eval(i); });
     return *this;
   }
@@ -108,15 +103,15 @@ class Bind : public Expression<Bind<Tensor, Index>>
   /// Accumulate from any right hand side expression that has an equivalent
   /// index pack.
   ///
-  /// @tparam         E Type of the Right-hand-side expression.
+  /// @tparam       RHS Type of the Right-hand-side expression.
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
-  template <class E>
-  Bind& operator+=(E&& rhs) {
-    static_assert(dimension<E>::value == dimension<Tensor>::value,
+  template <class RHS>
+  Bind& operator+=(RHS&& rhs) {
+    static_assert(dimension<E>::value == dimension<RHS>::value,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<Outer, outer_type<E>>::value,
-                  "Attempted assignment of incompatible Tensors");
+    static_assert(equivalent<Outer, outer_type<RHS>>::value,
+                  "Attempted assignment of incompatible Expressions");
     apply<>::op(Outer{}, [&,this](Outer i) { eval(i) += rhs.eval(i); });
     return *this;
   }
@@ -156,7 +151,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
     /// @param    index The partially constructed index.
     template <class Op>
     static void op(Outer index, Op&& f) {
-      for (int i = 0; i < dimension<Tensor>::value; ++i) {
+      for (int i = 0; i < dimension<E>::value; ++i) {
         std::get<n>(index).set(i);
         apply<n + 1>::op(index, std::forward<Op>(f));
       }
@@ -186,7 +181,7 @@ class Bind : public Expression<Bind<Tensor, Index>>
     }
   };
 
-  Tensor& t_;                                   ///<! The underlying tensor.
+  E& t_;                                        ///<! The underlying tree.
   const Index i_;                               ///<! The bound index.
 };
 

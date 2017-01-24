@@ -10,7 +10,8 @@ namespace ttl {
 namespace expressions {
 
 /// Forward declare the IndexMap template, since it is needed in the Expression
-template <class T, class Outer, class Inner> class IndexMap;
+// template <class T, class Outer, class Inner> class IndexMap;
+template <class T, class Index> class Bind;
 
 /// The base expression class template.
 ///
@@ -28,9 +29,10 @@ class Expression {
   }
 
   template <class... I>
-  constexpr const auto to(I...) const {
-    return IndexMap<E, std::tuple<I...>,
-                    outer_type<E>>(static_cast<const E&>(*this));
+  constexpr const auto to(I... index) const {
+    return Bind<const Expression<E>, std::tuple<I...>>(*this, std::make_tuple(index...));
+    // return Bind<E, std::tuple<I...>,
+    //                 outer_type<E>>(static_cast<const E&>(*this));
   }
 
   constexpr operator scalar_type<E>() const {
