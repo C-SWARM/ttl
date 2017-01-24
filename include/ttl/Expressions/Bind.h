@@ -116,6 +116,13 @@ class Bind : public Expression<Bind<E, Index>>
     return *this;
   }
 
+  std::ostream& print(std::ostream& os) const {
+    apply<>::op(Outer{}, [&,this](Outer i) {
+        print_pack(os, i) << ": " << eval(i) << "\n";
+      });
+    return os;
+  }
+
  private:
   /// The recursive template class that evaluates tensor expressions.
   ///

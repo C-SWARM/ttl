@@ -4,6 +4,7 @@
 
 #include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
+#include <ostream>
 #include <type_traits>
 
 namespace ttl {
@@ -31,8 +32,6 @@ class Expression {
   template <class... I>
   constexpr const auto to(I... index) const {
     return Bind<const Expression<E>, std::tuple<I...>>(*this, std::make_tuple(index...));
-    // return Bind<E, std::tuple<I...>,
-    //                 outer_type<E>>(static_cast<const E&>(*this));
   }
 
   constexpr operator scalar_type<E>() const {
@@ -40,6 +39,11 @@ class Expression {
                   "Cannot use Tensor as scalar");
     return static_cast<const E*>(this)->eval(std::tuple<>{});
   }
+
+  constexpr std::ostream& print(std::ostream& os) const {
+    return static_cast<const E*>(this)->print(os);
+  }
+
 };
 
 template <class E>
@@ -58,5 +62,10 @@ using is_expression = typename detail::is_expression_impl<E>::type;
 
 } // namespace expressions
 } // namespace ttl
+
+template <class E, class = std::enable_if_t<ttl::expressions::is_expression<E>::value>>
+std::ostream& operator<<(std::ostream& os, const E& expression) {
+  return expression.print(os);
+}
 
 #endif // TTL_EXPRESSIONS_EXPRESSION_H

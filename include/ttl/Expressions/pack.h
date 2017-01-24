@@ -22,6 +22,7 @@ template <class Pacl> struct non_integral_impl;
 template <class Pack> struct unique_impl;
 template <class Pack> struct duplicate_impl;
 template <int N, class T, class Pack> struct index_of_impl;
+template <class Pack, int n, int N> struct print_impl;
 } // namespace detail
 
 // -----------------------------------------------------------------------------
@@ -242,8 +243,31 @@ struct index_of_impl
   using type = iif<match, std::integral_constant<int, N>, next>;
 };
 
+template <class Pack, int N>
+struct print_impl<Pack,N,N>
+{
+  static std::ostream& op(std::ostream& os, const Pack&) {
+    return os;
+  }
+};
+
+template <class Pack,
+          int n = 0,
+          int N = std::tuple_size<Pack>::value>
+struct print_impl
+{
+  static std::ostream& op(std::ostream& os, const Pack& pack) {
+    os << std::get<n>(pack) << ", ";
+    return print_impl<Pack, n+1>::op(os, pack);
+  }
+};
+
 } // namespace detail
-} // namespace util
+template <class Pack>
+std::ostream& print_pack(std::ostream& os, const Pack& pack) {
+  return detail::print_impl<Pack>::op(os, pack);
+}
+} // namespace expressions
 } // namespace ttl
 
 #endif // #define TTL_EXPRESSIONS_PACK_H
