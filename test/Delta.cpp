@@ -50,7 +50,7 @@ auto Identity() {
   static constexpr ttl::Index<'j'> j;
   static constexpr ttl::Index<'k'> k;
   static constexpr ttl::Index<'l'> l;
-  return ttl::expressions::force(ttl::Delta<2,D,S>()(i,k)*ttl::Delta<2,D,S>()(j,l));
+  return ttl::expressions::force((ttl::Delta<2,D,S>()(i,k)*ttl::Delta<2,D,S>()(j,l)).to(i,j,k,l));
 }
 
 TEST(Delta, Identity) {
@@ -58,18 +58,19 @@ TEST(Delta, Identity) {
   static constexpr ttl::Index<'j'> j;
   static constexpr ttl::Index<'k'> k;
   static constexpr ttl::Index<'l'> l;
-  auto I = Identity<2,int>();
+  auto I = Identity<3,int>();
   std::cout << "I\n" << I(i,j,k,l) << "\n";
 
-  ttl::Tensor<2,2,int> A = {1, 3,
-                            5, 7}, B{};
+  ttl::Tensor<2,3,int> A = {1, 3, 5,
+                            7, 9, 11,
+                            13, 15, 17}, B{};
 
   std::cout << "A\n" << A(i,j) << "\n";
-  B(i,j) = I(i,k,j,l).to(i,j,k,l) * A(k,l);
+  B(i,j) = I(i,j,k,l) * A(k,l);
   std::cout << "B\n" << B(i,j) << "\n";
 
-  for (int i = 0; i < 2; ++i) {
-    for (int j = 0; j < 2; ++j) {
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
       EXPECT_EQ(A[i][j], B[i][j]);
     }
   }
