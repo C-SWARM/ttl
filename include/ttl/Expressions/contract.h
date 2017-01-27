@@ -2,7 +2,9 @@
 #ifndef TTL_EXPRESSIONS_CONTRACT_H
 #define TTL_EXPRESSIONS_CONTRACT_H
 
+#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/Expressions/transform.h>
 
 namespace ttl {
 namespace expressions {
@@ -45,7 +47,7 @@ struct contract_impl<E, M, M, D>
 template <class E,
           class Index>           // Index c++14 auto (icc 16 complains)
 constexpr auto extend(Index i) {
-  return std::tuple_cat(transform<outer_type<E>>(i), inner_type<E>{});
+  return std::tuple_cat(transform(outer_type<E>{}, i), inner_type<E>{});
 }
 } // namespace detail
 

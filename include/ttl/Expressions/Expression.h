@@ -4,13 +4,15 @@
 
 #include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
+#include <ostream>
 #include <type_traits>
 
 namespace ttl {
 namespace expressions {
 
 /// Forward declare the IndexMap template, since it is needed in the Expression
-template <class T, class Outer, class Inner> class IndexMap;
+// template <class T, class Outer, class Inner> class IndexMap;
+template <class T, class Index> class Bind;
 
 /// The base expression class template.
 ///
@@ -28,15 +30,16 @@ class Expression {
   }
 
   template <class... I>
-  constexpr const auto to(I...) const {
-    return IndexMap<E, std::tuple<I...>,
-                    outer_type<E>>(static_cast<const E&>(*this));
+  constexpr const auto to(I... index) const {
+    return Bind<const Expression<E>, std::tuple<I...>>(*this, std::make_tuple(index...));
   }
 
-  constexpr operator scalar_type<E>() const {
-    static_assert(std::tuple_size<outer_type<E>>::value == 0,
-                  "Cannot use Tensor as scalar");
-    return static_cast<const E*>(this)->eval(std::tuple<>{});
+  constexpr operator const scalar_type<E>() const {
+    return eval(std::tuple<>{});
+  }
+
+  constexpr std::ostream& print(std::ostream& os) const {
+    return static_cast<const E*>(this)->print(os);
   }
 };
 
@@ -56,5 +59,10 @@ using is_expression = typename detail::is_expression_impl<E>::type;
 
 } // namespace expressions
 } // namespace ttl
+
+template <class E, class = std::enable_if_t<ttl::expressions::is_expression<E>::value>>
+std::ostream& operator<<(std::ostream& os, const E& expression) {
+  return expression.print(os);
+}
 
 #endif // TTL_EXPRESSIONS_EXPRESSION_H

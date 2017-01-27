@@ -24,12 +24,13 @@ class Product;
 template <class L, class R>
 struct traits<Product<L, R>>
 {
-  using outer_type = set_xor<typename traits<L>::outer_type,
-                             typename traits<R>::outer_type>;
-  using inner_type = set_and<typename traits<L>::outer_type,
-                             typename traits<R>::outer_type>;
+  using l_outer_type = expressions::outer_type<L>;
+  using r_outer_type = expressions::outer_type<R>;
+
+  using outer_type = set_xor<l_outer_type, r_outer_type>;
+  using inner_type = set_and<l_outer_type, r_outer_type>;
   using scalar_type = promote<L, R>;
-  using dimension = typename traits<rinse<L>>::dimension;
+  using dimension = typename traits<L>::dimension;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
