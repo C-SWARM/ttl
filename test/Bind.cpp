@@ -191,7 +191,7 @@ TEST(Bind, ExternalAssignLValueExpression) {
 
 TEST(Bind, Trace2x2) {
   ttl::Tensor<2,2,int> A = {1,2,3,4};
-  auto t = A(i,i);
+  int t = A(i,i);
   EXPECT_EQ(t, 5);
 }
 
@@ -220,8 +220,49 @@ TEST(Bind, SequentialContract) {
   EXPECT_EQ(t, B.get(0) + B.get(3));
 }
 
-// TEST(Bind, Projection) {
-//   ttl::Tensor<1,2,int> A = {0,1};
-//   int i = A(1);
-//   EXPECT_EQ(i, 1);
+TEST(Bind, ProjectionRead1) {
+  ttl::Tensor<1,2,int> A = {0,1};
+  EXPECT_EQ(A(0), A[0]);
+  EXPECT_EQ(A(1), A[1]);
+}
+
+TEST(Bind, ProjectionRead2) {
+  ttl::Tensor<2,2,int> A = {0,1,2,3};
+  EXPECT_EQ(A(0,0), A[0][0]);
+  EXPECT_EQ(A(0,1), A[0][1]);
+  EXPECT_EQ(A(1,0), A[1][0]);
+  EXPECT_EQ(A(1,1), A[1][1]);
+}
+
+
+TEST(Bind, ProjectionRead2_1) {
+  ttl::Tensor<2,2,int> A = {0,1,2,3};
+  ttl::Tensor<1,2,int> v = A(1,i);
+  EXPECT_EQ(v(0), 2);
+  EXPECT_EQ(v(1), 3);
+}
+
+TEST(Bind, ProjectionRead3) {
+  ttl::Tensor<3,2,int> A = {0,1,2,3,4,5,6,7};
+  int d = A(0,1,0);
+  EXPECT_EQ(d, A[0][1][0]);
+  ttl::Tensor<2,2,int> B = A(i,1,j);
+  EXPECT_EQ(B(0,0), A(0,1,0));
+  EXPECT_EQ(B(0,1), A(0,1,1));
+  EXPECT_EQ(B(1,0), A(1,1,0));
+  EXPECT_EQ(B(1,1), A(1,1,1));
+  ttl::Tensor<1,2,int> v = A(1,i,0);
+  EXPECT_EQ(v(0), A(1,0,0));
+  EXPECT_EQ(v(1), A(1,1,0));
+  v = A(i,1,1);
+  EXPECT_EQ(v(0), A(0,1,1));
+  EXPECT_EQ(v(1), A(1,1,1));
+}
+
+// TEST(Bind, ProjectionWrite) {
+//   ttl::Tensor<1,2,int> A;
+//   A(0) = 0;
+//   A(1) = 1;
+//   EXPECT_EQ(A[0], 0);
+//   EXPECT_EQ(A[1], 1);
 // }

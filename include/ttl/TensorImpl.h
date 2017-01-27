@@ -148,10 +148,9 @@ class TensorBase
   /// @param      index The multidimension index to access.
   /// @returns          The a reference to the scalar value at the linearized @p
   ///                   index.
-  template <class Index>
+  template <class Index, int N = std::tuple_size<Index>::value>
   constexpr auto& eval(Index index) noexcept {
-    using NIndex = std::tuple_size<Index>;
-    static_assert(R == NIndex::value, "Index size does not match tensor rank");
+    static_assert(R == N, "Index size does not match tensor rank");
     return derived().data[util::linearize<D>(index)];
   }
 

@@ -34,10 +34,8 @@ class Expression {
     return Bind<const Expression<E>, std::tuple<I...>>(*this, std::make_tuple(index...));
   }
 
-  constexpr operator scalar_type<E>() const {
-    static_assert(std::tuple_size<outer_type<E>>::value == 0,
-                  "Cannot use Tensor as scalar");
-    return static_cast<const E*>(this)->eval(std::tuple<>{});
+  constexpr operator const scalar_type<E>() const {
+    return eval(std::tuple<>{});
   }
 
   constexpr std::ostream& print(std::ostream& os) const {

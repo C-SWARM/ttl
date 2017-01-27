@@ -47,7 +47,7 @@ struct contract_impl<E, M, M, D>
 template <class E,
           class Index>           // Index c++14 auto (icc 16 complains)
 constexpr auto extend(Index i) {
-  return std::tuple_cat(transform<outer_type<E>>(i), inner_type<E>{});
+  return std::tuple_cat(transform(outer_type<E>{}, i), inner_type<E>{});
 }
 } // namespace detail
 

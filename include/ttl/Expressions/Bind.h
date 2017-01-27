@@ -44,7 +44,7 @@ struct traits<Bind<E, Index>> : public traits<rinse<E>>
 template <class E, class Index>
 class Bind : public Expression<Bind<E, Index>>
 {
-  using Outer = unique<Index>;
+  using Outer = outer_type<Bind>;
 
  public:
   /// A Bind expression keeps a reference to the E it wraps, and a
@@ -72,16 +72,8 @@ class Bind : public Expression<Bind<E, Index>>
     return contract<Bind>(i, [&](auto index) {
         // intel 16.0 can't handle the "transform" symbol here without the
         // namespace
-        return t_.eval(ttl::expressions::transform<Index>(index));
+        return t_.eval(ttl::expressions::transform(i_, index));
       });
-  }
-
-  /// This eval operation is used during evaluation to set a left-hand-side
-  /// element.
-  constexpr auto& eval(Outer index) {
-    static_assert(std::is_same<Outer, Index>::value,
-                  "LHS evaluation must not contain a contraction");
-    return t_.eval(index);
   }
 
   /// Assignment from any right hand side expression that has an equivalent
@@ -96,7 +88,7 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](Outer i) { eval(i) = rhs.eval(i); });
+    apply<>::op(Outer{}, [&](Outer i) { t_.eval(i) = rhs.eval(i); });
     return *this;
   }
 
@@ -112,10 +104,14 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&,this](Outer i) { eval(i) += rhs.eval(i); });
+    apply<>::op(Outer{}, [&](Outer i) { t_.eval(i) += rhs.eval(i); });
     return *this;
   }
 
+  /// Basic print-to-stream functionality.
+  ///
+  /// This iterates through the index space and prints the index and results to
+  /// the stream.
   std::ostream& print(std::ostream& os) const {
     apply<>::op(Outer{}, [&,this](Outer i) {
         print_pack(os, i) << ": " << eval(i) << "\n";

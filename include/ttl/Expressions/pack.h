@@ -18,10 +18,12 @@ template <class Pack> struct cdr_impl;
 template <class L, class R> struct concat_impl;
 template <class L, class R> struct subset_impl;
 template <class T, class Pack> struct remove_impl;
-template <class Pacl> struct non_integral_impl;
+template <template <class...> class Pack, class... U> struct non_integral_impl;
+template <class Pack> struct non_integral_unpack;
 template <class Pack> struct unique_impl;
 template <class Pack> struct duplicate_impl;
-template <int N, class T, class Pack> struct index_of_impl;
+template <int N, class T, class... U> struct index_of_impl;
+template <int N, class T, class Pack> struct index_of_unpack;
 template <class Pack, int n, int N> struct print_impl;
 } // namespace detail
 
@@ -47,7 +49,7 @@ template <class T, class Pack>
 using remove = typename detail::remove_impl<T, Pack>::type;
 
 template <class Pack>
-using non_integral = typename detail::non_integral_impl<Pack>::type;
+using non_integral = typename detail::non_integral_unpack<Pack>::type;
 
 template <class Pack>
 using unique = typename detail::unique_impl<Pack>::type;
@@ -60,7 +62,7 @@ using duplicate = typename detail::duplicate_impl<Pack>::type;
 /// @tparam           T The type that we're searching for.
 /// @tparam...        U The pack that we're searching.
 template <class T, class Pack>
-using index_of = typename detail::index_of_impl<0, T, Pack>::type;
+using index_of = typename detail::index_of_unpack<0, T, Pack>::type;
 
 /// Two packs are equivalent when they are subsets of each other.
 template <class L, class R>
@@ -77,7 +79,8 @@ using set_and = duplicate<concat<L, R>>;
 // -----------------------------------------------------------------------------
 namespace detail {
 template <class B, class T, class U>
-struct iif_impl {
+struct iif_impl
+{
   using type = T;
 };
 
@@ -174,19 +177,24 @@ struct remove_impl
   using type = iif<typename std::is_same<T, head>::type, next, concat<head, next>>;
 };
 
+template <template <class...> class Pack, class... T>
+struct non_integral_unpack<Pack<T...>>
+{
+  using type = typename non_integral_impl<Pack, T...>::type;
+};
+
 template <template <class...> class Pack>
-struct non_integral_impl<Pack<>>
+struct non_integral_impl<Pack>
 {
   using type = Pack<>;
 };
 
-template <class Pack>
-struct non_integral_impl
+template <template <class...> class Pack, class T0, class... T>
+struct non_integral_impl<Pack, T0, T...>
 {
-  using head = car<Pack>;
-  using tail = cdr<Pack>;
-  using next = non_integral<tail>;
-  using type = iif<std::is_integral<head>, concat<head, next>, next>;
+  static constexpr bool integral = std::is_integral<T0>::value;
+  using next = typename non_integral_impl<Pack, T...>::type;
+  using type = std::conditional_t<integral, next, concat<Pack<T0>, next>>;
 };
 
 template <template <class...> class Pack>
@@ -227,20 +235,32 @@ struct duplicate_impl
   using type = iif<subset<head, tail>, concat<head, next>, next>;
 };
 
-template <int N, template <class...> class Pack, class T>
-struct index_of_impl<N, Pack<T>, Pack<>>
+/// Unpack the indices in the pack and forward them to the implementation.
+template <int N, class T, template <class...> class Pack, class... U>
+struct index_of_unpack<N, T, Pack<U...>>
+{
+  using type = typename index_of_impl<N,T,U...>::type;
+};
+
+/// Base case when there aren't any types left to search.
+template <int N, class T, class... U>
+struct index_of_impl
 {
   using type = std::integral_constant<int, N>;
 };
 
-template <int N, class T, class Pack>
-struct index_of_impl
+/// Base case when the first type matches.
+template <int N, class T, class... U>
+struct index_of_impl<N, T, T, U...>
 {
-  using head = car<Pack>;
-  using tail = cdr<Pack>;
-  using match = typename std::is_same<T, head>::type;
-  using next = typename index_of_impl<N + 1, T, tail>::type;
-  using type = iif<match, std::integral_constant<int, N>, next>;
+  using type = std::integral_constant<int, N>;
+};
+
+/// When the first type doesn't match we just keep searching.
+template <int N, class T, class U0, class... U>
+struct index_of_impl<N, T, U0, U...>
+{
+  using type = typename index_of_impl<N+1, T, U...>::type;
 };
 
 template <class Pack, int N>
