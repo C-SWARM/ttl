@@ -41,7 +41,6 @@ class Expression {
   constexpr std::ostream& print(std::ostream& os) const {
     return static_cast<const E*>(this)->print(os);
   }
-
 };
 
 template <class E>

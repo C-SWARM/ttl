@@ -21,10 +21,10 @@ using ipiv_t = lapack_int;
 
 namespace ttl {
 namespace detail {
-template <class E,
-          int N = expressions::rank<E>::value,
-          int D = expressions::dimension<E>::value>
+template <class E>
 struct square_dimension {
+  static constexpr int N = expressions::rank<E>::value;
+  static constexpr int D = expressions::dimension<E>::value;
   static constexpr int value = util::pow(D, util::log2<N>::value);
 };
 
@@ -54,7 +54,7 @@ template <>
 struct inverse_impl<2>
 {
   template<class E>
-  static constexpr auto op(E&& e) {
+  static auto op(E&& e) {
     auto f = expressions::force(std::forward<E>(e));
     return 1/ttl::det(f) * expressions::tensor_type<E>{f(0,0), -f(0,1),
       -f(1,0),  f(1,1)}(ttl::Index<'\0'>(), ttl::Index<'\1'>());

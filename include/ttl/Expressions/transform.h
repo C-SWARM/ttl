@@ -32,10 +32,10 @@ struct select
   /// This specialization finds the index of the type T in the From pack, and
   /// returns its value. We check to make sure that the index is actually
   /// found.
-  template <class From>
+  template <class From,
+            int n = index_of<T, From>::value,     // intel can't handle these in
+            int N = std::tuple_size<From>::value> // constexpr function
   static constexpr T op(const T, const From from) {
-    constexpr auto n = index_of<T, From>::value;
-    constexpr auto N = std::tuple_size<From>::value;
     static_assert(n < N, "Index space is incompatible");
     return std::get<n>(from);
   }

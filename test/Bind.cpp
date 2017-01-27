@@ -259,10 +259,56 @@ TEST(Bind, ProjectionRead3) {
   EXPECT_EQ(v(1), A(1,1,1));
 }
 
-// TEST(Bind, ProjectionWrite) {
-//   ttl::Tensor<1,2,int> A;
-//   A(0) = 0;
-//   A(1) = 1;
-//   EXPECT_EQ(A[0], 0);
-//   EXPECT_EQ(A[1], 1);
-// }
+TEST(Bind, ProjectionWrite) {
+  ttl::Tensor<1,2,int> A;
+  A(0) = 0;
+  A(1) = 1;
+  EXPECT_EQ(A[0], 0);
+  EXPECT_EQ(A[1], 1);
+}
+
+TEST(Bind, ProjectionWrite2) {
+  ttl::Tensor<2,2,int> A;
+  A(0,0) = 0;
+  A(0,1) = 1;
+  A(1,0) = 2;
+  A(1,1) = 3;
+  EXPECT_EQ(A[0][0], 0);
+  EXPECT_EQ(A[0][1], 1);
+  EXPECT_EQ(A[1][0], 2);
+  EXPECT_EQ(A[1][1], 3);
+}
+
+TEST(Bind, ProjectionWriteVector) {
+  ttl::Tensor<2,2,int> A = {};
+  ttl::Tensor<1,2,int> v = {1,2};
+
+  A(i,0) = v(i);
+  EXPECT_EQ(A[0][0], 1);
+  EXPECT_EQ(A[1][0], 2);
+
+  A(1,i) = v(i);
+  EXPECT_EQ(A[1][0], 1);
+  EXPECT_EQ(A[1][1], 2);
+}
+
+TEST(Bind, ProjectionWriteMatrix) {
+  ttl::Tensor<3,2,int> A = {};
+  ttl::Tensor<2,2,int> M = {1,2,3,4};
+
+  A(i,0,j) = M(i,j);
+  EXPECT_EQ(A[0][0][0], 1);
+  EXPECT_EQ(A[0][0][1], 2);
+  EXPECT_EQ(A[1][0][0], 3);
+  EXPECT_EQ(A[1][0][1], 4);
+}
+
+
+TEST(Bind, ProjectionProduct) {
+  ttl::Tensor<2,2,int> A = {}, B={1,2,3,4};
+  ttl::Tensor<3,2,int> C={1,2,3,4,5,6,7,8};
+
+  A(i,0) = B(j,i)*C(1,j,0);
+  EXPECT_EQ(A[0][0], 26);
+  EXPECT_EQ(A[1][0], 38);
+}

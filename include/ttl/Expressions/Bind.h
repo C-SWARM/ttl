@@ -86,11 +86,22 @@ class Bind : public Expression<Bind<E, Index>>
   /// @returns          A reference to *this for chaining.
   template <class RHS>
   Bind& operator=(RHS&& rhs) {
-    static_assert(dimension<E>::value == dimension<RHS>::value,
+    static_assert(dimension<Bind>::value == dimension<RHS>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](Outer i) { t_.eval(i) = rhs.eval(i); });
+    apply<>::op(Outer{}, [&](Outer i) {
+        t_.eval(ttl::expressions::transform(i_, i)) = rhs.eval(i);
+      });
+    return *this;
+  }
+
+  /// Assignment of a scalar to a fully specified scalar right hand side.
+  Bind& operator=(scalar_type<Bind>&& rhs) {
+    static_assert(rank<Bind>::value == 0, "Cannot assign scalar to tensor");
+    apply<>::op(Outer{}, [&](Outer i) {
+        t_.eval(ttl::expressions::transform(i_, i)) = rhs;
+      });
     return *this;
   }
 
@@ -106,7 +117,9 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](Outer i) { t_.eval(i) += rhs.eval(i); });
+    apply<>::op(Outer{}, [&](Outer i) {
+        t_.eval(ttl::expressions::transform(i_, i)) += rhs.eval(i);
+      });
     return *this;
   }
 
