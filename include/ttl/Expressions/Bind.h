@@ -31,6 +31,8 @@ class Bind;
 
 /// The expression traits for Bind expressions.
 ///
+/// Bind currently strips the cvref keywords from the bound type.
+///
 /// @tparam           E The subtree expression type.
 /// @tparam       Index The indices bound to this expression.
 template <class E, class Index>
