@@ -12,5 +12,6 @@
 #include <ttl/Library/determinant.h>
 #include <ttl/Library/epsilon.h>
 #include <ttl/Library/inverse.h>
+#include <ttl/Library/transpose.h>
 
 #endif // #ifndef TTL_H

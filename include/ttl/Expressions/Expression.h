@@ -29,9 +29,14 @@ class Expression {
     return static_cast<const E*>(this)->eval(index);
   }
 
+  template <template <class...> class Pack, class... I>
+  constexpr const auto to(Pack<I...> index) const {
+    return make_bind(*this, index);
+  }
+
   template <class... I>
   constexpr const auto to(I... index) const {
-    return Bind<const Expression<E>, std::tuple<I...>>(*this, std::make_tuple(index...));
+    return to(std::make_tuple(index...));
   }
 
   constexpr operator const scalar_type<E>() const {
