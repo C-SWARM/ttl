@@ -75,3 +75,14 @@ TEST(Delta, Identity) {
     }
   }
 }
+
+TEST(Delta, Expression) {
+  static constexpr ttl::Index<'i'> i;
+  static constexpr ttl::Index<'j'> j;
+  double d = 3.14;
+  ttl::Tensor<2,3,double> D = d * ttl::delta<3>(i,j);
+  for (int n = 0; n < 3; ++n)
+    for (int m = 0; m < 3; ++m)
+      EXPECT_EQ(D(m,n), (m==n) ? d : 0.0);
+}
+

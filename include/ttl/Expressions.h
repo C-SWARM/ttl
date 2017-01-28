@@ -8,5 +8,6 @@
 #include <ttl/Expressions/ScalarOp.h>
 #include <ttl/Expressions/Product.h>
 #include <ttl/Expressions/Operators.h>
+#include <ttl/Expressions/DeltaOp.h>
 
 #endif // TTL_EXPRESSIONS_EXPRESSIONS_H
