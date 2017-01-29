@@ -31,13 +31,13 @@ struct traits<Product<L, R>>
   using l_outer_type = expressions::outer_type<L>;
   using r_outer_type = expressions::outer_type<R>;
 
-  static constexpr int l_dimension = expressions::dimension<L>::value;
-  static constexpr int r_dimension = expressions::dimension<R>::value;
-  static_assert(l_dimension == r_dimension or
-                l_dimension == -1 or
-                r_dimension == -1,
+  static constexpr int l_dim = expressions::dimension<L>::value;
+  static constexpr int r_dim = expressions::dimension<R>::value;
+  static_assert(l_dim == r_dim or
+                l_dim == -1 or
+                r_dim == -1,
                 "Cannot combine expressions with different dimensionality");
-  static constexpr int dim = (std::max(l_dimension, r_dimension));
+  static constexpr int dim = ((l_dim < r_dim) ? r_dim : l_dim);
 
  public:
   using outer_type = set_xor<l_outer_type, r_outer_type>;
