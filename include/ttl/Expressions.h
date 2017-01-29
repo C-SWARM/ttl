@@ -9,5 +9,6 @@
 #include <ttl/Expressions/Product.h>
 #include <ttl/Expressions/Operators.h>
 #include <ttl/Expressions/DeltaOp.h>
+#include <ttl/Expressions/Epsilon.h>
 
 #endif // TTL_EXPRESSIONS_EXPRESSIONS_H
