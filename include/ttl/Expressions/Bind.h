@@ -52,7 +52,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// A Bind expression keeps a reference to the E it wraps, and a
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(E& t, const Index i) noexcept : t_(t), i_(i) {
+  constexpr Bind(E& t, const Index i = Index{}) noexcept : t_(t), i_(i) {
   }
 
   /// The index operator maps the index array using the normal interpretation of
@@ -86,7 +86,8 @@ class Bind : public Expression<Bind<E, Index>>
   /// @returns          A reference to *this for chaining.
   template <class RHS>
   Bind& operator=(RHS&& rhs) {
-    static_assert(dimension<Bind>::value == dimension<RHS>::value,
+    static_assert(dimension<RHS>::value == dimension<Bind>::value or
+                  dimension<RHS>::value == -1,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
@@ -117,7 +118,7 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](Outer i) {
+    apply<>::op(Outer{}, [&](const Outer i) {
         t_.eval(ttl::expressions::transform(i_, i)) += rhs.eval(i);
       });
     return *this;
@@ -128,7 +129,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// This iterates through the index space and prints the index and results to
   /// the stream.
   std::ostream& print(std::ostream& os) const {
-    apply<>::op(Outer{}, [&,this](Outer i) {
+    apply<>::op(Outer{}, [&,this](const Outer i) {
         print_pack(os, i) << ": " << eval(i) << "\n";
       });
     return os;
@@ -162,6 +163,9 @@ class Bind : public Expression<Bind<E, Index>>
   template <int n = 0, int M = std::tuple_size<Outer>::value>
   struct apply
   {
+    static constexpr int D = dimension<E>::value;
+    static_assert(D > 0, "Apply requires explicit dimensionality");
+
     /// The evaluation routine just iterates through the values of the nth
     /// dimension of the tensor, recursively calling the template.
     ///
@@ -169,7 +173,7 @@ class Bind : public Expression<Bind<E, Index>>
     /// @param    index The partially constructed index.
     template <class Op>
     static void op(Outer index, Op&& f) {
-      for (int i = 0; i < dimension<E>::value; ++i) {
+      for (int i = 0; i < D; ++i) {
         std::get<n>(index).set(i);
         apply<n + 1>::op(index, std::forward<Op>(f));
       }

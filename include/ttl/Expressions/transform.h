@@ -92,6 +92,11 @@ template <class To, class From>
 constexpr To transform(const To to, const From from) noexcept {
   return detail::transform_impl<To>::op(to, from);
 }
+
+template <class To, class From>
+constexpr To transform(const From from) noexcept {
+  return detail::transform_impl<To>::op(To{}, from);
+}
 } // namespace expressions
 } // namespace ttl
 

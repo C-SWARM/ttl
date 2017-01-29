@@ -24,13 +24,26 @@ class Product;
 template <class L, class R>
 struct traits<Product<L, R>>
 {
+ private:
+  static_assert(is_expression<L>::value, "Operand is not Expression");
+  static_assert(is_expression<R>::value, "Operand is not Expression");
+
   using l_outer_type = expressions::outer_type<L>;
   using r_outer_type = expressions::outer_type<R>;
 
+  static constexpr int l_dimension = expressions::dimension<L>::value;
+  static constexpr int r_dimension = expressions::dimension<R>::value;
+  static_assert(l_dimension == r_dimension or
+                l_dimension == -1 or
+                r_dimension == -1,
+                "Cannot combine expressions with different dimensionality");
+  static constexpr int dim = (std::max(l_dimension, r_dimension));
+
+ public:
   using outer_type = set_xor<l_outer_type, r_outer_type>;
   using inner_type = set_and<l_outer_type, r_outer_type>;
   using scalar_type = promote<L, R>;
-  using dimension = typename traits<L>::dimension;
+  using dimension = std::integral_constant<int, dim>;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
@@ -45,11 +58,6 @@ struct traits<Product<L, R>>
 template <class L, class R>
 class Product : public Expression<Product<L, R>>
 {
-  static_assert(dimension<L>::value == dimension<R>::value,
-                "Cannot combine expressions with different dimensionality");
-  static_assert(is_expression<L>::value, "Operand is not Expression");
-  static_assert(is_expression<R>::value, "Operand is not Expression");
-
  public:
   constexpr Product(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
   }
@@ -66,7 +74,7 @@ class Product : public Expression<Product<L, R>>
   ///                   expression.
   template <class I>
   constexpr auto eval(I i) const noexcept {
-    return contract<Product>(i, [&](auto index){
+    return contract<Product>(i, [&](auto index) {
         return lhs_.eval(index) * rhs_.eval(index);
       });
   }

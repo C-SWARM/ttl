@@ -3,7 +3,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)
-add_executable(library Delta.cpp Epsilon.cpp Determinant.cpp Inverse.cpp
+add_executable(library Delta.cpp
+  Epsilon.cpp
+  Determinant.cpp
+  Inverse.cpp
   Transpose.cpp) 
 add_executable(bind Bind.cpp)
 add_executable(index_map IndexMap.cpp)

@@ -80,9 +80,30 @@ TEST(Delta, Expression) {
   static constexpr ttl::Index<'i'> i;
   static constexpr ttl::Index<'j'> j;
   double d = 3.14;
-  ttl::Tensor<2,3,double> D = d * ttl::delta<3>(i,j);
+
+  ttl::Tensor<2,3,double> D = d * ttl::delta(i,j);
   for (int n = 0; n < 3; ++n)
     for (int m = 0; m < 3; ++m)
       EXPECT_EQ(D(m,n), (m==n) ? d : 0.0);
 }
 
+TEST(Delta, Expression2) {
+  static constexpr ttl::Index<'i'> i;
+  static constexpr ttl::Index<'j'> j;
+  static constexpr ttl::Index<'k'> k;
+  static constexpr ttl::Index<'l'> l;
+  ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8},
+                       B = A(i,j) * ttl::delta(j,k),
+                       C = A(i,j) * ttl::delta(k,j).to(j,k),
+                       D = ((ttl::delta(i,k)*ttl::delta(j,l)).to(i,j,k,l))*A(k,l);
+
+  for (int n = 0; n < 3; ++n) {
+    for (int m = 0; m < 3; ++m) {
+      EXPECT_EQ(B(m,n), A(m,n));
+      EXPECT_EQ(C(m,n), A(m,n));
+      EXPECT_EQ(D(m,n), A(m,n));
+    }
+  }
+
+  ttl::Tensor<2,3,double> E = ttl::delta<3>(i,j)*ttl::delta<3>(j,k);
+}

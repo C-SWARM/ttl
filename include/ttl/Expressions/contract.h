@@ -20,6 +20,8 @@ template <class E,
           int D = dimension<E>::value>
 struct contract_impl
 {
+  static_assert(D > 0, "Contraction requires explicit dimensionality");
+
   template <class Index, class F>              // c++14 auto (icc 16 complains)
   static auto op(Index index, F&& f) noexcept {
     decltype(f(index)) s{};
@@ -65,7 +67,8 @@ constexpr auto extend(Index i) {
 template <class E,
           class Index, class F>              // c++14 auto (icc 16 complains)
 constexpr auto contract(Index i, F&& f) noexcept {
-  return detail::contract_impl<E>::op(detail::extend<E>(i), std::forward<F>(f));
+  using impl = detail::contract_impl<E>;
+  return impl::op(detail::extend<E>(i), std::forward<F>(f));
 }
 } // namespace contract
 } // namespace ttl

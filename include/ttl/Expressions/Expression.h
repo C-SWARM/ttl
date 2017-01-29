@@ -65,9 +65,12 @@ using is_expression = typename detail::is_expression_impl<E>::type;
 } // namespace expressions
 } // namespace ttl
 
-template <class E, class = std::enable_if_t<ttl::expressions::is_expression<E>::value>>
-std::ostream& operator<<(std::ostream& os, const E& expression) {
-  return expression.print(os);
+template <class E,
+          class = std::enable_if_t<ttl::expressions::is_expression<E>::value>>
+std::ostream& operator<<(std::ostream& os, const E& e) {
+  using Index = ttl::expressions::outer_type<E>;
+  using Bind = ttl::expressions::Bind<const E,Index>;
+  return Bind(e).print(os);
 }
 
 #endif // TTL_EXPRESSIONS_EXPRESSION_H
