@@ -71,7 +71,6 @@ template <int D, class Index>
 struct traits<DeltaOp<D, Index>>
 {
   using outer_type = Index;
-  using inner_type = std::tuple<>;
   using scalar_type = int;
   using dimension = std::integral_constant<int, D>;
   using rank = typename std::tuple_size<Index>::type;

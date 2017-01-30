@@ -1,6 +1,7 @@
 # Trivial example using gtest and gmock
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
+add_executable(identity Identity.cpp)
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)
 add_executable(library Determinant.cpp Inverse.cpp Transpose.cpp)
@@ -12,6 +13,7 @@ add_executable(trees Trees.cpp)
 add_executable(epsilon Epsilon.cpp)
 add_executable(delta Delta.cpp)
 
+target_link_libraries(identity gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(tensor gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(library gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(bind gtest_main ${LAPACK_LIBRARIES})
@@ -22,6 +24,8 @@ target_link_libraries(trees gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(epsilon gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(delta gtest_main ${LAPACK_LIBRARIES})
 
+
+add_test(NAME identity_test COMMAND identity)
 add_test(NAME index_test COMMAND index)
 add_test(NAME tensor_test COMMAND tensor)
 add_test(NAME library_test COMMAND library)
