@@ -39,6 +39,11 @@ class Expression {
     return to(std::make_tuple(index...));
   }
 
+  template <class... I>
+  constexpr const auto operator()(I... index) const {
+    return eval(outer_type<E>(index...));
+  }
+
   constexpr operator const scalar_type<E>() const {
     return eval(std::tuple<>{});
   }

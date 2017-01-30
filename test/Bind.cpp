@@ -303,7 +303,6 @@ TEST(Bind, ProjectionWriteMatrix) {
   EXPECT_EQ(A[1][0][1], 4);
 }
 
-
 TEST(Bind, ProjectionProduct) {
   ttl::Tensor<2,2,int> A = {}, B={1,2,3,4};
   ttl::Tensor<3,2,int> C={1,2,3,4,5,6,7,8};
@@ -311,4 +310,10 @@ TEST(Bind, ProjectionProduct) {
   A(i,0) = B(j,i)*C(1,j,0);
   EXPECT_EQ(A[0][0], 26);
   EXPECT_EQ(A[1][0], 38);
+}
+
+TEST(Bind, Curry) {
+  ttl::Tensor<1,2,int> A = {1,2};
+  auto f = A(j);
+  int v = f(1);
 }

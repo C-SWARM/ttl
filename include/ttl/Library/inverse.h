@@ -54,8 +54,7 @@ template <>
 struct inverse_impl<2>
 {
   template<class E>
-  static auto op(E&& e) {
-    auto f = expressions::force(std::forward<E>(e));
+  static auto op(E&& f) {
     return 1/ttl::det(f) * expressions::tensor_type<E>{f(0,0), -f(0,1),
       -f(1,0),  f(1,1)}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
   }
@@ -66,8 +65,7 @@ template <>
 struct inverse_impl<3>
 {
   template<class E>
-  static expressions::tensor_type<E> op(E&& e) {
-    auto f = expressions::force(std::forward<E>(e));
+  static expressions::tensor_type<E> op(E&& f) {
     auto t00 = f(2,2)*f(1,1) - f(2,1)*f(1,2); //a22a11-a21a12
     auto t01 = f(2,2)*f(0,1) - f(2,1)*f(0,2); //a22a01-a21a02
     auto t02 = f(1,2)*f(0,1) - f(1,1)*f(0,2); //a12a01-a11a02
