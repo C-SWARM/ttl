@@ -10,5 +10,6 @@
 #include <ttl/Expressions/Operators.h>
 #include <ttl/Expressions/DeltaOp.h>
 #include <ttl/Expressions/Epsilon.h>
+#include <ttl/Expressions/Identity.h>
 
 #endif // TTL_EXPRESSIONS_EXPRESSIONS_H
