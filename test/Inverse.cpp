@@ -1,6 +1,15 @@
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
 
+TEST(Inverse, Basic_2_2) {
+  ttl::Tensor<2,2,double> A = {1, 2, 3, 5};
+  auto B = ttl::inverse(A);
+  EXPECT_EQ(B[0][0], -5);
+  EXPECT_EQ(B[0][1], 2);
+  EXPECT_EQ(B[1][0], 3);
+  EXPECT_EQ(B[1][1], -1);
+}
+
 TEST(Inverse, Basic_2_3) {
   const ttl::Tensor<2,3,const double> A = {1, 2, 3,
                                            4, 5, 6,
@@ -100,30 +109,6 @@ TEST(Inverse, Expression_2_3) {
 TEST(Inverse, Basic_4xo_3) {
   const ttl::Tensor<4,3,double> A = {};
   auto B = ttl::inverse(A);
-}
-
-TEST(Inverse, Basic_2_2) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  ttl::Index<'k'> k;
-
-  ttl::Tensor<2,2,double> A = {1, 2,   //init A
-                   3, 4};
-
-  ttl::Tensor<2,2,double> B = ttl::inverse(A);
-
-  //EXPECT_EQ(B[0][0], -2);
-  //EXPECT_EQ(B[0][1], 1);
-  //EXPECT_EQ(B[1][0], 1.5);
-  //EXPECT_EQ(B[1][1], -.5);
-
-  ttl::Tensor<2,2,double> AxB = {};
-  AxB(i,j) = A(i,k) * B(k,j);
-
-  //EXPECT_EQ(AxB[0][0], 1);
-  //EXPECT_EQ(AxB[0][1], 0);
-  //EXPECT_EQ(AxB[1][0], 0);
-  //EXPECT_EQ(AxB[1][1], 1);
 }
 
 TEST(Inverse, Basic_2_4) {

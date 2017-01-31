@@ -54,9 +54,9 @@ template <>
 struct inverse_impl<2>
 {
   template<class E>
-  static auto op(E&& f) {
-    return 1/ttl::det(f) * expressions::tensor_type<E>{f(0,0), -f(0,1),
-      -f(1,0),  f(1,1)}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
+  static expressions::tensor_type<E> op(E&& f) {
+    auto d = 1/ttl::det(f);
+    return {d*f(1,1), -d*f(0,1), -d*f(1,0), d*f(0,0)};
   }
 };
 
@@ -75,9 +75,10 @@ struct inverse_impl<3>
     auto t20 = f(2,1)*f(1,0) - f(2,0)*f(1,1); //a21a10-a20a11
     auto t21 = f(2,1)*f(0,0) - f(2,0)*f(0,1); //a21a00-a20a01
     auto t22 = f(1,1)*f(0,0) - f(1,0)*f(0,1); //a11a00-a10a01
-    return 1/ttl::det(f) * expressions::tensor_type<E>{t00, -t01,  t02,
-                                                      -t10,  t11, -t12,
-                                                       t20, -t21,  t22}(ttl::Index<'\0'>(), ttl::Index<'\1'>());
+    auto d = 1/ttl::det(f);
+    return {d*t00, -d*t01,  d*t02,
+           -d*t10,  d*t11, -d*t12,
+            d*t20, -d*t21,  d*t22};
   }
 };
 } // namespace detail
