@@ -25,8 +25,8 @@ template <class L, class R>
 struct traits<Product<L, R>>
 {
  private:
-  static_assert(is_expression<L>::value, "Operand is not Expression");
-  static_assert(is_expression<R>::value, "Operand is not Expression");
+  static_assert(is_expression_t<L>::value, "Operand is not Expression");
+  static_assert(is_expression_t<R>::value, "Operand is not Expression");
 
   using l_outer_type = expressions::outer_type<L>;
   using r_outer_type = expressions::outer_type<R>;

@@ -51,8 +51,8 @@ struct traits<BinaryOp<Op, L, R>> : public traits<L>
 template <class Op, class L, class R>
 class BinaryOp : public Expression<BinaryOp<Op, L, R>>
 {
-  static_assert(is_expression<L>::value, "Operand is not Expression");
-  static_assert(is_expression<R>::value, "Operand is not Expression");
+  static_assert(is_expression_t<L>::value, "Operand is not Expression");
+  static_assert(is_expression_t<R>::value, "Operand is not Expression");
   static_assert(equivalent<outer_type<L>, outer_type<R>>::value,
                 "BinaryOp expressions do not have equivalent index types.");
   static_assert(dimension<L>::value == dimension<R>::value,

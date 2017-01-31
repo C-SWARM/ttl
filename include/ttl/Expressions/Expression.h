@@ -60,18 +60,18 @@ struct traits<Expression<E>> : public traits<E> {
 namespace detail {
 template <class E>
 struct is_expression_impl {
-  using type = std::is_base_of<Expression<E>, E>;
+  using type = typename std::is_base_of<Expression<E>, E>::type;
 };
 } // namespace detail
 
 template <class E>
-using is_expression = typename detail::is_expression_impl<E>::type;
+using is_expression_t = typename detail::is_expression_impl<std::remove_cv_t<E>>::type;
 
 } // namespace expressions
 } // namespace ttl
 
 template <class E,
-          class = std::enable_if_t<ttl::expressions::is_expression<E>::value>>
+          class = std::enable_if_t<ttl::expressions::is_expression_t<E>::value>>
 std::ostream& operator<<(std::ostream& os, const E& e) {
   using Index = ttl::expressions::outer_type<E>;
   using Bind = ttl::expressions::Bind<const E,Index>;

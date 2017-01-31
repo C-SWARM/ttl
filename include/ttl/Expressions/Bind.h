@@ -46,14 +46,17 @@ struct traits<Bind<E, Index>> : public traits<rinse<E>>
 template <class E, class Index>
 class Bind : public Expression<Bind<E, Index>>
 {
+  /// The Bind storage type is an expression, or a reference to a Tensor.
+  using Child = iif<is_expression_t<E>, E, E&>;
   using Outer = outer_type<Bind>;
 
  public:
   /// A Bind expression keeps a reference to the E it wraps, and a
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(E& t, const Index i = Index{}) noexcept : t_(t), i_(i) {
+  constexpr Bind(Child t, const Index i = Index{}) noexcept : t_(t), i_(i) {
   }
+
 
   /// The index operator maps the index array using the normal interpretation of
   /// multidimensional indexing, using index 0 as the most-significant-index.
@@ -203,7 +206,7 @@ class Bind : public Expression<Bind<E, Index>>
     }
   };
 
-  E& t_;                                        ///<! The underlying tree.
+  Child t_;                                     ///<! The underlying tree.
   const Index i_;                               ///<! The bound index.
 };
 

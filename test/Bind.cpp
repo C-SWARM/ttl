@@ -315,5 +315,16 @@ TEST(Bind, ProjectionProduct) {
 TEST(Bind, Curry) {
   ttl::Tensor<1,2,int> A = {1,2};
   auto f = A(j);
-  int v = f(1);
+  EXPECT_EQ(f(0), 1);
+  EXPECT_EQ(f(1), 2);
+}
+
+TEST(Bind, PermuteSubtree) {
+  ttl::Tensor<2,2,int> A = {1,2,3,4},
+                       B = {1,3,2,4};
+  auto f = A(i,j).to(j,i);
+  EXPECT_EQ(f(0,0), B(0,0));
+  EXPECT_EQ(f(0,1), B(0,1));
+  EXPECT_EQ(f(1,0), B(1,0));
+  EXPECT_EQ(f(1,1), B(1,1));
 }

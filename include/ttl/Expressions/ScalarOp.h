@@ -41,7 +41,7 @@ struct traits<ScalarOp<Op, L, R, false>> : public traits<L>
 template <class Op, class L, class R>
 class ScalarOp<Op, L, R, true> : public  Expression<ScalarOp<Op, L, R, true>>
 {
-  static_assert(is_expression<R>::value, "Operand is not Expression");
+  static_assert(is_expression_t<R>::value, "Operand is not Expression");
  public:
   constexpr ScalarOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
   }
@@ -64,7 +64,7 @@ class ScalarOp<Op, L, R, true> : public  Expression<ScalarOp<Op, L, R, true>>
 template <class Op, class L, class R>
 class ScalarOp<Op, L, R, false> : public Expression<ScalarOp<Op, L, R, false>>
 {
-  static_assert(is_expression<L>::value, "Operand is not Expression");
+  static_assert(is_expression_t<L>::value, "Operand is not Expression");
 
  public:
   constexpr ScalarOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
