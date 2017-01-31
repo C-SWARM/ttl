@@ -1,6 +1,14 @@
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
 
+#include <ttl/Library/solve.h>
+
+using namespace ttl;
+
+static constexpr Index<'i'> i;
+static constexpr Index<'j'> j;
+static constexpr Index<'k'> k;
+
 TEST(Inverse, Basic_2_2) {
   ttl::Tensor<2,2,double> A = {1, 2, 3, 5};
   auto B = ttl::inverse(A);
@@ -11,125 +19,116 @@ TEST(Inverse, Basic_2_2) {
 }
 
 TEST(Inverse, Basic_2_3) {
-  const ttl::Tensor<2,3,const double> A = {1, 2, 3,
-                                           4, 5, 6,
-                                           7, 8, 10};
-  auto B = ttl::inverse(A);
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  const Tensor<2,3,const double> A = {1, 2, 3,
+                                      4, 5, 6,
+                                      7, 8, 10};
+  Tensor<2,3,const double> B = inverse(A);
+  std::cout << B(i,j) << "\n";
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, Extern_2_3) {
   const double a[9] = {1, 2, 3,
                        4, 5, 6,
                        7, 8, 10};
-  const ttl::Tensor<2,3,const double*> A(a);
-  auto B = ttl::inverse(A);
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  const Tensor<2,3,const double*> A(a);
+  auto B = inverse(A);
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, RValue_2_3) {
-  const ttl::Tensor<2,3,double> B = ttl::inverse(ttl::Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  const Tensor<2,3,double> B = inverse(Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, RValue_2_3_Infer) {
-  auto B = ttl::inverse(ttl::Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  auto B = inverse(Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, RValueExpression_2_3) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  const ttl::Tensor<2,3,double> A = {1, 2, 3,
-                                     4, 5, 6,
-                                     7, 8, 10}, C = {};
-  const ttl::Tensor<2,3,double> B = ttl::inverse(1*(A(i,j) + C(i,j)));
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  const Tensor<2,3,double> A = {1, 2, 3,
+                                4, 5, 6,
+                                7, 8, 10},
+                           C = {},
+                           B = inverse(1*(A(i,j) + C(i,j)));
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, Expression_2_3) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  const ttl::Tensor<2,3,double> A = {1, 2, 3,
-                                     4, 5, 6,
-                                     7, 8, 10}, C = {};
+  const Tensor<2,3,double> A = {1, 2, 3,
+                                4, 5, 6,
+                                7, 8, 10},
+                           C = {};
   auto e = 1*(A(i,j) + C(i,j));
-  const ttl::Tensor<2,3,double> B = ttl::inverse(e);
-  EXPECT_EQ(B[0][0], -2/3.0);
-  EXPECT_EQ(B[0][1], -(1.0 + 1/3.0));
-  EXPECT_EQ(B[0][2], 1);
-  EXPECT_EQ(B[1][0], -2/3.0);
-  EXPECT_EQ(B[1][1], 3.0 + 2/3.0);
-  EXPECT_EQ(B[1][2], -2);
-  EXPECT_EQ(B[2][0], 1);
-  EXPECT_EQ(B[2][1], -2);
-  EXPECT_EQ(B[2][2], 1);
+  const Tensor<2,3,double> B = inverse(e);
+  EXPECT_EQ(B(0,0), -2/3.0);
+  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
+  EXPECT_EQ(B(0,2), 1);
+  EXPECT_EQ(B(1,0), -2/3.0);
+  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
+  EXPECT_EQ(B(1,2), -2);
+  EXPECT_EQ(B(2,0), 1);
+  EXPECT_EQ(B(2,1), -2);
+  EXPECT_EQ(B(2,2), 1);
 }
 
 TEST(Inverse, Basic_4xo_3) {
-  const ttl::Tensor<4,3,double> A = {};
-  auto B = ttl::inverse(A);
+  const Tensor<4,3,double> A = {};
+  auto B = inverse(A);
 }
 
 TEST(Inverse, Basic_2_4) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  ttl::Index<'k'> k;
+  Tensor<2,4,double> A = {};
 
-  ttl::Tensor<2,4,double> A = {};
-
-  for (int i = 0; i < 4; i++){   //init A
-    for (int j = 0; j < 4; j++){   //init A
-      A[i][j] = (rand()%10);
+  for (int m = 0; m < 4; m++) {
+    for (int n = 0; n < 4; n++) {
+      A(m,n) = (double)(rand()%10);
     }
   }
 
-  ttl::Tensor<2,4,double> B = ttl::inverse(A);
-
-
-  ttl::Tensor<2,4,double> AxB = {};
-  AxB(i,j) = A(i,k) * B(k,j);
-
+  Tensor<2,4,double> B = inverse(A),
+                   AxB = A(i,k) * B(k,j);
 }
 
 TEST(Inverse, Basic_2_9) {
@@ -157,4 +156,29 @@ TEST(Inverse, Basic_2_9) {
       }
     }
   }
+}
+
+TEST(Solve, Basic_2_2) {
+  Tensor<2,2,double> A = {1,2,3,4};
+  Tensor<1,2,double> b = {1,2},
+                     x = solve(A,b);
+  EXPECT_DOUBLE_EQ(x(0), 0);
+  EXPECT_DOUBLE_EQ(x(1), 0.5);
+}
+
+TEST(Solve, Expression_2_2) {
+  Tensor<2,2,double> A = {1,2,3,4};
+  Tensor<1,2,double> b = {1,2},
+                     x = solve(A(i,j),b);
+  EXPECT_DOUBLE_EQ(x(0), 0);
+  EXPECT_DOUBLE_EQ(x(1), 0.5);
+}
+
+TEST(Solve, Basic_2_3) {
+  Tensor<2,3,double> A = {1,2,3,4,5,6,7,8,10};
+  Tensor<1,3,double> b = {1,2,3},
+                     x = solve(A,b);
+  EXPECT_DOUBLE_EQ(x(0), -1/3.);
+  EXPECT_DOUBLE_EQ(x(1), 2/3.);
+  EXPECT_DOUBLE_EQ(x(2), 0);
 }

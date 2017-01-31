@@ -18,7 +18,6 @@ using ipiv_t = MKL_INT;
 using ipiv_t = lapack_int;
 #endif
 
-
 namespace ttl {
 namespace detail {
 template <class E>

@@ -27,17 +27,24 @@ int solve(double *a, double *b) {
   return LAPACKE_dgesv(LAPACK_COL_MAJOR, D, 1, a, D, pivot, b, D);
 }
 } // namespace detail
-} // namespace lib
 
 template <int D, class S, class T>
-Tensor<1,D,T> solve(Tensor<2,D,S> A, Tensor<1,D,T> b) {
-  lib::detail::solve<D>(A.data, b.data);
+Tensor<1,D,T> solve(Tensor<2,D,S> Tr, Tensor<1,D,T> b) {
+  lib::detail::solve<D>(Tr.data, b.data);
   return b;
 }
+} // namespace lib
 
 template <class E, class V>
 auto solve(const E e, const V v) {
-  return solve(expressions::force(e), expressions::force(v));
+    return lib::solve(expressions::force(transpose(e)), expressions::force(v));
+}
+
+template <int D, class S, class T>
+auto solve(Tensor<2,D,S> A, Tensor<1,D,T> b) {
+  Index<'i'> i;
+  Index<'j'> j;
+  return solve(A(i,j), b(j));
 }
 }
 
