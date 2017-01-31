@@ -132,23 +132,29 @@ TEST(Inverse, Basic_2_4) {
 
 }
 
-
 TEST(Inverse, Basic_2_9) {
   ttl::Index<'i'> i;
   ttl::Index<'j'> j;
   ttl::Index<'k'> k;
+  ttl::Index<'l'> l;
+  ttl::Index<'m'> m;
+  ttl::Index<'n'> n;
 
-  ttl::Tensor<2,9,double> A = {};
+  ttl::Tensor<4,2,double> A = {1,2,3,4,
+                               9,8,7,6,
+                               11,13,12,14,
+                               -16,17,-18,19},
+                          B = ttl::inverse(A),
+                          C = B(i,j,k,l)*A(k,l,m,n), I;
+  I(i,j,k,l) = ttl::identity(i,j,k,l);
 
-  for (int i = 0; i < 9; i++){   //init A
-    for (int j = 0; j < 9; j++){   //init A
-      A[i][j] = (rand()%10);
+  for (int q = 0; q < 2; ++q) {
+    for (int r = 0; r < 2; ++r) {
+      for (int s = 0; s < 2; ++s) {
+        for (int t = 0; t < 2; ++t) {
+          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+        }
+      }
     }
   }
-
-  ttl::Tensor<2,9,double> B = ttl::inverse(A);
-
-  ttl::Tensor<2,9,double> AxB = {};
-  AxB(i,j) = A(i,k) * B(k,j);
-
 }
