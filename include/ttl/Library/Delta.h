@@ -26,7 +26,7 @@ namespace detail {
 /// @returns            The linear index of the Nth diagonal element.
 template <int D, int R>
 constexpr int diagonal(const int n, const int i = 0) {
-  return (i < R) ? n * util::pow(D, i) + diagonal<D, R>(n, i + 1) : 0;
+  return (i < R) ? n * ttl::util::pow(D, i) + diagonal<D, R>(n, i + 1) : 0;
 }
 
 /// Convenience constructor for recursively initializing a Delta tensor.
