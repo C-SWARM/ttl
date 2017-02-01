@@ -6,14 +6,14 @@ static constexpr ttl::Index<'j'> j;
 static constexpr ttl::Index<'k'> k;
 
 TEST(Epsilon, 2_2) {
-  auto e = ttl::expressions::force(ttl::epsilon<2>(i,j));
+  auto e = ttl::epsilon<2>(i,j);
 
   EXPECT_EQ(e(0,0),  0); EXPECT_EQ(e(0,1), 1);
   EXPECT_EQ(e(1,0), -1); EXPECT_EQ(e(1,1), 0);
 }
 
 TEST(Epsilon, 3_3) {
-  auto e = ttl::expressions::force(ttl::epsilon<3>(i,j,k));
+  auto e = ttl::epsilon<3>(i,j,k);
 
   EXPECT_EQ(e(0,0,0), 0); EXPECT_EQ(e(0,0,1),  0); EXPECT_EQ(e(0,0,2), 0);
   EXPECT_EQ(e(0,1,0), 0); EXPECT_EQ(e(0,1,1),  0); EXPECT_EQ(e(0,1,2), 1);

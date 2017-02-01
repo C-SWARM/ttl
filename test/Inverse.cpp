@@ -113,25 +113,7 @@ TEST(Inverse, Expression_2_3) {
   EXPECT_EQ(B(2,2), 1);
 }
 
-TEST(Inverse, Basic_4xo_3) {
-  const Tensor<4,3,double> A = {};
-  auto B = inverse(A);
-}
-
-TEST(Inverse, Basic_2_4) {
-  Tensor<2,4,double> A = {};
-
-  for (int m = 0; m < 4; m++) {
-    for (int n = 0; n < 4; n++) {
-      A(m,n) = (double)(rand()%10);
-    }
-  }
-
-  Tensor<2,4,double> B = inverse(A),
-                   AxB = A(i,k) * B(k,j);
-}
-
-TEST(Inverse, Basic_2_9) {
+TEST(Inverse, Basic_4_2) {
   ttl::Index<'i'> i;
   ttl::Index<'j'> j;
   ttl::Index<'k'> k;
@@ -146,6 +128,41 @@ TEST(Inverse, Basic_2_9) {
                           B = ttl::inverse(A),
                           C = B(i,j,k,l)*A(k,l,m,n), I;
   I(i,j,k,l) = ttl::identity(i,j,k,l);
+
+  for (int q = 0; q < 2; ++q) {
+    for (int r = 0; r < 2; ++r) {
+      for (int s = 0; s < 2; ++s) {
+        for (int t = 0; t < 2; ++t) {
+          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+        }
+      }
+    }
+  }
+}
+
+TEST(Inverse, Basic_4_3) {
+  ttl::Index<'i'> i;
+  ttl::Index<'j'> j;
+  ttl::Index<'k'> k;
+  ttl::Index<'l'> l;
+  ttl::Index<'m'> m;
+  ttl::Index<'n'> n;
+
+  ttl::Tensor<4,3,double> A, I;
+  I(i,j,k,l) = ttl::identity(i,j,k,l);
+  for (int q = 0; q < 3; ++q) {
+    for (int r = 0; r < 3; ++r) {
+      for (int s = 0; s < 3; ++s) {
+        for (int t = 0; t < 3; ++t) {
+          A(q,r,s,t) = (double)(q*27+r*9+s*3+t+1);
+        }
+      }
+      A(q,r,q,r) = 1.;
+    }
+  }
+
+  auto B = ttl::inverse(A);
+  auto C = B(i,j,k,l)*A(k,l,m,n);
 
   for (int q = 0; q < 2; ++q) {
     for (int r = 0; r < 2; ++r) {

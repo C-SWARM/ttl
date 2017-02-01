@@ -2,6 +2,8 @@
 #ifndef TTL_LIBRARY_DELTA_H
 #define TTL_LIBRARY_DELTA_H
 
+#pragma message("ttl::Delta<>() is deprecated, please move to ttl::delta(i,j)")
+
 #include <ttl/Tensor.h>
 #include <ttl/TensorImpl.h>
 #include <ttl/util/pow.h>

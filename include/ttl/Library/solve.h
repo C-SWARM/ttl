@@ -2,7 +2,10 @@
 #ifndef TTL_LIBRARY_SOLVE_H
 #define TTL_LIBRARY_SOLVE_H
 
-#include <ttl/ttl.h>
+#include <ttl/config.h>
+#include <ttl/Expressions/traits.h>
+#include <ttl/Library/binder.h>
+#include <ttl/Library/matrix.h>
 
 #ifdef HAVE_MKL_H
 #include <mkl.h>
@@ -14,37 +17,45 @@ using ipiv_t = lapack_int;
 
 namespace ttl {
 namespace lib {
-namespace detail {
-template <int D>
-int solve(float *a, float *b) {
-  ipiv_t pivot[D];
-  return LAPACKE_sgesv(LAPACK_COL_MAJOR, D, 1, a, D, pivot, b, D);
-}
+template <class E, class V, int N = matrix_dimension<E>()>
+struct solve_impl
+{
+  static int gesv(double A[N*N], double b[N], ipiv_t pivot[N]) {
+    return LAPACKE_dgesv(LAPACK_COL_MAJOR, N, 1, A, N, pivot, b, N);
+  }
 
-template <int D>
-int solve(double *a, double *b) {
-  ipiv_t pivot[D];
-  return LAPACKE_dgesv(LAPACK_COL_MAJOR, D, 1, a, D, pivot, b, D);
-}
-} // namespace detail
+  static int gesv(float A[N*N], float b[N], ipiv_t pivot[N]) {
+    return LAPACKE_sgesv(LAPACK_COL_MAJOR, N, 1, A, N, pivot, b, N);
+  }
 
-template <int D, class S, class T>
-Tensor<1,D,T> solve(Tensor<2,D,S> Tr, Tensor<1,D,T> b) {
-  lib::detail::solve<D>(Tr.data, b.data);
-  return b;
-}
+  static auto op(E e, V v) {
+    // explicitly force a transpose into a temporary tensor on the stack... this
+    // prevents lapacke from having to transpose back and forth to column major
+    using namespace ttl::expressions;
+    ipiv_t ipiv[N];
+    auto A = force(transpose(e));
+    auto b = force(v);
+    if (int i = gesv(A.data, b.data, ipiv)) {
+      assert(false);                            // error message?
+    }
+    return b;
+  }
+};
 } // namespace lib
 
 template <class E, class V>
-auto solve(const E e, const V v) {
-    return lib::solve(expressions::force(transpose(e)), expressions::force(v));
+auto solve(E e, V v) {
+  return lib::solve_impl<E,V>::op(e, v);
 }
 
-template <int D, class S, class T>
-auto solve(Tensor<2,D,S> A, Tensor<1,D,T> b) {
-  Index<'i'> i;
-  Index<'j'> j;
-  return solve(A(i,j), b(j));
+template <class E, int R, int D, class S>
+auto solve(E A, const Tensor<R,D,S>& b) {
+  return solve(A, lib::bind(b));
+}
+
+template <int R, int D, class S, class T>
+auto solve(const Tensor<R,D,S>& A, const Tensor<R/2,D,T>& b) {
+  return solve(lib::bind(A), lib::bind(b));
 }
 }
 

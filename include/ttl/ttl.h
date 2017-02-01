@@ -8,10 +8,9 @@
 #include <ttl/TensorImpl.h>
 #include <ttl/Expressions.h>
 
-#include <ttl/Library/Delta.h>
 #include <ttl/Library/determinant.h>
-#include <ttl/Library/epsilon.h>
 #include <ttl/Library/inverse.h>
+#include <ttl/Library/solve.h>
 #include <ttl/Library/transpose.h>
 
 #endif // #ifndef TTL_H

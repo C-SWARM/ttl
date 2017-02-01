@@ -1,5 +1,6 @@
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
+#include <ttl/Library/Delta.h>
 
 TEST(Delta, 2_6) {
   auto D2 = ttl::Delta<2, 6, double>();
