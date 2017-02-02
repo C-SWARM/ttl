@@ -178,24 +178,70 @@ TEST(Inverse, Basic_4_3) {
 TEST(Solve, Basic_2_2) {
   Tensor<2,2,double> A = {1,2,3,4};
   Tensor<1,2,double> b = {1,2},
-                     x = solve(A,b);
-  EXPECT_DOUBLE_EQ(x(0), 0);
-  EXPECT_DOUBLE_EQ(x(1), 0.5);
+                     x = solve(A,b),
+                     y = A(i,j)*x(j);
+  EXPECT_DOUBLE_EQ(y(0), b(0));
+  EXPECT_DOUBLE_EQ(y(1), b(1));
+
+  x = decltype(x){};
+  solve(A,b,x);
+  y = A(i,j)*x(j);
+  EXPECT_DOUBLE_EQ(y(0), b(0));
+  EXPECT_DOUBLE_EQ(y(1), b(1));
 }
 
 TEST(Solve, Expression_2_2) {
   Tensor<2,2,double> A = {1,2,3,4};
   Tensor<1,2,double> b = {1,2},
-                     x = solve(A(i,j),b);
-  EXPECT_DOUBLE_EQ(x(0), 0);
-  EXPECT_DOUBLE_EQ(x(1), 0.5);
+                     x = solve(A(i,j),b),
+                     y = A(i,j)*x(j);
+
+  EXPECT_DOUBLE_EQ(y(0), b(0));
+  EXPECT_DOUBLE_EQ(y(1), b(1));
+
+  x = decltype(x){};
+  solve(A(i,j),b(j),x);
+  y = A(i,j)*x(j);
+  EXPECT_DOUBLE_EQ(y(0), b(0));
+  EXPECT_DOUBLE_EQ(y(1), b(1));
 }
 
 TEST(Solve, Basic_2_3) {
-  Tensor<2,3,double> A = {1,2,3,4,5,6,7,8,10};
-  Tensor<1,3,double> b = {1,2,3},
-                     x = solve(A,b);
-  EXPECT_DOUBLE_EQ(x(0), -1/3.);
-  EXPECT_DOUBLE_EQ(x(1), 2/3.);
-  EXPECT_DOUBLE_EQ(x(2), 0);
+  const Tensor<2,3,double> A = {1,2,3,4,5,6,7,8,10};
+  const Tensor<1,3,double> b = {1,2,3},
+                           x = solve(A,b),
+                           y = A(i,j)*x(j);
+
+  EXPECT_DOUBLE_EQ(y(0), b(0));
+  EXPECT_DOUBLE_EQ(y(1), b(1));
+  EXPECT_DOUBLE_EQ(y(2), b(2));
+}
+
+TEST(Solve, SingularException) {
+  const Tensor<2,3,double> A = {1,2,3,1,2,4,1,2,5};
+  const Tensor<1,3,double> b = {1,2,3};
+
+  int singular = 0;
+  try {
+    const Tensor<1,3,double> x = solve(A,b);
+  } catch (int i) {
+    std::cout << "Saw solve error: " << i << "\n";
+    singular = 1;
+  }
+
+  EXPECT_EQ(singular, 1);
+}
+
+TEST(Solve, SingularOut) {
+  const Tensor<2,3,double> A = {1,2,3,1,2,4,1,2,5};
+  const Tensor<1,3,double> b = {1,2,3};
+  Tensor<1,3,double> x;
+
+  int singular = 0;
+  if (int i = solve(A,b,x)) {
+    std::cout << "Saw solve error: " << i << "\n";
+    singular = 1;
+  }
+
+  EXPECT_EQ(singular, 1);
 }
