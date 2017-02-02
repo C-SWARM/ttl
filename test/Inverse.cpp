@@ -1,8 +1,6 @@
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
 
-#include <ttl/Library/solve.h>
-
 using namespace ttl;
 
 static constexpr Index<'i'> i;
@@ -10,29 +8,90 @@ static constexpr Index<'j'> j;
 static constexpr Index<'k'> k;
 
 TEST(Inverse, Basic_2_2) {
-  ttl::Tensor<2,2,double> A = {1, 2, 3, 5};
-  auto B = ttl::inverse(A);
-  EXPECT_EQ(B[0][0], -5);
-  EXPECT_EQ(B[0][1], 2);
-  EXPECT_EQ(B[1][0], 3);
-  EXPECT_EQ(B[1][1], -1);
+  ttl::Tensor<2,2,double> A = {1, 2, 3, 5},
+                          B = ttl::inverse(A),
+                          C = B(i,j)*A(j,k),
+                          I = identity(i,j);
+
+  EXPECT_DOUBLE_EQ(C(0,0), I(0,0));
+  EXPECT_DOUBLE_EQ(C(0,1), I(0,1));
+  EXPECT_DOUBLE_EQ(C(1,0), I(1,0));
+  EXPECT_DOUBLE_EQ(C(1,1), I(1,1));
+
+  B = zero(i,j);
+  int e = ttl::inverse(A,B);
+  C = B(i,j)*A(j,k);
+
+  EXPECT_EQ(e, 0);
+  EXPECT_DOUBLE_EQ(C(0,0), I(0,0));
+  EXPECT_DOUBLE_EQ(C(0,1), I(0,1));
+  EXPECT_DOUBLE_EQ(C(1,0), I(1,0));
+  EXPECT_DOUBLE_EQ(C(1,1), I(1,1));
+}
+
+TEST(Inverse, Singular_2_2) {
+  ttl::Tensor<2,2,double> A = {1, 1, 3, 3},
+                              B;
+  int singular = 0;
+  try {
+    B = ttl::inverse(A);
+  } catch (int) {
+    singular = 1;
+  }
+  EXPECT_EQ(singular, 1);
+
+  singular = ttl::inverse(A, B);
+  EXPECT_EQ(singular, 1);
 }
 
 TEST(Inverse, Basic_2_3) {
   const Tensor<2,3,const double> A = {1, 2, 3,
                                       4, 5, 6,
-                                      7, 8, 10};
-  Tensor<2,3,const double> B = inverse(A);
-  std::cout << B(i,j) << "\n";
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+                                      7, 8, 10},
+                                 B = inverse(A),
+                                 C = B(i,j)*A(j,k),
+                                 I = identity(i,j);
+
+  EXPECT_NEAR(C(0,0), I(0,0), 1e-14);
+  EXPECT_NEAR(C(0,1), I(0,1), 1e-14);
+  EXPECT_NEAR(C(0,2), I(0,2), 1e-14);
+  EXPECT_NEAR(C(1,0), I(1,0), 1e-14);
+  EXPECT_NEAR(C(1,1), I(1,1), 1e-14);
+  EXPECT_NEAR(C(1,2), I(1,2), 1e-14);
+  EXPECT_NEAR(C(2,0), I(2,0), 1e-14);
+  EXPECT_NEAR(C(2,1), I(2,1), 1e-14);
+  EXPECT_NEAR(C(2,2), I(2,2), 1e-14);
+
+  Tensor<2,3,double> D;
+  int singular = inverse(A(i,j), D);
+  EXPECT_EQ(singular, 0);
+
+  Tensor<2,3,double> E = D(i,j)*A(j,k);
+
+  EXPECT_NEAR(E(0,0), I(0,0), 1e-14);
+  EXPECT_NEAR(E(0,1), I(0,1), 1e-14);
+  EXPECT_NEAR(E(0,2), I(0,2), 1e-14);
+  EXPECT_NEAR(E(1,0), I(1,0), 1e-14);
+  EXPECT_NEAR(E(1,1), I(1,1), 1e-14);
+  EXPECT_NEAR(E(1,2), I(1,2), 1e-14);
+  EXPECT_NEAR(E(2,0), I(2,0), 1e-14);
+  EXPECT_NEAR(E(2,1), I(2,1), 1e-14);
+  EXPECT_NEAR(E(2,2), I(2,2), 1e-14);
+}
+
+TEST(Inverse, Singular_2_3) {
+  ttl::Tensor<2,3,double> A = {1,2,3,4,5,6,7,8,9};
+  int singular = 0;
+  try {
+    ttl::inverse(A);
+  } catch (int) {
+    singular = 1;
+  }
+  EXPECT_EQ(singular, 1);
+
+  decltype(A) B;
+  singular = inverse(A,B);
+  EXPECT_EQ(singular, 1);
 }
 
 TEST(Inverse, Extern_2_3) {
@@ -138,7 +197,38 @@ TEST(Inverse, Basic_4_2) {
       }
     }
   }
+
+  B = zero(i,j,k,l);
+  int singular = inverse(A,B);
+  EXPECT_EQ(singular, 0);
+
+  C = B(i,j,k,l)*A(k,l,m,n);
+  for (int q = 0; q < 2; ++q) {
+    for (int r = 0; r < 2; ++r) {
+      for (int s = 0; s < 2; ++s) {
+        for (int t = 0; t < 2; ++t) {
+          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+        }
+      }
+    }
+  }
 }
+
+TEST(Inverse, Singular_4_2) {
+  ttl::Tensor<4,2,double> A = {1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4};
+  int singular = 0;
+  try {
+    ttl::inverse(A);
+  } catch (int i) {
+    singular = i;
+  }
+  EXPECT_NE(singular, 0);
+
+  decltype(A) B;
+  singular = inverse(A,B);
+  EXPECT_NE(singular, 0);
+}
+
 
 TEST(Inverse, Basic_4_3) {
   ttl::Index<'i'> i;
@@ -217,31 +307,19 @@ TEST(Solve, Basic_2_3) {
   EXPECT_DOUBLE_EQ(y(2), b(2));
 }
 
-TEST(Solve, SingularException) {
+TEST(Solve, Singular) {
   const Tensor<2,3,double> A = {1,2,3,1,2,4,1,2,5};
   const Tensor<1,3,double> b = {1,2,3};
 
   int singular = 0;
   try {
-    const Tensor<1,3,double> x = solve(A,b);
+    auto x = solve(A,b);
   } catch (int i) {
-    std::cout << "Saw solve error: " << i << "\n";
-    singular = 1;
+    singular = i;
   }
+  EXPECT_NE(singular, 0);
 
-  EXPECT_EQ(singular, 1);
-}
-
-TEST(Solve, SingularOut) {
-  const Tensor<2,3,double> A = {1,2,3,1,2,4,1,2,5};
-  const Tensor<1,3,double> b = {1,2,3};
   Tensor<1,3,double> x;
-
-  int singular = 0;
-  if (int i = solve(A,b,x)) {
-    std::cout << "Saw solve error: " << i << "\n";
-    singular = 1;
-  }
-
-  EXPECT_EQ(singular, 1);
+  singular = solve(A,b,x);
+  EXPECT_NE(singular, 0);
 }
