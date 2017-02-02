@@ -67,6 +67,16 @@ class DeltaOp : public Expression<DeltaOp<D, Index>>
   }
 };
 
+template <int D>
+class DeltaOp<D, std::tuple<>> : public Expression<DeltaOp<D, std::tuple<>>>
+{
+ public:
+  template <class I>
+  constexpr int eval(I) const noexcept {
+    return 1;
+  }
+};
+
 template <int D, class Index>
 struct traits<DeltaOp<D, Index>>
 {
@@ -75,7 +85,6 @@ struct traits<DeltaOp<D, Index>>
   using dimension = std::integral_constant<int, D>;
   using rank = typename std::tuple_size<Index>::type;
 };
-
 } // namespace expressions
 
 template <int D = -1, class... I>

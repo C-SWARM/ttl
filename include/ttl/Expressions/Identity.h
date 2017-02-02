@@ -17,6 +17,7 @@
 #ifndef TTL_EXPRESSIONS_IDENTITY_H
 #define TTL_EXPRESSIONS_IDENTITY_H
 
+#include <ttl/Expressions/Bind.h>
 #include <ttl/Expressions/DeltaOp.h>
 #include <ttl/Expressions/pack.h>
 #include <type_traits>
@@ -68,8 +69,8 @@ using shuffle_t = typename shuffle<std::tuple<I...>>::type;
 } // namespace detail
 
 template <int D>
-constexpr int identity(std::tuple<>) {
-  return 1;
+constexpr auto identity(std::tuple<>) {
+  return DeltaOp<D, std::tuple<>>();
 }
 
 template <int D, class T0, class T1, class... T>
@@ -83,7 +84,7 @@ template <int D = -1, class... I>
 constexpr auto identity(I...) {
   static_assert(sizeof...(I) % 2 == 0, "The identity must have even rank.");
   using type = expressions::detail::shuffle_t<I...>;
-  return expressions::identity<D>(type{});
+  return expressions::identity<D>(type{}).to(std::tuple<I...>{});
 }
 } // namespace ttl
 
