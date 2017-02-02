@@ -57,7 +57,6 @@ class Bind : public Expression<Bind<E, Index>>
   constexpr Bind(Child t, const Index i = Index{}) noexcept : t_(t), i_(i) {
   }
 
-
   /// The index operator maps the index array using the normal interpretation of
   /// multidimensional indexing, using index 0 as the most-significant-index.
   ///
@@ -74,7 +73,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @returns          The scalar value at the linearized offset.
   template <class I>
   constexpr auto eval(I i) const {
-    return contract<Bind>(i, [&](auto index) {
+    return contract<Bind>(i, [this](auto index) {
         // intel 16.0 can't handle the "transform" symbol here without the
         // namespace
         return t_.eval(ttl::expressions::transform(i_, index));
@@ -94,16 +93,16 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](Outer i) {
-        t_.eval(ttl::expressions::transform(i_, i)) = rhs.eval(i);
+    apply<>::op(Outer{}, [&rhs,this](Outer i) {
+        t_.eval(ttl::expressions::transform(i_, i)) = std::forward<RHS>(rhs).eval(i);
       });
     return *this;
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  Bind& operator=(scalar_type<Bind>&& rhs) {
+  Bind& operator=(scalar_type<Bind> rhs) {
     static_assert(rank<Bind>::value == 0, "Cannot assign scalar to tensor");
-    apply<>::op(Outer{}, [&](Outer i) {
+    apply<>::op(Outer{}, [rhs,this](Outer i) {
         t_.eval(ttl::expressions::transform(i_, i)) = rhs;
       });
     return *this;
@@ -121,8 +120,8 @@ class Bind : public Expression<Bind<E, Index>>
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
-    apply<>::op(Outer{}, [&](const Outer i) {
-        t_.eval(ttl::expressions::transform(i_, i)) += rhs.eval(i);
+    apply<>::op(Outer{}, [&rhs,this](const Outer i) {
+        t_.eval(ttl::expressions::transform(i_, i)) += std::forward<RHS>(rhs).eval(i);
       });
     return *this;
   }
@@ -132,7 +131,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// This iterates through the index space and prints the index and results to
   /// the stream.
   std::ostream& print(std::ostream& os) const {
-    apply<>::op(Outer{}, [&,this](const Outer i) {
+    apply<>::op(Outer{}, [&os,this](const Outer i) {
         print_pack(os, i) << ": " << eval(i) << "\n";
       });
     return os;
@@ -211,8 +210,8 @@ class Bind : public Expression<Bind<E, Index>>
 };
 
 template <class T, class Index>
-Bind<T, Index> make_bind(T& t, const Index i) {
-  return Bind<T,Index>(t, i);
+Bind<T, Index> make_bind(T&& t, const Index i) {
+  return Bind<T,Index>(std::forward<T>(t), i);
 }
 
 } // namespace expressions

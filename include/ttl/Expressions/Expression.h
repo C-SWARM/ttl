@@ -10,9 +10,12 @@
 namespace ttl {
 namespace expressions {
 
-/// Forward declare the IndexMap template, since it is needed in the Expression
-// template <class T, class Outer, class Inner> class IndexMap;
-template <class T, class Index> class Bind;
+/// The expression that represents binding an index space to a subtree.
+///
+/// @tparam           E The subtree type.
+/// @tparam       Index The index map for this expression.
+template <class E, class Index>
+class Bind;
 
 /// The base expression class template.
 ///
@@ -31,7 +34,7 @@ class Expression {
 
   template <template <class...> class Pack, class... I>
   constexpr const auto to(Pack<I...> index) const {
-    return make_bind(*this, index);
+    return Bind<E,Pack<I...>>(*static_cast<const E*>(this), index);
   }
 
   template <class... I>
@@ -62,6 +65,11 @@ template <class E>
 struct is_expression_impl {
   using type = typename std::is_base_of<Expression<E>, E>::type;
 };
+
+template <class E>
+struct is_expression_impl<Expression<E>> {
+  using type = std::true_type;
+};
 } // namespace detail
 
 template <class E>
@@ -70,9 +78,8 @@ using is_expression_t = typename detail::is_expression_impl<std::remove_cv_t<E>>
 } // namespace expressions
 } // namespace ttl
 
-template <class E,
-          class = std::enable_if_t<ttl::expressions::is_expression_t<E>::value>>
-std::ostream& operator<<(std::ostream& os, const E& e) {
+template <class E>
+std::ostream& operator<<(std::ostream& os, const ttl::expressions::Expression<E>& e) {
   return e.print(os);
 }
 
