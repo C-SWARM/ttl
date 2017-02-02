@@ -12,7 +12,7 @@ namespace lib {
 template <char N>
 struct bind_impl
 {
-  static_assert(N>0);
+  static_assert(N > 0, "Unexpected index size");
   using next = typename bind_impl<N-1>::type;
   using type = expressions::concat<std::tuple<Index<N>>, next>;
 };
