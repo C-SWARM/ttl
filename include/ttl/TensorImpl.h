@@ -26,14 +26,16 @@ template <int R, int D, class S>
 class TensorBase
 {
  private:
+  using TensorType = Tensor<R,D,S>;
+
   static constexpr std::size_t Size = util::pow(D,R); ///!< Number of elements
 
-  constexpr const auto& derived() const noexcept {
-    return *static_cast<const Tensor<R,D,S>* const>(this);
+  constexpr const TensorType& derived() const noexcept {
+    return *static_cast<const TensorType*>(this);
   }
 
-  constexpr auto& derived() noexcept {
-    return *static_cast<Tensor<R,D,S>* const>(this);
+  constexpr TensorType& derived() noexcept {
+    return *static_cast<TensorType*>(this);
   }
 
  protected:
@@ -61,12 +63,12 @@ class TensorBase
 
   template <class Index>                        // required for icc 16
   constexpr const auto bind(const Index index) const noexcept {
-    return expressions::make_bind(derived(), index);
+    return expressions::Bind<const TensorType, Index>(derived(), index);
   }
 
   template <class Index>                        // required for icc 16
   constexpr auto bind(const Index index) noexcept {
-    return expressions::make_bind(derived(), index);
+    return expressions::Bind<TensorType, Index>(derived(), index);
   }
 
   template <class E>

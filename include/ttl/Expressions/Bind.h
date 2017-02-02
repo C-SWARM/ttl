@@ -208,12 +208,6 @@ class Bind : public Expression<Bind<E, Index>>
   Child t_;                                     ///<! The underlying tree.
   const Index i_;                               ///<! The bound index.
 };
-
-template <class T, class Index>
-Bind<T, Index> make_bind(T&& t, const Index i) {
-  return Bind<T,Index>(std::forward<T>(t), i);
-}
-
 } // namespace expressions
 } // namespace ttl
 
