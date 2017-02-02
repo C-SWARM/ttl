@@ -183,7 +183,7 @@ TEST(Solve, Basic_2_2) {
   EXPECT_DOUBLE_EQ(y(0), b(0));
   EXPECT_DOUBLE_EQ(y(1), b(1));
 
-  x = decltype(x){};
+  x = zero(i);
   solve(A,b,x);
   y = A(i,j)*x(j);
   EXPECT_DOUBLE_EQ(y(0), b(0));
@@ -199,7 +199,7 @@ TEST(Solve, Expression_2_2) {
   EXPECT_DOUBLE_EQ(y(0), b(0));
   EXPECT_DOUBLE_EQ(y(1), b(1));
 
-  x = decltype(x){};
+  x = zero(i);
   solve(A(i,j),b(j),x);
   y = A(i,j)*x(j);
   EXPECT_DOUBLE_EQ(y(0), b(0));

@@ -118,3 +118,38 @@ TEST(TensorProduct, Outer) {
   EXPECT_EQ(C[1][1][1][0], 16);
   EXPECT_EQ(C[1][1][1][1], 20);
 }
+
+TEST(Zero, Construct) {
+  ttl::Tensor<2,3,double> Z = ttl::zero(i,j);
+  EXPECT_DOUBLE_EQ(Z(0,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(0,1), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,1), 0.);
+}
+
+TEST(Zero, Assign) {
+  ttl::Tensor<2,3,double> Z;
+  Z = ttl::zero(i,j);
+  EXPECT_DOUBLE_EQ(Z(0,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(0,1), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,1), 0.);
+}
+
+TEST(Zero, AssignExpression) {
+  ttl::Tensor<2,3,double> Z;
+  Z(i,j) = ttl::zero(i,j);
+  EXPECT_DOUBLE_EQ(Z(0,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(0,1), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,1), 0.);
+}
+
+TEST(Zero, AssignProduct) {
+  ttl::Tensor<2,3,double> Z, A = {1,2,3,4,5,6,7,8,9};
+  Z(i,k) = ttl::zero(i,j)*A(j,k);
+  EXPECT_DOUBLE_EQ(Z(0,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(0,1), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,0), 0.);
+  EXPECT_DOUBLE_EQ(Z(1,1), 0.);
+}
