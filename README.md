@@ -19,6 +19,28 @@ $ export C_INCLUDE_PATH="$HOME/ttl-install/include:$C_INCLUDE_PATH"
 $ export CPLUS_INCLUDE_PATH="$HOME/ttl-install/include:$CPLUS_INCLUDE_PATH"
 ```
 
+*** BLAS/LAPACK
+
+TTL uses LAPACK to perform inversions and solve operations on higher-dimensional
+structures. It uses the FindLAPACK cmake command to set up the LAPACK
+dependencies, but this can sometimes to weird things that causes the build to
+fail. Some examples that I've seen.
+
+* Finds a BLAS from a different distribution than the LAPACK.
+* Finds BLAS and LAPACK correctly but doesn't set up the link correclty.
+* Finds BLAS and LAPACL but can't find lapacke.h.
+
+If you are having problems with LAPACK it can pay to specifically request a
+LAPACK implementation during configuration by setting the `BLA_VENDOR`
+environment variable. Currrent vendors are listed at
+https://github.com/Kitware/CMake/blob/master/Modules/FindBLAS.cmake#L35.
+
+For the modern Intel MKL I typically use `Intel10_64lp_seq` (we want sequential
+implementations, not parallel implementations.
+
+```
+$ cmake <path-to-ttl> -DBLA_VENDOR=Intel10_64lp_seq
+```
 
 *** Mac OS X
 
