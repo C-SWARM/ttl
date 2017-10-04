@@ -31,6 +31,9 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
+/// @file  ttl/TensorImpl.h
+/// @brief Contains the CPU-based implementation of the Tensor template.
+// -----------------------------------------------------------------------------
 #ifndef TTL_TENSOR_IMPL_H
 #define TTL_TENSOR_IMPL_H
 
@@ -46,9 +49,6 @@
 namespace ttl {
 
 /// Common functionality for the tensor specializations.
-///
-/// The TensorBase implements a quasi-CRTP pattern in order to statically
-/// dispatch based on the subclass implementation of the data storage.
 ///
 /// @tparam           R The tensor's rank.
 /// @tparam           D The tensor's dimension.
@@ -71,6 +71,7 @@ class TensorBase
   }
 
  protected:
+  /// Copy data from an initializer list.
   template <class T>
   auto& copy(std::initializer_list<T> list) noexcept {
     // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
@@ -81,28 +82,33 @@ class TensorBase
     return derived();
   }
 
+  /// Copy data from another Tensor.
   template <class T>
   auto& copy(const Tensor<R,D,T>& rhs) noexcept {
     std::copy_n(rhs.data, Size, derived().data);
     return derived();
   }
 
+  /// Copy data from an r-value reference.
   template <class T>
   auto& copy(Tensor<R,D,T>&& rhs) noexcept {
     std::copy_n(std::move(rhs.data), Size, derived().data);
     return derived();
   }
 
+  /// Create a bind expression that pairs this Tensor with an Index expression.
   template <class Index>                        // required for icc 16
   constexpr const auto bind(const Index index) const noexcept {
     return expressions::Bind<const TensorType, Index>(derived(), index);
   }
 
+  /// Create a bind expression that pairs this Tensor with an Index epxression.
   template <class Index>                        // required for icc 16
   constexpr auto bind(const Index index) noexcept {
     return expressions::Bind<TensorType, Index>(derived(), index);
   }
 
+  /// Bind and evaulate an expression when this is the LHS.
   template <class E>
   auto& apply(E&& rhs) noexcept {
     bind(expressions::outer_type<E>{}) = std::forward<E>(rhs);

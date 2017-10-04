@@ -31,6 +31,9 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
+/// @file ttl/Expressions.h
+/// @brief Collate all of the expression headers into one top-level file.
+// -----------------------------------------------------------------------------
 #ifndef TTL_EXPRESSIONS_EXPRESSIONS_H
 #define TTL_EXPRESSIONS_EXPRESSIONS_H
 

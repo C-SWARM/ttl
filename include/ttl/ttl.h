@@ -31,6 +31,9 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
+/// @file  ttl/ttl.h
+/// @brief Collate all of the necessary headers for TTL into a single location.
+// -----------------------------------------------------------------------------
 #ifndef TTL_H
 #define TTL_H
 
