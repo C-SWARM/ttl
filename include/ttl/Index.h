@@ -40,30 +40,6 @@
 namespace ttl {
 
 /// This is an index template that can be used to index a tensor.
-///
-/// The index class template simply creates unique types for each char ID that
-/// it is parameterized with. Index values that have the same class are assumed
-/// to be the same index. The resulting type can be manipulated by the TTL
-/// internal infrastructure at compile time. This allows TTL to perform various
-/// set operations on indices in order to perform index matching and code
-/// generation for expressions.
-///
-/// Source-level indices only occur in constant, compile-time contexts and thus
-/// it is common to see them declared as constexpr, const, or both.
-///
-/// @code
-///   Tensor<2,2,int> A, B = {...}, C = {...};
-///
-///   constexpr const Index<'i'> i;
-///   constexpr const Index<'j'> j;
-///   constexpr const Index<'k'> k;
-///
-///   // matrix-matrix multiply in TTL (contracts `j`)
-///   C(i,k) = A(i,j) * B(j,k);
-///
-///   // a weirder operation in TTL (contracts `j` again, but different "slot"
-///   C(i,k) = A(j,i) * B(k,j);
-/// @code
 template <char ID>
 struct Index {
   static constexpr char id = ID;
