@@ -254,25 +254,28 @@ A(i,i)
 ```
 A(i,j,k).to(k,j,i) 
 ```
-* Constant Expressions
+
+## Constant Expressions
+
 These expressions are constant and do not allocate space when used in
 expressions. They simply statically materialize a `1` or `0` based on the index
 requested. A constant expression can be assigned to a compatibly shaped
 Tensor. In normal usage as part of a compound expression, the manifold space
 (Tensor dimension, `D`) can be inferred for these expressions.
-  * A zero expression
+
+* A zero expression
 ```
 zero<D>(i,j)
 ```
-  * The delta expression 
+* The delta expression 
 ```
 identity<D>(i,j,k,l)
 ```
-  * The epsilon expression
+* The epsilon expression
 ```
 epsilon<D>(i,j)
 ```
-  * The delta expression
+* The delta expression
 ```
 delta<D>(i,j)
 ```
