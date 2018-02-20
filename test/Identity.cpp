@@ -43,19 +43,19 @@ TEST(Identity, Vector) {
 }
 
 TEST(Identity, Matrix) {
-  Tensor<4,3,int> I = identity(i,j,k,l), J;
+  Tensor<4,3,int> ID = identity(i,j,k,l), J;
   J(i,j,k,l) = identity(i,j,k,l);
 
-  std::cout << "I\n" << I(i,j,k,l) << "\n";
+  std::cout << "I\n" << ID(i,j,k,l) << "\n";
 
 
   Tensor<2,3,int> A = {1,2,3,4,5,6,7,8,9},
-                  B = I(i,j,k,l)*A(k,l),
+                  B = ID(i,j,k,l)*A(k,l),
                   C = J(i,j,k,l)*A(k,l),
                   D = identity(i,j,k,l)*A(k,l),
                       E, F, G;
 
-  E(i,j) = I(i,j,k,l)*A(k,l);
+  E(i,j) = ID(i,j,k,l)*A(k,l);
   F(i,j) = J(i,j,k,l)*A(k,l);
   G(i,j) = identity(i,j,k,l)*A(k,l);
 
@@ -63,10 +63,10 @@ TEST(Identity, Matrix) {
     for (int n = 0; n < 3; ++n) {
       for (int o = 0; o < 3; ++o) {
         for (int p = 0; p < 3; ++p) {
-          EXPECT_EQ(I(m,n,o,p), J(m,n,o,p));
+          EXPECT_EQ(ID(m,n,o,p), J(m,n,o,p));
         }
       }
-      EXPECT_EQ(I(m,n,m,n), 1);
+      EXPECT_EQ(ID(m,n,m,n), 1);
       EXPECT_EQ(B(m,n), A(m,n));
       EXPECT_EQ(C(m,n), A(m,n));
       EXPECT_EQ(D(m,n), A(m,n));
