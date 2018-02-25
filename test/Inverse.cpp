@@ -44,22 +44,22 @@ TEST(Inverse, Basic_2_2) {
   ttl::Tensor<2,2,double> A = {1, 2, 3, 5},
                           B = ttl::inverse(A),
                           C = B(i,j)*A(j,k),
-                          I = identity(i,j);
+                          ID = identity(i,j);
 
-  EXPECT_DOUBLE_EQ(C(0,0), I(0,0));
-  EXPECT_DOUBLE_EQ(C(0,1), I(0,1));
-  EXPECT_DOUBLE_EQ(C(1,0), I(1,0));
-  EXPECT_DOUBLE_EQ(C(1,1), I(1,1));
+  EXPECT_DOUBLE_EQ(C(0,0), ID(0,0));
+  EXPECT_DOUBLE_EQ(C(0,1), ID(0,1));
+  EXPECT_DOUBLE_EQ(C(1,0), ID(1,0));
+  EXPECT_DOUBLE_EQ(C(1,1), ID(1,1));
 
   B = zero(i,j);
   int e = ttl::inverse(A,B);
   C = B(i,j)*A(j,k);
 
   EXPECT_EQ(e, 0);
-  EXPECT_DOUBLE_EQ(C(0,0), I(0,0));
-  EXPECT_DOUBLE_EQ(C(0,1), I(0,1));
-  EXPECT_DOUBLE_EQ(C(1,0), I(1,0));
-  EXPECT_DOUBLE_EQ(C(1,1), I(1,1));
+  EXPECT_DOUBLE_EQ(C(0,0), ID(0,0));
+  EXPECT_DOUBLE_EQ(C(0,1), ID(0,1));
+  EXPECT_DOUBLE_EQ(C(1,0), ID(1,0));
+  EXPECT_DOUBLE_EQ(C(1,1), ID(1,1));
 }
 
 TEST(Inverse, Singular_2_2) {
@@ -83,17 +83,17 @@ TEST(Inverse, Basic_2_3) {
                                       7, 8, 10},
                                  B = inverse(A),
                                  C = B(i,j)*A(j,k),
-                                 I = identity(i,j);
+                                 ID = identity(i,j);
 
-  EXPECT_NEAR(C(0,0), I(0,0), 1e-14);
-  EXPECT_NEAR(C(0,1), I(0,1), 1e-14);
-  EXPECT_NEAR(C(0,2), I(0,2), 1e-14);
-  EXPECT_NEAR(C(1,0), I(1,0), 1e-14);
-  EXPECT_NEAR(C(1,1), I(1,1), 1e-14);
-  EXPECT_NEAR(C(1,2), I(1,2), 1e-14);
-  EXPECT_NEAR(C(2,0), I(2,0), 1e-14);
-  EXPECT_NEAR(C(2,1), I(2,1), 1e-14);
-  EXPECT_NEAR(C(2,2), I(2,2), 1e-14);
+  EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
 
   Tensor<2,3,double> D;
   int singular = inverse(A(i,j), D);
@@ -101,15 +101,15 @@ TEST(Inverse, Basic_2_3) {
 
   Tensor<2,3,double> E = D(i,j)*A(j,k);
 
-  EXPECT_NEAR(E(0,0), I(0,0), 1e-14);
-  EXPECT_NEAR(E(0,1), I(0,1), 1e-14);
-  EXPECT_NEAR(E(0,2), I(0,2), 1e-14);
-  EXPECT_NEAR(E(1,0), I(1,0), 1e-14);
-  EXPECT_NEAR(E(1,1), I(1,1), 1e-14);
-  EXPECT_NEAR(E(1,2), I(1,2), 1e-14);
-  EXPECT_NEAR(E(2,0), I(2,0), 1e-14);
-  EXPECT_NEAR(E(2,1), I(2,1), 1e-14);
-  EXPECT_NEAR(E(2,2), I(2,2), 1e-14);
+  EXPECT_NEAR(E(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(E(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(E(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(E(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(E(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(E(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(E(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(E(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(E(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, Singular_2_3) {
@@ -218,14 +218,14 @@ TEST(Inverse, Basic_4_2) {
                                11,13,12,14,
                                -16,17,-18,19},
                           B = ttl::inverse(A),
-                          C = B(i,j,k,l)*A(k,l,m,n), I;
-  I(i,j,k,l) = ttl::identity(i,j,k,l);
+                          C = B(i,j,k,l)*A(k,l,m,n), ID;
+  ID(i,j,k,l) = ttl::identity(i,j,k,l);
 
   for (int q = 0; q < 2; ++q) {
     for (int r = 0; r < 2; ++r) {
       for (int s = 0; s < 2; ++s) {
         for (int t = 0; t < 2; ++t) {
-          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+          EXPECT_NEAR(C(q,r,s,t), ID(q,r,s,t), 1e-13);
         }
       }
     }
@@ -240,7 +240,7 @@ TEST(Inverse, Basic_4_2) {
     for (int r = 0; r < 2; ++r) {
       for (int s = 0; s < 2; ++s) {
         for (int t = 0; t < 2; ++t) {
-          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+          EXPECT_NEAR(C(q,r,s,t), ID(q,r,s,t), 1e-13);
         }
       }
     }
@@ -271,8 +271,8 @@ TEST(Inverse, Basic_4_3) {
   ttl::Index<'m'> m;
   ttl::Index<'n'> n;
 
-  ttl::Tensor<4,3,double> A, I;
-  I(i,j,k,l) = ttl::identity(i,j,k,l);
+  ttl::Tensor<4,3,double> A, ID;
+  ID(i,j,k,l) = ttl::identity(i,j,k,l);
   for (int q = 0; q < 3; ++q) {
     for (int r = 0; r < 3; ++r) {
       for (int s = 0; s < 3; ++s) {
@@ -291,7 +291,7 @@ TEST(Inverse, Basic_4_3) {
     for (int r = 0; r < 2; ++r) {
       for (int s = 0; s < 2; ++s) {
         for (int t = 0; t < 2; ++t) {
-          EXPECT_NEAR(C(q,r,s,t), I(q,r,s,t), 1e-13);
+          EXPECT_NEAR(C(q,r,s,t), ID(q,r,s,t), 1e-13);
         }
       }
     }
