@@ -36,47 +36,20 @@
 
 #include <ttl/config.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/Library/LinearAlgebra.hpp>
 #include <ttl/Library/binder.h>
 #include <ttl/Library/determinant.h>
 #include <ttl/Library/fp_utils.h>
 #include <ttl/Library/matrix.h>
-
-#ifdef HAVE_MKL_H
-#include <mkl.h>
-using ipiv_t = MKL_INT;
-#else
-#include <lapacke.h>
-using ipiv_t = lapack_int;
-#endif
 
 namespace ttl {
 namespace lib {
 template <class E, int N = matrix_dimension<E>()>
 struct inverse_impl
 {
-  static int getrf(double data[N*N], ipiv_t ipiv[N]) {
-    return LAPACKE_dgetrf(LAPACK_COL_MAJOR,N,N,data,N,ipiv);
-  }
-
-  static int getri(double data[N*N], ipiv_t ipiv[N]) {
-    return LAPACKE_dgetri(LAPACK_COL_MAJOR,N,data,N,ipiv);
-  }
-
   template <class M>
   static int op(E e, M& m) noexcept {
-    // explicitly force a transpose into a temporary tensor on the stack... this
-    // prevents lapacke from having to transpose back and forth to column major
-    using namespace ttl::expressions;
-    ipiv_t ipiv[N];
-    auto A = force(transpose(e));
-    if (int i = getrf(A.data, ipiv)) {
-      return i;
-    }
-    if (int i = getri(A.data, ipiv)) {
-      return i;
-    }
-    m = force(transpose(bind(A)));
-    return 0;
+    return detail::invert<N>(e, m);
   }
 
   static auto op(E e) {

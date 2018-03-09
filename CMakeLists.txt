@@ -34,6 +34,12 @@ cmake_minimum_required(VERSION 2.8.2)
 # project specification
 project(ttl CXX)
 
+# -----------------------------------------------------------------------------
+# Configure-time project options.
+# -----------------------------------------------------------------------------
+option(TTL_WITH_LAPACK "use an external lapack implementation for solve/inverse"
+  OFF)
+
 # module include path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
@@ -54,8 +60,10 @@ gtest()
 # -----------------------------------------------------------------------------
 # Figure out what form of lapack we're going to include and link to.
 # -----------------------------------------------------------------------------
-CHECK_INCLUDE_FILES(mkl.h HAVE_MKL_H)
-include(FindLAPACK)
+if (TTL_WITH_LAPACK)
+  CHECK_INCLUDE_FILES(mkl.h TTL_HAVE_MKL_H)
+  include(FindLAPACK)
+endif (TTL_WITH_LAPACK)
 
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.
