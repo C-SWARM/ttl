@@ -33,35 +33,52 @@
 // -----------------------------------------------------------------------------
 #include <ttl/ttl.h>
 #include <gtest/gtest.h>
-#include <ttl/Library/Delta.h>
 
-TEST(Delta, 2_6) {
-  auto D2 = ttl::Delta<2, 6, double>();
-  for (int i = 0; i < 6; ++i) {
-    for (int j = 0; j < 6; ++j) {
-      EXPECT_EQ(D2[i][j], (i == j) ? 1.0 : 0.0);
+static constexpr ttl::Index<'i'> i;
+static constexpr ttl::Index<'j'> j;
+static constexpr ttl::Index<'k'> k;
+static constexpr ttl::Index<'l'> l;
+
+TEST(Delta, 1_1) {
+  ttl::Tensor<1,1,int> d = ttl::delta(i);
+  EXPECT_EQ(d(0), 1);
+}
+
+TEST(Delta, 2_2) {
+  ttl::Tensor<2,2,int> d = ttl::delta(i,j);
+  EXPECT_EQ(d(0,0), 1);
+  EXPECT_EQ(d(1,0), 0);
+  EXPECT_EQ(d(0,1), 0);
+  EXPECT_EQ(d(1,1), 1);
+}
+
+TEST(Delta, 2_3) {
+  ttl::Tensor<2,3,int> d = ttl::delta(i,j);
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      EXPECT_EQ(d(i,j), (i == j) ? 1 : 0);
     }
   }
 }
 
-TEST(Delta, 3_4) {
-  auto D3 = ttl::Delta<3, 4, double>(3.14);
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      for (int k = 0; k < 4; ++k) {
-        EXPECT_EQ(D3[i][j][k], (i == j && j == k) ? 3.14 : 0.0);
+TEST(Delta, 3_2) {
+  ttl::Tensor<3,2,int> d = ttl::delta(i,j,k);
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      for (int k = 0; k < 2; ++k) {
+        EXPECT_EQ(d(i,j,k), (i == j && j == k) ? 1 : 0);
       }
     }
   }
 }
 
 TEST(Delta, 4_3) {
-  auto D4 = ttl::Delta<4, 3, int>(42);
+  ttl::Tensor<4,3,int> d = ttl::delta(i,j,k,l);
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       for (int k = 0; k < 3; ++k) {
         for (int l = 0; l < 3; ++l) {
-          EXPECT_EQ(D4[i][j][k][l], (i == j && j == k && k == l) ? 42 : 0.0);
+          EXPECT_EQ(d(i,j,k,l), (i == j && j == k && k == l) ? 1 : 0);
         }
       }
     }
@@ -69,50 +86,15 @@ TEST(Delta, 4_3) {
 }
 
 TEST(Delta, Widen) {
-  auto D2 = ttl::Delta<2, 2, double>(3u);
+  ttl::Tensor<2,2,int> d = 3u*ttl::delta(i,j);
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 2; ++j) {
-      EXPECT_EQ(D2[i][j], (i == j) ? 3.0 : 0.0);
-    }
-  }
-}
-
-
-template <int D, class S>
-auto Identity() {
-  static constexpr ttl::Index<'i'> i;
-  static constexpr ttl::Index<'j'> j;
-  static constexpr ttl::Index<'k'> k;
-  static constexpr ttl::Index<'l'> l;
-  return ttl::expressions::force((ttl::Delta<2,D,S>()(i,k)*ttl::Delta<2,D,S>()(j,l)).to(i,j,k,l));
-}
-
-TEST(Delta, Identity) {
-  static constexpr ttl::Index<'i'> i;
-  static constexpr ttl::Index<'j'> j;
-  static constexpr ttl::Index<'k'> k;
-  static constexpr ttl::Index<'l'> l;
-  auto ID = Identity<3,int>();
-  std::cout << "I\n" << ID(i,j,k,l) << "\n";
-
-  ttl::Tensor<2,3,int> A = {1, 3, 5,
-                            7, 9, 11,
-                            13, 15, 17}, B{};
-
-  std::cout << "A\n" << A(i,j) << "\n";
-  B(i,j) = ID(i,j,k,l) * A(k,l);
-  std::cout << "B\n" << B(i,j) << "\n";
-
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      EXPECT_EQ(A[i][j], B[i][j]);
+      EXPECT_EQ(d(i,j), (i == j) ? 3 : 0);
     }
   }
 }
 
 TEST(Delta, Expression) {
-  static constexpr ttl::Index<'i'> i;
-  static constexpr ttl::Index<'j'> j;
   double d = 3.14;
 
   ttl::Tensor<2,3,double> D = d * ttl::delta(i,j);
@@ -122,10 +104,6 @@ TEST(Delta, Expression) {
 }
 
 TEST(Delta, Expression2) {
-  static constexpr ttl::Index<'i'> i;
-  static constexpr ttl::Index<'j'> j;
-  static constexpr ttl::Index<'k'> k;
-  static constexpr ttl::Index<'l'> l;
   ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8},
                        B = A(i,j) * ttl::delta(j,k),
                        C = A(i,j) * ttl::delta(k,j).to(j,k),
