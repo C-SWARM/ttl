@@ -31,13 +31,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 cmake_minimum_required(VERSION 3.8)
 
+option(TTL_USE_CUDA "" ON)
+if (TTL_USE_CUDA)
+  set(TTL_LANGUAGES "CXX;CUDA")
+else ()
+  set(TTL_LANGUAGES "CXX")
+endif(TTL_USE_CUDA)
+
 # -----------------------------------------------------------------------------
 # project specification
 # -----------------------------------------------------------------------------
 project(
   ttl
   VERSION 0.1
-  LANGUAGES CXX)
+  LANGUAGES ${TTL_LANGUAGES})
 
 # -----------------------------------------------------------------------------
 # Configure-time project options.
