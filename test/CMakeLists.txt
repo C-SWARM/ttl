@@ -67,3 +67,8 @@ add_test(NAME scalar_test COMMAND scalar)
 add_test(NAME trees_test COMMAND trees)
 add_test(NAME epsilon_test COMMAND epsilon)
 add_test(NAME delta_test COMMAND delta)
+
+
+add_executable(cuda_init Init.cu)
+target_link_libraries(cuda_init gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_init_test COMMAND cuda_init)
