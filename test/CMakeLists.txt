@@ -30,9 +30,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Trivial examples and unit tests using gtest and gmock
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-
 add_executable(identity Identity.cpp)
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)

@@ -29,33 +29,47 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.8)
 
+# -----------------------------------------------------------------------------
 # project specification
-project(ttl CXX)
+# -----------------------------------------------------------------------------
+project(
+  ttl
+  VERSION 0.1
+  LANGUAGES CXX)
 
 # -----------------------------------------------------------------------------
 # Configure-time project options.
 # -----------------------------------------------------------------------------
-option(TTL_WITH_LAPACK "use an external lapack implementation for solve/inverse"
-  OFF)
+option(TTL_WITH_LAPACK "use an external LAPACK for solve/inverse" OFF)
+option(TTL_BUILD_TESTS "build the TTL unit tests" ON)
 
+# -----------------------------------------------------------------------------
 # module include path
+# -----------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+# -----------------------------------------------------------------------------
+# set some basic build-type flags
+# -----------------------------------------------------------------------------
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
+
+# -----------------------------------------------------------------------------
+# tell cmake we want to use c++14
+# -----------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # -----------------------------------------------------------------------------
 # Included functionality.
 # -----------------------------------------------------------------------------
 include(CTest)
-include(DownloadProject)
-include(GTest)
 include(CheckIncludeFiles)
-
-# -----------------------------------------------------------------------------
-# Configure the gtest framework
-# -----------------------------------------------------------------------------
-gtest()
+include(GTest)
 
 # -----------------------------------------------------------------------------
 # Figure out what form of lapack we're going to include and link to.
@@ -68,17 +82,15 @@ endif (TTL_WITH_LAPACK)
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.
 # -----------------------------------------------------------------------------
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(include)
-add_subdirectory(test)
+
+if (BUILD_TESTING AND TTL_BUILD_TESTS)
+  add_subdirectory(test)
+endif (BUILD_TESTING AND TTL_BUILD_TESTS)
 
 install(
   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include
   DESTINATION ${CMAKE_INSTALL_PREFIX})
-
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/ttl/config.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/include/ttl/config.h)
