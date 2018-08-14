@@ -69,7 +69,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -----------------------------------------------------------------------------
 include(CTest)
 include(CheckIncludeFiles)
-include(GTest)
 
 # -----------------------------------------------------------------------------
 # Figure out what form of lapack we're going to include and link to.

@@ -30,6 +30,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+include(GTest)
+
 add_executable(identity Identity.cpp)
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)
