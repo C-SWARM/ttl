@@ -346,7 +346,7 @@ TEST(Solve, Singular) {
 
   int singular = 0;
   try {
-    auto x = solve(A,b);
+    solve(A,b);
   } catch (int i) {
     singular = i;
   }

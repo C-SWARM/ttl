@@ -184,7 +184,7 @@ TEST(Bind, AssignPermuteExternal) {
 
 TEST(Bind, ExternalInitializeRValue) {
   int a[4];
-  const ttl::Tensor<2,2,int*> A = {a, 2 * B(i,j)};
+  ttl::Tensor<2,2,int*> {a, 2 * B(i,j)};
   EXPECT_EQ(2 * B.get(0), a[0]);
   EXPECT_EQ(2 * B.get(1), a[1]);
   EXPECT_EQ(2 * B.get(2), a[2]);
@@ -194,7 +194,7 @@ TEST(Bind, ExternalInitializeRValue) {
 TEST(Bind, ExternalInitializeLValue) {
   auto e = 2 * B(i,j);
   int a[4];
-  const ttl::Tensor<2,2,int*> A = {a, e};
+  ttl::Tensor<2,2,int*> {a, e};
   EXPECT_EQ(2 * B.get(0), a[0]);
   EXPECT_EQ(2 * B.get(1), a[1]);
   EXPECT_EQ(2 * B.get(2), a[2]);
