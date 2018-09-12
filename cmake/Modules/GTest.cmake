@@ -9,4 +9,7 @@ download_project(
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+# don't support pthreads... it breaks nvcc
+set(gtest_disable_pthreads ON CACHE BOOL "" FORCE)
+  
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
