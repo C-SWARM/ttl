@@ -121,7 +121,7 @@ TEST(Delta, Expression2) {
   for (int n = 0; n < 3; ++n) {
     for (int m = 0; m < 3; ++m) {
       if (n == m) EXPECT_EQ(E(n,m), 1);
-      else EXPECT_EQ(E(n,m), 1);
+      else EXPECT_EQ(E(n,m), 0);
     }
   }
 }
