@@ -68,13 +68,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Included functionality.
 # -----------------------------------------------------------------------------
 include(CTest)
-include(CheckIncludeFiles)
+include(CheckIncludeFileCXX)
 
 # -----------------------------------------------------------------------------
 # Figure out what form of lapack we're going to include and link to.
 # -----------------------------------------------------------------------------
 if (TTL_WITH_LAPACK)
-  CHECK_INCLUDE_FILES(mkl.h TTL_HAVE_MKL_H)
+  CHECK_INCLUDE_FILE_CXX(mkl.h TTL_HAVE_MKL_H)
   include(FindLAPACK)
 endif (TTL_WITH_LAPACK)
 
