@@ -42,6 +42,7 @@
 #include <ttl/util/linearize.h>
 #include <ttl/util/multi_array.h>
 #include <ttl/util/pow.h>
+#include <ttl/util/stl_wrappers.h>
 #include <cassert>
 #include <tuple>
 #include <algorithm>
@@ -73,26 +74,26 @@ class TensorBase
  protected:
   /// Copy data from an initializer list.
   template <class T>
-  auto& copy(std::initializer_list<T> list) noexcept {
+  HOST DEVICE auto& copy(std::initializer_list<T> list) noexcept {
     // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
     auto size = Size;
-    std::size_t min = std::min(size, list.size());
-    std::copy_n(list.begin(), min, derived().data);     // copy prefix
-    std::fill_n(&derived().data[min], Size - min, 0);   // 0-fill suffix
+    size_t min = utils::min(size, list.size());
+    utils::copy_n(list.begin(), min, derived().data);     // copy prefix
+    utils::fill_n(&derived().data[min], Size - min, 0);   // 0-fill suffix
     return derived();
   }
 
   /// Copy data from another Tensor.
   template <class T>
   auto& copy(const Tensor<R,D,T>& rhs) noexcept {
-    std::copy_n(rhs.data, Size, derived().data);
+    utils::copy_n(rhs.data, Size, derived().data);
     return derived();
   }
 
   /// Copy data from an r-value reference.
   template <class T>
   auto& copy(Tensor<R,D,T>&& rhs) noexcept {
-    std::copy_n(std::move(rhs.data), Size, derived().data);
+    utils::copy_n(std::move(rhs.data), Size, derived().data);
     return derived();
   }
 
@@ -128,7 +129,7 @@ class TensorBase
   ///                   chained.
   template <class T>
   auto& fill(T scalar) noexcept {
-    std::fill_n(derived().data, Size, scalar);
+    utils::fill_n(derived().data, Size, scalar);
     return derived();
   }
 
@@ -273,7 +274,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @code
   ///
   /// @param       list The initializer list for the tensor.
-  Tensor(std::initializer_list<S> list) noexcept {
+  HOST DEVICE Tensor(std::initializer_list<S> list) noexcept {
     this->copy(list);
   }
 
@@ -291,7 +292,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @code
   ///
   /// The copy is performed using the promotion and compatibility rules of the
-  /// std::copy_n algorithm.
+  /// utils::copy_n algorithm.
   ///
   /// @tparam         T The scalar type for the right hand side.
   /// @param        rhs The tensor to copy from.
@@ -311,7 +312,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @code
   ///
   /// The copy is performed using the promotion and compatibility rules of the
-  /// std::copy_n algorithm.
+  /// utils::copy_n algorithm.
   ///
   /// @tparam         T The scalar type for the right hand side.
   /// @param        rhs The tensor rvalue to copy from.
@@ -583,7 +584,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   ///
   /// This supports both in place and external tensor assignments, and
   /// implements the expected value-type copy. T->S compatibility is governed by
-  /// the std::copy_n semantics.
+  /// the utils::copy_n semantics.
   ///
   /// @code
   ///   int a[4];
@@ -604,7 +605,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   ///
   /// This supports both in place and external tensor assignments, and
   /// implements the expected value-type copy. T->S compatibility is governed by
-  /// the std::copy_n semantics.
+  /// the utils::copy_n semantics.
   ///
   /// @code
   ///   int a[4];

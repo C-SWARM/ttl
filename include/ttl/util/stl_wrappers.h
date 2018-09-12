@@ -31,15 +31,33 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#cmakedefine TTL_HAVE_MKL_H
-#cmakedefine TTL_WITH_LAPACK
+/// @file  ttl/utils/stl_wrappers.h
+/// @brief Contains wrappers for the stl.
+// -----------------------------------------------------------------------------
+#ifndef TTL_UTILS_STL_WRAPPERS_H
+#define TTL_UTILS_STL_WRAPPERS_H
 
-#ifdef __CUDACC__
-#define HOST __host__
-#define DEVICE __device__
-#define CUDA __host__ __device__
-#else
-#define HOST
-#define DEVICE
-#define CUDA
-#endif
+namespace ttl {
+namespace utils {
+template <class T>
+CUDA static inline T min(const T& lhs, const T& rhs) {
+  return (lhs < rhs) ? lhs : rhs;
+}
+
+template <class T, class U>
+CUDA static inline void copy_n(T from, const size_t N, U to) {
+  for (size_t i = 0; i < N; ++i, ++from, ++to) {
+    *to = *from;
+  }
+}
+
+template <class T, class U>
+CUDA static inline void fill_n(T in, const size_t N, U&& u) {
+  for (size_t i = 0; i < N; ++i, ++in) {
+    *in = std::forward<U>(u);
+  }
+}
+}
+}
+
+#endif // TTL_UTILS_STL_WRAPPERS_H
