@@ -42,7 +42,7 @@ project(
 # -----------------------------------------------------------------------------
 # Configure-time project options.
 # -----------------------------------------------------------------------------
-option(TTL_WITH_LAPACK "use an external LAPACK for solve/inverse" OFF)
+option(TTL_WITH_LAPACK "use an external LAPACK for solve/inverse" ON)
 option(TTL_BUILD_TESTS "build the TTL unit tests" ON)
 
 # -----------------------------------------------------------------------------
