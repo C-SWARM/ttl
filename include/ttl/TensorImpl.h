@@ -63,11 +63,11 @@ class TensorBase
 
   static constexpr std::size_t Size = util::pow(D,R); ///!< Number of elements
 
-  CUDA constexpr const TensorType& derived() const noexcept {
+  constexpr const TensorType& derived() const noexcept {
     return *static_cast<const TensorType*>(this);
   }
 
-  CUDA constexpr TensorType& derived() noexcept {
+  constexpr TensorType& derived() noexcept {
     return *static_cast<TensorType*>(this);
   }
 
@@ -363,7 +363,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  CUDA constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
     return this->apply(std::move(rhs));
   }
 
@@ -379,7 +379,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  CUDA constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
+  constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
     return this->apply(rhs);
   }
 
@@ -546,7 +546,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   ///
   /// @param        rhs The right hand side of the assignment.
   /// @returns          A reference to *this;
-  CUDA constexpr Tensor& operator=(const Tensor& rhs) noexcept {
+  constexpr Tensor& operator=(const Tensor& rhs) noexcept {
     return this->copy(rhs);
   }
 
@@ -558,7 +558,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   ///
   /// @param        rhs The right hand side of the assignment.
   /// @returns          A reference to *this;
-  CUDA constexpr Tensor& operator=(Tensor&& rhs) noexcept {
+  constexpr Tensor& operator=(Tensor&& rhs) noexcept {
     return this->copy(std::move(rhs));
   }
 
@@ -576,7 +576,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   ///
   /// @param        rhs The right hand side of the assignment.
   /// @returns          A reference to *this.
-  CUDA constexpr Tensor& operator=(std::initializer_list<S> list) noexcept {
+  constexpr Tensor& operator=(std::initializer_list<S> list) noexcept {
     return this->copy(list);
   }
 
@@ -597,7 +597,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param        rhs The right hand side tensor.
   /// @returns          A reference to *this.
   template <class T>
-  CUDA constexpr Tensor& operator=(const Tensor<R,D,T>& rhs) noexcept {
+  constexpr Tensor& operator=(const Tensor<R,D,T>& rhs) noexcept {
     return this->copy(rhs);
   }
 
@@ -618,7 +618,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param        rhs The right hand side tensor.
   /// @returns          A reference to *this.
   template <class T>
-  CUDA constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
+  constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
     return this->copy(std::move(rhs));
   }
 
@@ -634,7 +634,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  CUDA constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
     return this->apply(std::move(rhs));
   }
 
@@ -651,7 +651,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  CUDA constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
+  constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
     return this->apply(rhs);
   }
 
