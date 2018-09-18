@@ -125,7 +125,7 @@ class Product : public Expression<Product<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class I>
-  constexpr auto eval(I i) const noexcept {
+  CUDA constexpr auto eval(I i) const noexcept {
     return contract<Product>(i, op_);
   }
 

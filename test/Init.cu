@@ -130,6 +130,7 @@ TEST(Tensor, Index) {
 
   k_index<<<1, 1>>>(a);
   cudaDeviceSynchronize();
+  cudaCheckErrors("failed");
   EXPECT_EQ(a[0], 1.0);
   EXPECT_EQ(a[1], 2.0);
   EXPECT_EQ(a[2], 3.0);
@@ -138,6 +139,7 @@ TEST(Tensor, Index) {
 
   k_index_2<<<1, 1>>>(a);
   cudaDeviceSynchronize();
+  cudaCheckErrors("failed");
   EXPECT_EQ(a[0], 1.0);
   EXPECT_EQ(a[1], 2.0);
   EXPECT_EQ(a[2], 3.0);
@@ -146,6 +148,7 @@ TEST(Tensor, Index) {
 
   k_slice<<<1, 1>>>(a);
   cudaDeviceSynchronize();
+  cudaCheckErrors("failed");
   EXPECT_EQ(a[0], 3.0);
   EXPECT_EQ(a[1], 1.0);
   EXPECT_EQ(a[2], 4.0);
@@ -169,6 +172,7 @@ TEST(Trees, TensorProduct) {
   assert(out);
   k_tensor_product<<<1, 1>>>(out);
   cudaDeviceSynchronize();
+  cudaCheckErrors("failed");
   EXPECT_EQ(out[0], 10);
   EXPECT_EQ(out[1], 13);
   EXPECT_EQ(out[2], 22);
@@ -176,22 +180,23 @@ TEST(Trees, TensorProduct) {
   cudaFree(out);
 }
 
-// __global__
-// static void k_scalar_multiply(double *c) {
-//   ttl::Tensor<2,2,double> A = {1, 2, 3, 4};
-//   ttl::Tensor<2,2,double*> C = {c};
-//   C = A / 2.;
-// }
+__global__
+static void k_scalar_multiply(double *c) {
+  ttl::Tensor<2,2,double> A = {1, 2, 3, 4};
+  ttl::Tensor<2,2,double*> C = {c};
+  C(i,j) = 2 * A(i,j) * 2;
+}
 
-// TEST(Trees, ScalarMultiply) {
-//   double *out;
-//   cudaMallocManaged(&out, 4*sizeof(double));
-//   assert(out);
-//   k_scalar_multiply<<<1, 1>>>(out);
-//   cudaDeviceSynchronize();
-//   EXPECT_EQ(out[0], 2);
-//   EXPECT_EQ(out[1], 4);
-//   EXPECT_EQ(out[2], 6);
-//   EXPECT_EQ(out[3], 8);
-//   cudaFree(out);
-// }
+TEST(Trees, ScalarMultiply) {
+  double *out;
+  cudaMallocManaged(&out, 4*sizeof(double));
+  assert(out);
+  k_scalar_multiply<<<1, 1>>>(out);
+  cudaDeviceSynchronize();
+  cudaCheckErrors("failed");
+  EXPECT_EQ(out[0], 4);
+  EXPECT_EQ(out[1], 8);
+  EXPECT_EQ(out[2], 12);
+  EXPECT_EQ(out[3], 16);
+  cudaFree(out);
+}
