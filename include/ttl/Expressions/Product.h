@@ -102,7 +102,7 @@ class Product : public Expression<Product<L, R>>
   /// to do that because it can't handle the type inference required.
   struct Op {
     template <class Index>
-    CUDA constexpr auto operator()(Index index) const {
+    constexpr auto operator()(Index index) const {
       return lhs.eval(index) * rhs.eval(index);
     }
 
@@ -125,7 +125,7 @@ class Product : public Expression<Product<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class I>
-  CUDA auto eval(I i) const noexcept {
+  constexpr auto eval(I i) const noexcept {
     return contract<Product>(i, op_);
   }
 
