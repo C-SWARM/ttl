@@ -50,17 +50,17 @@ struct Index {
   constexpr explicit Index(int value) : value_(value) {
   }
 
-  Index(const Index&) = default;
-  Index(Index&&) = default;
-  Index& operator=(const Index&) = default;
-  Index& operator=(Index&&) = default;
+  constexpr Index(const Index&) = default;
+  constexpr Index(Index&&) = default;
+  constexpr Index& operator=(const Index&) = default;
+  constexpr Index& operator=(Index&&) = default;
 
-  Index& operator=(int i) {
+  constexpr Index operator=(int i) const noexcept {
     value_ = i;
     return *this;
   }
 
-  Index& set(int i) {
+  constexpr Index& operator=(int i) noexcept {
     value_ = i;
     return *this;
   }
@@ -73,7 +73,7 @@ struct Index {
     return value_ < e;
   }
 
-  Index& operator++() {
+  constexpr Index& operator++() {
     ++value_;
     return *this;
   }

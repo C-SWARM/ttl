@@ -90,8 +90,28 @@ struct traits<Product<L, R>>
 template <class L, class R>
 class Product : public Expression<Product<L, R>>
 {
+  /// This local structure is the product operator.
+  ///
+  /// The product operator is stored in the Expression and will apply the
+  /// operator* operation to the result of the left-hand-side and
+  /// right-hand-side evaluation of the given index.
+  ///
+  /// It is passed to the `contract` operation as the "lambda" expression. In
+  /// standard C++ we would just store `L` and `R` in the Product directly, and
+  /// use a lambda function in `contract`, however CUDA doesn't want to allow us
+  /// to do that because it can't handle the type inference required.
+  struct Op {
+    template <class Index>
+    CUDA constexpr auto operator()(Index index) const {
+      return lhs.eval(index) * rhs.eval(index);
+    }
+
+    L lhs;
+    R rhs;
+  };
+
  public:
-  constexpr Product(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs) {
+  constexpr Product(L lhs, R rhs) noexcept : op_{lhs, rhs} {
   }
 
   /// The eval() operation for the product forwards to the contraction routine.
@@ -105,15 +125,12 @@ class Product : public Expression<Product<L, R>>
   /// @returns          The scalar contraction of the hidden dimensions in the
   ///                   expression.
   template <class I>
-  constexpr auto eval(I i) const noexcept {
-    return contract<Product>(i, [&](auto index) {
-        return lhs_.eval(index) * rhs_.eval(index);
-      });
+  CUDA auto eval(I i) const noexcept {
+    return contract<Product>(i, op_);
   }
 
  private:
-  L lhs_;                                    //!< The left-hand-side expression
-  R rhs_;                                    //!< The right-hand-side expression
+  Op op_;                                       //!< The product operator.
 };
 
 } // namespace expressions

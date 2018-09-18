@@ -51,7 +51,7 @@ struct multi_array_impl<0,D,S>
 } // namespace detail
 
 template <int R, int D, class S>
-using multi_array = typename detail::multi_array_impl<R,D,S>::type;
+using multi_array_t = typename detail::multi_array_impl<R,D,S>::type;
 } // namespace util
 } // namespace ttl
 

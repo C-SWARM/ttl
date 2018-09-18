@@ -105,13 +105,13 @@ class TensorBase
 
   /// Create a bind expression that pairs this Tensor with an Index epxression.
   template <class Index>                        // required for icc 16
-  constexpr auto bind(const Index index) noexcept {
+  CUDA auto bind(const Index index) noexcept {
     return expressions::Bind<TensorType, Index>(derived(), index);
   }
 
   /// Bind and evaulate an expression when this is the LHS.
   template <class E>
-  auto& apply(E&& rhs) noexcept {
+  CUDA auto& apply(E&& rhs) noexcept {
     bind(expressions::outer_type<E>{}) = std::forward<E>(rhs);
     return derived();
   }
@@ -128,7 +128,7 @@ class TensorBase
   /// @returns          A reference to the tensor so that fill() can be
   ///                   chained.
   template <class T>
-  auto& fill(T scalar) noexcept {
+  CUDA auto& fill(T scalar) noexcept {
     utils::fill_n(derived().data, Size, scalar);
     return derived();
   }
@@ -190,7 +190,7 @@ class TensorBase
   /// @returns          The a reference to the scalar value at the linearized @p
   ///                   index.
   template <class Index, int N = std::tuple_size<Index>::value>
-  constexpr auto& eval(Index index) noexcept {
+  CUDA auto& eval(Index index) noexcept {
     static_assert(R == N, "Index size does not match tensor rank");
     return derived().data[util::linearize<D>(index)];
   }
@@ -244,7 +244,7 @@ class TensorBase
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... I>
-  constexpr auto operator()(I... indices) noexcept {
+  CUDA auto operator()(I... indices) noexcept {
     static_assert(R == sizeof...(I), "Index size does not match tensor rank");
     return bind(std::make_tuple(indices...));
   }
@@ -274,7 +274,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @code
   ///
   /// @param       list The initializer list for the tensor.
-  HOST DEVICE Tensor(std::initializer_list<S> list) noexcept {
+  CUDA Tensor(std::initializer_list<S> list) noexcept {
     this->copy(list);
   }
 
@@ -297,7 +297,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @tparam         T The scalar type for the right hand side.
   /// @param        rhs The tensor to copy from.
   template <class T>
-  Tensor(const Tensor<R,D,T>& rhs) noexcept {
+  CUDA Tensor(const Tensor<R,D,T>& rhs) noexcept {
     this->copy(rhs);
   }
 
@@ -317,7 +317,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @tparam         T The scalar type for the right hand side.
   /// @param        rhs The tensor rvalue to copy from.
   template <class T>
-  Tensor(Tensor<R,D,T>&& rhs) noexcept {
+  CUDA Tensor(Tensor<R,D,T>&& rhs) noexcept {
     this->copy(std::move(rhs));
   }
 
@@ -330,7 +330,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @tparam         E The type of the right-hand-side expression.
   /// @param        rhs The right hand side expression.
   template <class E>
-  Tensor(const expressions::Expression<E>&& rhs) noexcept {
+  CUDA Tensor(expressions::Expression<E>&& rhs) noexcept {
     this->apply(std::move(rhs));
   }
 
@@ -344,7 +344,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @tparam         E The type of the right-hand-side expression.
   /// @param        rhs The right hand side expression.
   template <class E>
-  Tensor(const expressions::Expression<E>& rhs) noexcept {
+  CUDA Tensor(const expressions::Expression<E>& rhs) noexcept {
     this->apply(rhs);
   }
 
@@ -363,7 +363,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+  constexpr Tensor& operator=(expressions::Expression<E>&& rhs) noexcept {
     return this->apply(std::move(rhs));
   }
 
@@ -384,15 +384,13 @@ class Tensor : public TensorBase<R,D,S>
   }
 
   constexpr auto operator[](int i) const noexcept {
-    using Multi = util::multi_array<R,D,const S>;
+    using Multi = util::multi_array_t<R,D,const S>;
     return (*reinterpret_cast<const Multi*>(&data))[i];
   }
 
   /// Direct multidimensional array access to the data.
-  constexpr auto operator[](int i) noexcept
-    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
-  {
-    using Multi = util::multi_array<R,D,S>;
+  CUDA auto& operator[](int i) noexcept {
+    using Multi = util::multi_array_t<R,D,S>;
     return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
@@ -514,28 +512,10 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param       data The external data buffer.
   /// @param        rhs The right hand side expression.
   template <class E>
-  Tensor(S* data, const expressions::Expression<E>&& rhs) noexcept
+  CUDA Tensor(S* data, E&& rhs) noexcept
       : Tensor(data)
   {
-    this->apply(std::move(rhs));
-  }
-
-  /// Allow initialization from expressions of compatible type.
-  ///
-  /// @code
-  ///   auto b = B(i,j);
-  ///   int a[]
-  ///   const Tensor<R,D,S*> A = {a, b};
-  /// @code
-  ///
-  /// @tparam         E The type of the right-hand-side expression.
-  /// @param       data The external data buffer.
-  /// @param        rhs The right hand side expression.
-  template <class E>
-  Tensor(S* data, const expressions::Expression<E>& rhs) noexcept
-      : Tensor(data)
-  {
-    this->apply(rhs);
+    this->apply(std::forward<E>(rhs));
   }
 
   /// Copy the data from the rhs.
@@ -634,7 +614,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @param        rhs The right hand side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+  constexpr Tensor& operator=(expressions::Expression<E>&& rhs) noexcept {
     return this->apply(std::move(rhs));
   }
 
@@ -656,15 +636,13 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   }
 
   /// Direct multidimensional array access to the data.
-  constexpr const auto operator[](int i) const noexcept {
-    using Multi = util::multi_array<R,D,const S>;
+  constexpr auto operator[](int i) const noexcept {
+    using Multi = util::multi_array_t<R,D,const S>;
     return (*reinterpret_cast<const Multi*>(&data))[i];
   }
 
-  constexpr auto operator[](int i) noexcept
-    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
-  {
-    using Multi = util::multi_array<R,D,S>;
+  CUDA auto& operator[](int i) noexcept {
+    using Multi = util::multi_array_t<R,D,S>;
     return (*reinterpret_cast<Multi*>(&data))[i];
   }
 
@@ -679,11 +657,11 @@ template <int D, class S>
 class Tensor<0,D,S>
 {
  public:
-  auto& operator()() {
+  CUDA auto& operator()() {
     return data;
   }
 
-  auto& operator[](int i) {
+  CUDA auto& operator[](int i) {
     assert(i==0);
     return data;
   }

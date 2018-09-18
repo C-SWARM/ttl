@@ -40,7 +40,7 @@
 namespace ttl {
 namespace utils {
 template <class T>
-CUDA static inline T min(const T& lhs, const T& rhs) {
+constexpr static inline T min(const T& lhs, const T& rhs) {
   return (lhs < rhs) ? lhs : rhs;
 }
 

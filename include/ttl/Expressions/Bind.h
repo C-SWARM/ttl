@@ -104,7 +104,7 @@ class Bind : public Expression<Bind<E, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  constexpr auto eval(I i) const {
+  CUDA constexpr auto eval(I i) const {
     return contract<Bind>(i, [this](auto index) {
         // intel 16.0 can't handle the "transform" symbol here without the
         // namespace
@@ -119,7 +119,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class RHS>
-  Bind& operator=(RHS&& rhs) {
+  CUDA Bind& operator=(RHS&& rhs) {
     static_assert(dimension<RHS>::value == dimension<Bind>::value or
                   dimension<RHS>::value == -1,
                   "Cannot operate on expressions of differing dimension");
@@ -132,7 +132,7 @@ class Bind : public Expression<Bind<E, Index>>
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  Bind& operator=(scalar_type<Bind> rhs) {
+  CUDA Bind& operator=(scalar_type<Bind> rhs) {
     static_assert(rank<Bind>::value == 0, "Cannot assign scalar to tensor");
     apply<>::op(Outer{}, [rhs,this](Outer i) {
         t_.eval(ttl::expressions::transform(i_, i)) = rhs;
@@ -147,7 +147,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class RHS>
-  Bind& operator+=(RHS&& rhs) {
+  CUDA Bind& operator+=(RHS&& rhs) {
     static_assert(dimension<E>::value == dimension<RHS>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
@@ -162,7 +162,7 @@ class Bind : public Expression<Bind<E, Index>>
   ///
   /// This iterates through the index space and prints the index and results to
   /// the stream.
-  std::ostream& print(std::ostream& os) const {
+  HOST std::ostream& print(std::ostream& os) const {
     apply<>::op(Outer{}, [&os,this](const Outer i) {
         print_pack(os, i) << ": " << eval(i) << "\n";
       });
@@ -206,9 +206,9 @@ class Bind : public Expression<Bind<E, Index>>
     /// @tparam      Op The lambda to evaluate for each index.
     /// @param    index The partially constructed index.
     template <class Op>
-    static void op(Outer index, Op&& f) {
+    static constexpr void op(Outer index, Op&& f) {
       for (int i = 0; i < D; ++i) {
-        std::get<n>(index).set(i);
+        std::get<n>(index) = i;
         apply<n + 1>::op(index, std::forward<Op>(f));
       }
     }
@@ -221,7 +221,7 @@ class Bind : public Expression<Bind<E, Index>>
   struct apply<M, M>
   {
     template <class Op>
-    static void op(Outer index, Op&& f) {
+    static constexpr void op(Outer index, Op&& f) {
       f(index);
     }
 
@@ -232,7 +232,7 @@ class Bind : public Expression<Bind<E, Index>>
     ///   c() = a(i) * b(i)
     /// @code
     template <class Op>
-    static void op(Op&& f) {
+    static constexpr void op(Op&& f) {
       f(Outer{});
     }
   };
