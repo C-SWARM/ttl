@@ -34,7 +34,10 @@ cmake_minimum_required(VERSION 3.8)
 option(TTL_USE_CUDA "" ON)
 if (TTL_USE_CUDA)
   set(TTL_LANGUAGES "CXX;CUDA")
-  set(CMAKE_CUDA_FLAGS "--expt-relaxed-constexpr --compiler-options -Wall" CACHE STRING "" FORCE)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --compiler-options -Wall")
+  set(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g -G")
+  set(CMAKE_CUDA_FLAGS_RELEASE "-O3")
+  set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O3 -g -G")
 else ()
   set(TTL_LANGUAGES "CXX")
 endif(TTL_USE_CUDA)
@@ -61,10 +64,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 # -----------------------------------------------------------------------------
 # set some basic build-type flags
 # -----------------------------------------------------------------------------
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
 
 # -----------------------------------------------------------------------------
 # tell cmake we want to use c++14
