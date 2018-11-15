@@ -38,26 +38,26 @@
 #define TTL_UTILS_STL_WRAPPERS_H
 
 namespace ttl {
-namespace utils {
-template <class T>
-constexpr static inline T min(const T& lhs, const T& rhs) {
-  return (lhs < rhs) ? lhs : rhs;
-}
+  namespace utils {
+    template <class T>
+      constexpr static inline T min(const T& lhs, const T& rhs) {
+        return (lhs < rhs) ? lhs : rhs;
+      }
 
-template <class T, class U>
-CUDA static inline void copy_n(T from, const size_t N, U to) {
-  for (size_t i = 0; i < N; ++i, ++from, ++to) {
-    *to = *from;
-  }
-}
+    template <class T, class U>
+    CUDA static inline void copy_n(T from, const size_t N, U to) {
+      for (size_t i = 0; i < N; ++i, ++from, ++to) {
+        *to = *from;
+      }
+    }
 
-template <class T, class U>
-CUDA static inline void fill_n(T in, const size_t N, U&& u) {
-  for (size_t i = 0; i < N; ++i, ++in) {
-    *in = std::forward<U>(u);
+    template <class T, class U>
+    CUDA static inline void fill_n(T in, const size_t N, U&& u) {
+      for (size_t i = 0; i < N; ++i, ++in) {
+        *in = std::forward<U>(u);
+      }
+    }
   }
-}
-}
 }
 
 #endif // TTL_UTILS_STL_WRAPPERS_H

@@ -53,7 +53,7 @@ template <int i, int n, int N>
 struct insert
 {
   template <class Index>
-  static int op(Index index, int parity) {
+  CUDA static int op(Index index, int parity) {
     int s = std::get<i>(index);
     int t = std::get<i-1>(index);
 
@@ -84,7 +84,7 @@ template <int n, int N>
 struct insert<0,n,N>
 {
   template <class Index>
-  static constexpr int op(const Index index, int parity) {
+  CUDA static constexpr int op(const Index index, int parity) {
     return sort<n+1,N>::op(index, parity);
   }
 };
@@ -94,7 +94,7 @@ template <int n, int N>
 struct sort
 {
   template <class Index>
-  static constexpr int op(const Index index, int parity) {
+  CUDA static constexpr int op(const Index index, int parity) {
     return insert<n,n,N>::op(index, parity);
   }
 };
@@ -104,7 +104,7 @@ template <int N>
 struct sort<N,N>
 {
   template <class Index>
-  static constexpr int op(const Index, int parity) {
+  CUDA static constexpr int op(const Index, int parity) {
     return parity;
   }
 };
@@ -113,13 +113,13 @@ struct sort<N,N>
 template <int D, class Index>
 class Epsilon : public Expression<Epsilon<D,Index>>
 {
-  static constexpr int sort(const Index index) noexcept {
+  CUDA static constexpr int sort(const Index index) noexcept {
     return detail::sort<0, std::tuple_size<Index>::value>::op(index, 1);
   }
 
  public:
   template <class I>
-  static constexpr int eval(const I index) noexcept {
+  CUDA static constexpr int eval(const I index) noexcept {
     return sort(ttl::expressions::transform<Index>(index));
   }
 };
@@ -136,7 +136,7 @@ struct traits<Epsilon<D, Index>>
 
 
 template <int D = -1, class... I>
-auto epsilon(I... i) {
+CUDA auto epsilon(I... i) {
   return expressions::Epsilon<D,std::tuple<I...>>();
 }
 } // namespace ttl

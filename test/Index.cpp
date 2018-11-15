@@ -32,6 +32,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
 #include <ttl/ttl.h>
+#include <iostream>
 
 using namespace ttl;
 using namespace ttl::expressions;
@@ -148,5 +149,6 @@ static_assert( is_same< x_jk1, l_jk >::value, "failed");
 static_assert( is_same< x_jk2, l_jk >::value, "failed");
 
 int main() {
+  std::cout << "All static asserts properly compiled" << std::endl;
   return 0;
 }

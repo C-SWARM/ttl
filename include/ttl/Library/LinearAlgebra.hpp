@@ -55,31 +55,52 @@ using ipiv_t = lapack_int;
 #endif
 
 template <int N>
-static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {
-  return LAPACKE_dgetrf(LAPACK_COL_MAJOR,N,N,data,N,ipiv);
+CUDA static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {  
+  #ifdef __CUDA_ARCH__
+    return 1;
+  #else  
+    return LAPACKE_dgetrf(LAPACK_COL_MAJOR,N,N,data,N,ipiv);
+  #endif
 }
 
 template <int N>
-static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
-  return LAPACKE_dgetri(LAPACK_COL_MAJOR,N,data,N,ipiv);
+CUDA static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
+  #ifdef __CUDA_ARCH__
+    return 1;
+  #else  
+    return LAPACKE_dgetri(LAPACK_COL_MAJOR,N,data,N,ipiv);
+  #endif
 }
 
 template <int N>
-static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
-  return LAPACKE_dgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
+CUDA static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
+  #ifdef __CUDA_ARCH__
+    return 1;
+  #else  
+    return LAPACKE_dgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
+  #endif
 }
 
 template <int N>
-static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
-  return LAPACKE_sgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
+CUDA static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
+  #ifdef __CUDA_ARCH__
+    
+  #else  
+    return LAPACKE_sgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
+  #endif  
 }
 
 template <int N, class A, class B, class X>
-static inline int solve(A a, B b, X& x) noexcept {
+CUDA static inline int solve(A a, B b, X& x) noexcept {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
-  ipiv_t ipiv[N];
+  #ifdef __CUDA_ARCH__
+    return 1;
+  #else  
+    ipiv_t ipiv[N];
+  #endif 
+  
   auto ta = force(transpose(a));
   x = force(b);
   int i = gesv<N>(ta.data, x.data, ipiv);
@@ -87,21 +108,26 @@ static inline int solve(A a, B b, X& x) noexcept {
 }
 
 template <int N, class A, class B>
-static inline auto solve(A a, B b) {
+CUDA static inline auto solve(A a, B b) {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
   ipiv_t ipiv[N];
   auto ta = force(transpose(a));
   auto tb = force(b);
-  if (int i = gesv<N>(ta.data, tb.data, ipiv)) {
-    throw i;
-  }
+
+  #ifdef __CUDA_ARCH__
+    gesv<N>(ta.data, tb.data, ipiv);
+  #else
+    if (int i = gesv<N>(ta.data, tb.data, ipiv)) {
+      throw i;
+    }
+  #endif // check for cuda architecture
   return tb;
 }
 
 template <int N, class E, class M>
-static inline int invert(E e, M& m) noexcept {
+CUDA static inline int invert(E e, M& m) noexcept {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
@@ -118,7 +144,7 @@ static inline int invert(E e, M& m) noexcept {
 }
 #else
 template <int N, class E, class M>
-static inline int invert(E e, M& m) noexcept {
+CUDA static inline int invert(E e, M& m) noexcept {
   static constexpr Index<'i'> i;
   static constexpr Index<'j'> j;
   ttl::expressions::tensor_type<E> A = force(e);
@@ -128,7 +154,7 @@ static inline int invert(E e, M& m) noexcept {
 }
 
 template <int N, class A, class B, class X>
-static inline int solve(A a, B b, X& x) noexcept {
+CUDA static inline int solve(A a, B b, X& x) noexcept {
   ttl::expressions::tensor_type<A> fA = force(a);
   ttl::expressions::tensor_type<B> fb = force(b);
   long ipiv[N];
@@ -136,14 +162,18 @@ static inline int solve(A a, B b, X& x) noexcept {
 }
 
 template <int N, class A, class B>
-static inline auto solve(A a, B b) {
+CUDA static inline auto solve(A a, B b) {
   ttl::expressions::tensor_type<A> fA = force(a);
   ttl::expressions::tensor_type<B> fb = force(b);
   ttl::expressions::tensor_type<B> x;
   long ipiv[N];
-  if (int i = reseni_rovnic(fA.data, x.data, fb.data, N, 1, 2, ipiv)) {
-    throw i;
-  }
+  #ifdef __CUDA_ARCH__
+    reseni_rovnic(fA.data, x.data, fb.data, N, 1, 2, ipiv);
+  #else
+    if (int i = reseni_rovnic(fA.data, x.data, fb.data, N, 1, 2, ipiv)) {
+      throw i;
+    }
+  #endif // check for cuda architecture
   return x;
 }
 #endif

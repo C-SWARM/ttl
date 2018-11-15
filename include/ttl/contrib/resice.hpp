@@ -3,20 +3,22 @@
 #include <cmath>
 
 static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,long as, long* av)
-/* funkce provadi reseni maticove rovnice A.X=Y
-   lze ji tedy bez problemu pouzit na vypocet inverzni matice
-   matice A je plna
+// translated from czech, YMMV
+
+/* function to resolve the matrix equation A.X = y
+   so it can be used without problem to calculate the inverse matrix
+   matrix A is full
 
    A(n,n),X(n,m),Y(n,m)
-   as - rozhodovaci konstanta
-   as=1 - pivot se hleda jen v pripade, ze A(i,i)=0
-   as=2 - pivot se hleda pokazde
-   av=n-element pivot array
+   as - decision constant
+   as=1 - the pivot is searched only in the case that A(i,i)=0
+   as=2 - the pivot is searched every time
+   av=n - element pivot array
 
-   testovano 24.7.1996 pomoci programu test_fin_res.c v /u/jk/TESTY/METODY
-   procedura dava stejne vysledky jako ldl,ldlkon,ldlblok,congrad_sky,congrad_comp
+   tested on July 24, 1996 to help test_fin_res.c v / u / jk / TESTS / METHODS
+   the procedure gives the same results as ldl, ldlkon, ldlblok, congrad_sky, congrad_comp
 
-   **** otestovano ****
+   **** tested ****
    */
 {
   assert(a);
@@ -30,7 +32,7 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
   double  s,g;
 
   /*************************************************************************/
-  /*  nastaveni hodnot vektoru, ktery udava poradi jednotlivych neznamych  */
+  /*  setting the values of the vector that gives the order of the individual not  */
   /*************************************************************************/
   for (i=0;i<n;i++){
     av[i]=i;
@@ -40,15 +42,15 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
     acr=i;  acc=i;
     if (as==1){
       /******************************************/
-      /*  pivot se hleda jen pokud je A(i,i)=0  */
+      /*  the pivot is searched only if it is A(i,i)=0  */
       /******************************************/
       if (fabs(a[i*n+i])<1.0e-5){
-        /*  vyber pivota  */
+        /*  choose a pivot */
         s=0.0;
-        /*  smycka pres radky  */
+        /*  choose a pivot  */
         for (j=i;j<n;j++){
           aca=j*n+i;
-          /*  smycka pres sloupce  */
+          /*  loop over columns  */
           for (k=i;k<n;k++){
             if (s<fabs(a[aca])){
               s=fabs(a[aca]);  acr=j;  acc=k;
@@ -63,13 +65,13 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
     }
     if (as==2){
       /****************************/
-      /*  pivot se hleda pokazde  */
+      /*  the pivot is searched every time  */
       /****************************/
       s=0.0;
-      /*  smycka pres radky  */
+      /*  skew over the rows  */
       for (j=i;j<n;j++){
         aca=j*n+i;
-        /*  smycka pres sloupce  */
+        /*  loop over columns  */
         for (k=i;k<n;k++){
           if (s<fabs(a[aca])){
             s=fabs(a[aca]);  acr=j;  acc=k;
@@ -83,7 +85,7 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
     }
 
     /******************/
-    /*  vymena radku  */
+    /*  exchange the line */
     /******************/
     if (acr!=i){
       aca=i*n+i;  aca1=acr*n+i;
@@ -102,7 +104,7 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
       }
     }
     /********************/
-    /*  vymena sloupcu  */
+    /*  exchange column  */
     /********************/
     if (acc!=i){
       ac=av[i];
@@ -118,19 +120,19 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
       }
     }
     /***************/
-    /*  eliminace  */
+    /*  elimination  */
     /***************/
 
     for (j=i+1;j<n;j++){
       acj=j*n+i;  aci=i*n+i;
       s=a[acj]/a[aci];
-      /*  modifikace matice A  */
+      /*  modification of the A matrix  */
       for (k=i;k<n;k++){
         a[acj]-=s*a[aci];
         acj++;  aci++;
       }
       acj=j*m;  aci=i*m;
-      /*  modifikace matice pravych stran Y  */
+      /*  modification of the right side matrix Y  */
       for (k=0;k<m;k++){
         y[acj]-=s*y[aci];
         acj++;  aci++;
@@ -139,7 +141,7 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
   }
 
   /*****************/
-  /*  zpetny chod  */
+  /*  reverse flow  */
   /*****************/
 
   for (i=n-1;i>-1;i--){
@@ -156,7 +158,7 @@ static inline int reseni_rovnic (double *a,double *x,double *y,long n,long m,lon
   }
 
   /***********************************/
-  /*  prerovnani do puvodniho stavu  */
+  /*  to the original state  */
   /***********************************/
   for (i=0;i<n;i++){
     if (av[i]!=i){

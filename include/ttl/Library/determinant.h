@@ -49,7 +49,7 @@ struct det_impl;
 template <class E>
 struct det_impl<E, 2, 2>
 {
-  static constexpr auto op(E f) {
+  CUDA static constexpr auto op(E f) {
     return f(0,0)*f(1,1) - f(0,1)*f(1,0);
   }
 };
@@ -57,7 +57,7 @@ struct det_impl<E, 2, 2>
 template <class E>
 struct det_impl<E, 2, 3>
 {
-  static auto op(E f) {
+  CUDA static auto op(E f) {
     auto t0 = f(0,0)*f(1,1)*f(2,2);
     auto t1 = f(1,0)*f(2,1)*f(0,2);
     auto t2 = f(2,0)*f(0,1)*f(1,2);
@@ -70,12 +70,12 @@ struct det_impl<E, 2, 3>
 } // namespace lib
 
 template <class E>
-constexpr expressions::scalar_type<E> det(E e) {
+CUDA constexpr expressions::scalar_type<E> det(E e) {
   return lib::det_impl<E>::op(e);
 }
 
 template <int D, class S>
-constexpr auto det(const Tensor<2,D,S>& matrix) {
+CUDA constexpr auto det(const Tensor<2,D,S>& matrix) {
   return det(lib::bind(matrix));
 }
 } // namespace ttl

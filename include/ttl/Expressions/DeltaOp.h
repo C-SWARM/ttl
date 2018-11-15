@@ -68,7 +68,7 @@ template <int n, int N>
 struct is_diagonal
 {
   template <class I, class Index>
-  static constexpr bool op(I d, const Index index) noexcept {
+  CUDA static constexpr bool op(I d, const Index index) noexcept {
     return (std::get<n>(index) == d && is_diagonal<n+1,N>::op(d, index));
   }
 };
@@ -77,7 +77,7 @@ template <int N>
 struct is_diagonal<N, N>
 {
   template <class I, class Index>
-  static constexpr bool op(I, const Index) noexcept {
+  CUDA static constexpr bool op(I, const Index) noexcept {
     return true;
   }
 };
@@ -89,12 +89,12 @@ class DeltaOp : public Expression<DeltaOp<D, Index>>
   static constexpr int N = std::tuple_size<Index>::value;
 
  public:
-  constexpr int eval(const Index index) const noexcept {
+  CUDA constexpr int eval(const Index index) const noexcept {
     return detail::is_diagonal<0,N>::op(std::get<0>(index), index);
   }
 
   template <class I>
-  constexpr int eval(const I index) const noexcept {
+  CUDA constexpr int eval(const I index) const noexcept {
     return eval(ttl::expressions::transform<Index>(index));
   }
 };
@@ -104,7 +104,7 @@ class DeltaOp<D, std::tuple<>> : public Expression<DeltaOp<D, std::tuple<>>>
 {
  public:
   template <class I>
-  constexpr int eval(I) const noexcept {
+  CUDA constexpr int eval(I) const noexcept {
     return 1;
   }
 };
@@ -120,7 +120,7 @@ struct traits<DeltaOp<D, Index>>
 } // namespace expressions
 
 template <int D = -1, class... I>
-auto delta(I... i) {
+CUDA auto delta(I... i) {
   return expressions::DeltaOp<D, std::tuple<I...>>();
 }
 } // namespace ttl

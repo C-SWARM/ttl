@@ -55,20 +55,90 @@ target_link_libraries(trees gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(epsilon gtest_main ${LAPACK_LIBRARIES})
 target_link_libraries(delta gtest_main ${LAPACK_LIBRARIES})
 
-
+add_test(NAME bind_test COMMAND bind)
+add_test(NAME delta_test COMMAND delta)
+add_test(NAME epsilon_test COMMAND epsilon)
 add_test(NAME identity_test COMMAND identity)
 add_test(NAME index_test COMMAND index)
-add_test(NAME tensor_test COMMAND tensor)
-add_test(NAME library_test COMMAND library)
-add_test(NAME bind_test COMMAND bind)
 add_test(NAME index_map_test COMMAND index_map)
+add_test(NAME library_test COMMAND library)
 add_test(NAME operators_test COMMAND operators)
 add_test(NAME scalar_test COMMAND scalar)
+add_test(NAME tensor_test COMMAND tensor)
 add_test(NAME trees_test COMMAND trees)
-add_test(NAME epsilon_test COMMAND epsilon)
-add_test(NAME delta_test COMMAND delta)
 
+#Cuda tests
+
+# completed and execute as expected (mostly)
+
+add_executable(cuda_bind Bind.cu)
+target_link_libraries(cuda_bind gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_bind_test COMMAND cuda_bind)
+
+add_executable(cuda_delta Delta.cu)
+target_link_libraries(cuda_delta gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_delta_test COMMAND cuda_delta)
+
+add_executable(cuda_determinant Determinant.cu)
+target_link_libraries(cuda_determinant gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_determinant_test COMMAND cuda_determinant)
+
+add_executable(cuda_epsilon Epsilon.cu)
+target_link_libraries(cuda_epsilon gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_epsilon_test COMMAND cuda_epsilon)
+
+add_executable(cuda_identity Identity.cu)
+target_link_libraries(cuda_identity gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_identity_test COMMAND cuda_identity)
+
+add_executable(cuda_index Index.cu)
+add_test(NAME cuda_index_test COMMAND cuda_index)
+
+add_executable(cuda_index_map IndexMap.cu)
+target_link_libraries(cuda_index_map gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_index_map_test COMMAND cuda_index_map)
 
 add_executable(cuda_init Init.cu)
 target_link_libraries(cuda_init gtest_main ${LAPACK_LIBRARIES})
 add_test(NAME cuda_init_test COMMAND cuda_init)
+
+add_executable(cuda_operators Operators.cu)
+target_link_libraries(cuda_operators gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_operators_test COMMAND cuda_operators)
+
+add_executable(cuda_scalar Scalar.cu)
+target_link_libraries(cuda_scalar gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_scalar_test COMMAND cuda_scalar)
+
+add_executable(cuda_tensor Tensor.cu)
+target_link_libraries(cuda_tensor gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_tensor_test COMMAND cuda_tensor)
+
+add_executable(cuda_transpose Transpose.cu)
+target_link_libraries(cuda_transpose gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_transpose_test COMMAND cuda_transpose)
+
+add_executable(cuda_trees Trees.cu)
+target_link_libraries(cuda_trees gtest_main ${LAPACK_LIBRARIES})
+add_test(NAME cuda_trees COMMAND cuda_trees)
+
+
+
+# in progress
+
+#add_executable(cuda_inverse Inverse.cu)
+#target_link_libraries(cuda_inverse gtest_main ${LAPACK_LIBRARIES})
+#add_test(NAME cuda_inverse_test COMMAND cuda_inverse)
+
+
+
+# not tested - Vector.cpp and Quantum.cpp aren't tested in serial/aren't in the original cmakefile, so I've left them as-is
+
+# add_executable(cuda_vector Vector.cu)
+# target_link_libraries(cuda_vector gtest_main ${LAPACK_LIBRARIES})
+# add_test(NAME cuda_vector COMMAND cuda_vector)
+
+# add_executable(cuda_quantum Quantum.cu)
+# target_link_libraries(cuda_quantum gtest_main ${LAPACK_LIBRARIES})
+# add_test(NAME cuda_quantum_test COMMAND cuda_quantum)
+

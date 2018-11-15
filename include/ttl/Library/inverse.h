@@ -42,21 +42,39 @@
 #include <ttl/Library/fp_utils.h>
 #include <ttl/Library/matrix.h>
 
+#include <assert.h>
+
+// early attempt at resolving throw problem
+
+// #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+// inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+// {
+//    if (code != cudaSuccess) 
+//    {
+//       fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+//       if (abort) exit(code);
+//    }
+// }
+
 namespace ttl {
 namespace lib {
 template <class E, int N = matrix_dimension<E>()>
 struct inverse_impl
 {
   template <class M>
-  static int op(E e, M& m) noexcept {
+  CUDA static int op(E e, M& m) noexcept {
     return detail::invert<N>(e, m);
   }
 
-  static auto op(E e) {
+  CUDA static auto op(E e) {
     ttl::expressions::tensor_type<E> m;
-    if (int i = op(e, m)) {
-      throw i;
-    }
+    #ifdef __CUDA_ARCH__
+      op(e,m);
+    #else
+      if (int i = op(e, m)) {
+        throw i;
+      }
+    #endif 
     return m;
   }
 };
@@ -66,7 +84,7 @@ template <class E>
 struct inverse_impl<E, 2>
 {
   template <class M>
-  static int op(E f, M& m) noexcept {
+  CUDA static int op(E f, M& m) noexcept {
     auto d = det(f);
     if (!FPNEZ(d)) {
       return 1;
@@ -76,11 +94,15 @@ struct inverse_impl<E, 2>
     return 0;
   }
 
-  static auto op(E f) {
+  CUDA static auto op(E f) {
     ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
-      throw i;
-    }
+    #ifdef __CUDA_ARCH__
+      op(f,m);
+    #else
+      if (int i = op(f, m)) {
+        throw i;
+      }
+    #endif
     return m;
   }
 };
@@ -90,7 +112,7 @@ template <class E>
 struct inverse_impl<E, 3>
 {
   template <class M>
-  static int op(E f, M& m) noexcept {
+  CUDA static int op(E f, M& m) noexcept {
     auto d = det(f);
     if (!FPNEZ(d)) {
       return 1;
@@ -112,33 +134,39 @@ struct inverse_impl<E, 3>
     return 0;
   }
 
-  static auto op(E f) {
+  // returns 1 to indicate the tensor is singular
+
+  CUDA static auto op(E f) {
     ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
-      throw i;
-    }
+    #ifdef __CUDA_ARCH__
+      op(f,m);
+    #else
+      if (int i = op(f, m)) {
+        throw i;
+      }
+    #endif
     return m;
   }
 };
 } // namespace lib
 
 template <class E>
-auto inverse(E e) {
+CUDA auto inverse(E e) {
   return lib::inverse_impl<E>::op(e);
 }
 
 template <int R, int D, class S>
-auto inverse(const Tensor<R,D,S>& T) {
+CUDA auto inverse(const Tensor<R,D,S>& T) {
   return inverse(lib::bind(T));
 }
 
 template <class E, class M>
-int inverse(E e, M& out) noexcept {
+CUDA int inverse(E e, M& out) noexcept {
   return lib::inverse_impl<E>::op(e,out);
 }
 
 template <int R, int D, class S, class T>
-int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
+CUDA int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
   return inverse(lib::bind(A),out);
 }
 } // namespace ttl

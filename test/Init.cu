@@ -87,6 +87,7 @@ TEST(Tensor, Copy) {
   k_move<<<1, 1>>>(a);
   cudaDeviceSynchronize();
   cudaCheckErrors("failed");
+
   EXPECT_EQ(a[0], 1.0);
   EXPECT_EQ(a[1], 2.0);
   EXPECT_EQ(a[2], 3.0);
