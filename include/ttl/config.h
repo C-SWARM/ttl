@@ -31,33 +31,15 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-/// @file  ttl/utils/stl_wrappers.h
-/// @brief Contains wrappers for the stl.
-// -----------------------------------------------------------------------------
-#ifndef TTL_UTILS_STL_WRAPPERS_H
-#define TTL_UTILS_STL_WRAPPERS_H
+/* #undef TTL_HAVE_MKL_H */
+/* #undef TTL_WITH_LAPACK */
 
-namespace ttl {
-  namespace utils {
-    template <class T>
-      constexpr static inline T min(const T& lhs, const T& rhs) {
-        return (lhs < rhs) ? lhs : rhs;
-      }
-
-    template <class T, class U>
-    CUDA_BOTH static inline void copy_n(T from, const size_t N, U to) {
-      for (size_t i = 0; i < N; ++i, ++from, ++to) {
-        *to = *from;
-      }
-    }
-
-    template <class T, class U>
-    CUDA_BOTH static inline void fill_n(T in, const size_t N, U&& u) {
-      for (size_t i = 0; i < N; ++i, ++in) {
-        *in = std::forward<U>(u);
-      }
-    }
-  }
-}
-
-#endif // TTL_UTILS_STL_WRAPPERS_H
+#ifdef __CUDACC__
+#define CUDA_HOST __host__
+#define CUDA_DEVICE __device__
+#define CUDA_BOTH __host__ __device__
+#else
+#define CUDA_HOST
+#define CUDA_DEVICE
+#define CUDA_BOTH
+#endif

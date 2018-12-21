@@ -55,7 +55,7 @@ using ipiv_t = lapack_int;
 #endif
 
 template <int N>
-CUDA static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {  
+CUDA_BOTH static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {  
   #ifdef __CUDA_ARCH__
     return 1;
   #else  
@@ -64,7 +64,7 @@ CUDA static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {
 }
 
 template <int N>
-CUDA static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
+CUDA_BOTH static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
   #ifdef __CUDA_ARCH__
     return 1;
   #else  
@@ -73,7 +73,7 @@ CUDA static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
 }
 
 template <int N>
-CUDA static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
+CUDA_BOTH static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
   #ifdef __CUDA_ARCH__
     return 1;
   #else  
@@ -82,7 +82,7 @@ CUDA static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
 }
 
 template <int N>
-CUDA static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
+CUDA_BOTH static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
   #ifdef __CUDA_ARCH__
     
   #else  
@@ -91,7 +91,7 @@ CUDA static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
 }
 
 template <int N, class A, class B, class X>
-CUDA static inline int solve(A a, B b, X& x) noexcept {
+CUDA_BOTH static inline int solve(A a, B b, X& x) noexcept {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
@@ -108,7 +108,7 @@ CUDA static inline int solve(A a, B b, X& x) noexcept {
 }
 
 template <int N, class A, class B>
-CUDA static inline auto solve(A a, B b) {
+CUDA_BOTH static inline auto solve(A a, B b) {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
@@ -127,7 +127,7 @@ CUDA static inline auto solve(A a, B b) {
 }
 
 template <int N, class E, class M>
-CUDA static inline int invert(E e, M& m) noexcept {
+CUDA_BOTH static inline int invert(E e, M& m) noexcept {
   // explicitly force a transpose into a temporary tensor on the stack... this
   // prevents lapacke from having to transpose back and forth to column major
   using namespace ttl::expressions;
@@ -144,7 +144,7 @@ CUDA static inline int invert(E e, M& m) noexcept {
 }
 #else
 template <int N, class E, class M>
-CUDA static inline int invert(E e, M& m) noexcept {
+CUDA_BOTH static inline int invert(E e, M& m) noexcept {
   static constexpr Index<'i'> i;
   static constexpr Index<'j'> j;
   ttl::expressions::tensor_type<E> A = force(e);
@@ -154,7 +154,7 @@ CUDA static inline int invert(E e, M& m) noexcept {
 }
 
 template <int N, class A, class B, class X>
-CUDA static inline int solve(A a, B b, X& x) noexcept {
+CUDA_BOTH static inline int solve(A a, B b, X& x) noexcept {
   ttl::expressions::tensor_type<A> fA = force(a);
   ttl::expressions::tensor_type<B> fb = force(b);
   long ipiv[N];
@@ -162,7 +162,7 @@ CUDA static inline int solve(A a, B b, X& x) noexcept {
 }
 
 template <int N, class A, class B>
-CUDA static inline auto solve(A a, B b) {
+CUDA_BOTH static inline auto solve(A a, B b) {
   ttl::expressions::tensor_type<A> fA = force(a);
   ttl::expressions::tensor_type<B> fb = force(b);
   ttl::expressions::tensor_type<B> x;

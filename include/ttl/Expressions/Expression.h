@@ -60,26 +60,26 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  CUDA constexpr auto eval(I index) const {
+  CUDA_BOTH constexpr auto eval(I index) const {
     return static_cast<const E*>(this)->eval(index);
   }
 
   template <template <class...> class Pack, class... I>
-  CUDA constexpr const auto to(Pack<I...> index) const {
+  CUDA_BOTH constexpr const auto to(Pack<I...> index) const {
     return Bind<E,Pack<I...>>(*static_cast<const E*>(this), index);
   }
 
   template <class... I>
-  CUDA constexpr const auto to(I... index) const {
+  CUDA_BOTH constexpr const auto to(I... index) const {
     return to(std::make_tuple(index...));
   }
 
   template <class... I>
-  CUDA constexpr const auto operator()(I... index) const {
+  CUDA_BOTH constexpr const auto operator()(I... index) const {
     return eval(outer_type<E>(index...));
   }
 
-  CUDA constexpr operator const scalar_type<E>() const {
+  CUDA_BOTH constexpr operator const scalar_type<E>() const {
     return eval(std::tuple<>{});
   }
 

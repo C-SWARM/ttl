@@ -104,7 +104,7 @@ class Bind : public Expression<Bind<E, Index>>
   ///
   /// @returns          The scalar value at the linearized offset.
   template <class I>
-  CUDA constexpr auto eval(I i) const {
+  CUDA_BOTH constexpr auto eval(I i) const {
     return contract<Bind>(i, [this](auto index) {
         // intel 16.0 can't handle the "transform" symbol here without the
         // namespace
@@ -119,7 +119,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class RHS>
-  CUDA Bind& operator=(RHS&& rhs) {
+  CUDA_BOTH Bind& operator=(RHS&& rhs) {
     static_assert(dimension<RHS>::value == dimension<Bind>::value or
                   dimension<RHS>::value == -1,
                   "Cannot operate on expressions of differing dimension");
@@ -132,7 +132,7 @@ class Bind : public Expression<Bind<E, Index>>
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  CUDA Bind& operator=(scalar_type<Bind> rhs) {
+  CUDA_BOTH Bind& operator=(scalar_type<Bind> rhs) {
     static_assert(rank<Bind>::value == 0, "Cannot assign scalar to tensor");
     apply<>::op(Outer{}, [rhs,this](Outer i) {
         t_.eval(ttl::expressions::transform(i_, i)) = rhs;
@@ -147,7 +147,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class RHS>
-  CUDA Bind& operator+=(RHS&& rhs) {
+  CUDA_BOTH Bind& operator+=(RHS&& rhs) {
     static_assert(dimension<E>::value == dimension<RHS>::value,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,

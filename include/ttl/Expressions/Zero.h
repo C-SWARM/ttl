@@ -47,7 +47,7 @@ class Zero : public Expression<Zero<D,Index>>
 {
  public:
   template <class I>
-  CUDA constexpr int eval(I) const noexcept {
+  CUDA_BOTH constexpr int eval(I) const noexcept {
     return 0;
   }
 };
@@ -63,7 +63,7 @@ struct traits<Zero<D, Index>>
 } // namespace expressions
 
 template <int D = -1, class... I>
-CUDA auto zero(I... i) {
+CUDA_BOTH auto zero(I... i) {
   return expressions::Zero<D, std::tuple<I...>>();
 }
 } // namespace ttl

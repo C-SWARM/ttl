@@ -62,11 +62,11 @@ template <class E, int N = matrix_dimension<E>()>
 struct inverse_impl
 {
   template <class M>
-  CUDA static int op(E e, M& m) noexcept {
+  CUDA_BOTH static int op(E e, M& m) noexcept {
     return detail::invert<N>(e, m);
   }
 
-  CUDA static auto op(E e) {
+  CUDA_BOTH static auto op(E e) {
     ttl::expressions::tensor_type<E> m;
     #ifdef __CUDA_ARCH__
       op(e,m);
@@ -84,7 +84,7 @@ template <class E>
 struct inverse_impl<E, 2>
 {
   template <class M>
-  CUDA static int op(E f, M& m) noexcept {
+  CUDA_BOTH static int op(E f, M& m) noexcept {
     auto d = det(f);
     if (!FPNEZ(d)) {
       return 1;
@@ -94,7 +94,7 @@ struct inverse_impl<E, 2>
     return 0;
   }
 
-  CUDA static auto op(E f) {
+  CUDA_BOTH static auto op(E f) {
     ttl::expressions::tensor_type<E> m;
     #ifdef __CUDA_ARCH__
       op(f,m);
@@ -112,7 +112,7 @@ template <class E>
 struct inverse_impl<E, 3>
 {
   template <class M>
-  CUDA static int op(E f, M& m) noexcept {
+  CUDA_BOTH static int op(E f, M& m) noexcept {
     auto d = det(f);
     if (!FPNEZ(d)) {
       return 1;
@@ -136,7 +136,7 @@ struct inverse_impl<E, 3>
 
   // returns 1 to indicate the tensor is singular
 
-  CUDA static auto op(E f) {
+  CUDA_BOTH static auto op(E f) {
     ttl::expressions::tensor_type<E> m;
     #ifdef __CUDA_ARCH__
       op(f,m);
@@ -151,22 +151,22 @@ struct inverse_impl<E, 3>
 } // namespace lib
 
 template <class E>
-CUDA auto inverse(E e) {
+CUDA_BOTH auto inverse(E e) {
   return lib::inverse_impl<E>::op(e);
 }
 
 template <int R, int D, class S>
-CUDA auto inverse(const Tensor<R,D,S>& T) {
+CUDA_BOTH auto inverse(const Tensor<R,D,S>& T) {
   return inverse(lib::bind(T));
 }
 
 template <class E, class M>
-CUDA int inverse(E e, M& out) noexcept {
+CUDA_BOTH int inverse(E e, M& out) noexcept {
   return lib::inverse_impl<E>::op(e,out);
 }
 
 template <int R, int D, class S, class T>
-CUDA int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
+CUDA_BOTH int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
   return inverse(lib::bind(A),out);
 }
 } // namespace ttl

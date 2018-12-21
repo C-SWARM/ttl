@@ -55,7 +55,7 @@ struct contract_impl
   static_assert(D > 0, "Contraction requires explicit dimensionality");
 
   template <class Index, class F>              // c++14 auto (icc 16 complains)
-  CUDA static auto op(Index index, F&& f) noexcept {
+  CUDA_BOTH static auto op(Index index, F&& f) noexcept {
     decltype(f(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index) = i;
@@ -70,7 +70,7 @@ template <class E, int M, int D>
 struct contract_impl<E, M, M, D>
 {
   template <class Index, class F>              // c++14 auto (icc 16 complains)
-  CUDA static constexpr auto op(Index index, F&& f) noexcept {
+  CUDA_BOTH static constexpr auto op(Index index, F&& f) noexcept {
     return f(index);
   }
 };
@@ -80,7 +80,7 @@ struct contract_impl<E, M, M, D>
 /// the Expression's inner type.
 template <class E,
           class Index>           // Index c++14 auto (icc 16 complains)
-CUDA constexpr auto extend(Index i) {
+CUDA_BOTH constexpr auto extend(Index i) {
   return std::tuple_cat(transform(outer_type<E>{}, i), inner_type<E>{});
 }
 } // namespace detail
@@ -98,7 +98,7 @@ CUDA constexpr auto extend(Index i) {
 ///                     inner loop invocations.
 template <class E,
           class Index, class F>              // c++14 auto (icc 16 complains)
-CUDA auto contract(Index i, F&& f) noexcept {
+CUDA_BOTH auto contract(Index i, F&& f) noexcept {
   using impl = detail::contract_impl<E>;
   return impl::op(detail::extend<E>(i), std::forward<F>(f));
 }
