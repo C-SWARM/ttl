@@ -162,7 +162,7 @@ class Bind : public Expression<Bind<E, Index>>
   ///
   /// This iterates through the index space and prints the index and results to
   /// the stream.
-  HOST std::ostream& print(std::ostream& os) const {
+  CUDA_HOST std::ostream& print(std::ostream& os) const {
     apply<>::op(Outer{}, [&os,this](const Outer i) {
         print_pack(os, i) << ": " << eval(i) << "\n";
       });

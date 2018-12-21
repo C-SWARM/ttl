@@ -83,7 +83,7 @@ class Expression {
     return eval(std::tuple<>{});
   }
 
-  HOST std::ostream& print(std::ostream& os) const {
+  CUDA_HOST std::ostream& print(std::ostream& os) const {
     return static_cast<const E*>(this)->print(os);
   }
 };
