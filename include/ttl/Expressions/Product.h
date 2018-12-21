@@ -98,7 +98,7 @@ class Product : public Expression<Product<L, R>>
   ///
   /// It is passed to the `contract` operation as the "lambda" expression. In
   /// standard C++ we would just store `L` and `R` in the Product directly, and
-  /// use a lambda function in `contract`, however CUDA_BOTH doesn't want to allow us
+  /// use a lambda function in `contract`, however CUDA doesn't want to allow us
   /// to do that because it can't handle the type inference required.
   struct Op {
     template <class Index>
