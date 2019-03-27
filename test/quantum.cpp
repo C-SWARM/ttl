@@ -47,7 +47,6 @@
 #include <vector>
 #include <tuple>
 #include <string>
-#include <mkl.h>
 #include <ctime>
 #include <ttl/ttl.h>
 #include <cstdlib>
