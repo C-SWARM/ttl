@@ -120,8 +120,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @returns          A reference to *this for chaining.
   template <class RHS>
   Bind& operator=(RHS&& rhs) {
-    static_assert(dimension<RHS>::value == dimension<Bind>::value or
-                  dimension<RHS>::value == -1,
+    static_assert(dimension(rhs) == dimension<Bind>() or dimension(rhs) == -1,
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
@@ -133,7 +132,7 @@ class Bind : public Expression<Bind<E, Index>>
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
   Bind& operator=(scalar_type<Bind> rhs) {
-    static_assert(rank<Bind>::value == 0, "Cannot assign scalar to tensor");
+    static_assert(rank<Bind>() == 0, "Cannot assign scalar to tensor");
     apply<>::op(Outer{}, [rhs,this](Outer i) {
         t_.eval(ttl::expressions::transform(i_, i)) = rhs;
       });
@@ -148,7 +147,7 @@ class Bind : public Expression<Bind<E, Index>>
   /// @returns          A reference to *this for chaining.
   template <class RHS>
   Bind& operator+=(RHS&& rhs) {
-    static_assert(dimension<E>::value == dimension<RHS>::value,
+    static_assert(dimension<E>() == dimension(rhs),
                   "Cannot operate on expressions of differing dimension");
     static_assert(equivalent<Outer, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
@@ -197,8 +196,7 @@ class Bind : public Expression<Bind<E, Index>>
   template <int n = 0, int M = std::tuple_size<Outer>::value>
   struct apply
   {
-    static constexpr int D = dimension<E>::value;
-    static_assert(D > 0, "Apply requires explicit dimensionality");
+    static_assert(dimension<E>() > 0, "Apply requires explicit dimensionality");
 
     /// The evaluation routine just iterates through the values of the nth
     /// dimension of the tensor, recursively calling the template.
@@ -207,7 +205,7 @@ class Bind : public Expression<Bind<E, Index>>
     /// @param    index The partially constructed index.
     template <class Op>
     static void op(Outer index, Op&& f) {
-      for (int i = 0; i < D; ++i) {
+      for (int i = 0; i < dimension<E>(); ++i) {
         std::get<n>(index).set(i);
         apply<n + 1>::op(index, std::forward<Op>(f));
       }

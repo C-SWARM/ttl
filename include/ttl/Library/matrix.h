@@ -44,7 +44,7 @@ template <class E>
 constexpr int matrix_dimension() {
   using namespace ttl::expressions;
   using namespace ttl::util;
-  return pow(dimension<E>::value, log2<rank<E>::value>::value);
+  return pow(dimension<E>(), log2<rank<E>()>::value);
 };
 } // namespace lib
 } // namespace ttl

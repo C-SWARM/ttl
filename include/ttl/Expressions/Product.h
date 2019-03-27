@@ -63,8 +63,8 @@ struct traits<Product<L, R>>
   using l_outer_type = expressions::outer_type<L>;
   using r_outer_type = expressions::outer_type<R>;
 
-  static constexpr int l_dim = expressions::dimension<L>::value;
-  static constexpr int r_dim = expressions::dimension<R>::value;
+  static constexpr int l_dim = expressions::dimension<L>();
+  static constexpr int r_dim = expressions::dimension<R>();
   static_assert(l_dim == r_dim or
                 l_dim == -1 or
                 r_dim == -1,

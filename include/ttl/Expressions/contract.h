@@ -49,7 +49,7 @@ namespace detail {
 template <class E,
           int n = std::tuple_size<outer_type<E>>::value,
           int M = std::tuple_size<concat<outer_type<E>, inner_type<E>>>::value,
-          int D = dimension<E>::value>
+          int D = dimension<E>()>
 struct contract_impl
 {
   static_assert(D > 0, "Contraction requires explicit dimensionality");
