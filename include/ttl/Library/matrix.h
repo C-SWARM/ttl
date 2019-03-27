@@ -41,7 +41,7 @@
 namespace ttl {
 namespace lib {
 template <class E>
-constexpr int matrix_dimension() {
+constexpr auto matrix_dimension(E&&) {
   using namespace ttl::expressions;
   using namespace ttl::util;
   return pow(dimension<E>(), log2<rank<E>()>::value);

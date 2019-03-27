@@ -44,7 +44,7 @@
 
 namespace ttl {
 namespace lib {
-template <class E, int N = matrix_dimension<E>()>
+template <class E, int N>
 struct inverse_impl
 {
   template <class M>
@@ -124,7 +124,8 @@ struct inverse_impl<E, 3>
 
 template <class E>
 auto inverse(E e) {
-  return lib::inverse_impl<E>::op(e);
+  constexpr auto N = lib::matrix_dimension(e);
+  return lib::inverse_impl<E, N>::op(e);
 }
 
 template <int R, int D, class S>
@@ -134,7 +135,8 @@ auto inverse(const Tensor<R,D,S>& T) {
 
 template <class E, class M>
 int inverse(E e, M& out) noexcept {
-  return lib::inverse_impl<E>::op(e,out);
+  constexpr auto N = lib::matrix_dimension(e);
+  return lib::inverse_impl<E, N>::op(e, out);
 }
 
 template <int R, int D, class S, class T>

@@ -42,15 +42,17 @@
 
 namespace ttl {
 namespace lib {
-template <class A, class B, int N = matrix_dimension<A>()>
+template <class A, class B>
 struct solve_impl
 {
   template <class X>
   static int op(A a, B b, X& x) noexcept {
+    constexpr auto N = matrix_dimension(a);
     return detail::solve<N>(a, b, x);
   }
 
   static auto op(A a, B b) {
+    constexpr auto N = matrix_dimension(a);
     return detail::solve<N>(a, b);
   }
 };
