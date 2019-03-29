@@ -205,7 +205,7 @@ TEST(Inverse, Expression_2_3) {
   EXPECT_EQ(B(2,2), 1);
 }
 
-TEST(Inverse, Basic_4_2) {
+TEST(DISABLED_Inverse, Basic_4_2) {
   ttl::Index<'i'> i;
   ttl::Index<'j'> j;
   ttl::Index<'k'> k;
@@ -247,7 +247,7 @@ TEST(Inverse, Basic_4_2) {
   }
 }
 
-TEST(Inverse, Singular_4_2) {
+TEST(DISABLED_Inverse, Singular_4_2) {
   ttl::Tensor<4,2,double> A = {1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4};
   int singular = 0;
   try {
@@ -263,7 +263,7 @@ TEST(Inverse, Singular_4_2) {
 }
 
 
-TEST(Inverse, Basic_4_3) {
+TEST(DISABLED_Inverse, Basic_4_3) {
   ttl::Index<'i'> i;
   ttl::Index<'j'> j;
   ttl::Index<'k'> k;
@@ -355,4 +355,19 @@ TEST(Solve, Singular) {
   Tensor<1,3,double> x;
   singular = solve(A,b,x);
   EXPECT_NE(singular, 0);
+}
+
+TEST(LU, Basic_2_3) {
+  Tensor<2,3,double> B = {
+    7, -2, 1,
+    7, -2, 1,
+    7, -2, 1
+  };
+
+  std::vector<int> perm(3);
+
+  ttl::lib::detail::lu_ikj_pp(B, perm);
+
+  std::cout.precision(17);
+  std::cout << ttl::lib::bind(B) << "\n";
 }

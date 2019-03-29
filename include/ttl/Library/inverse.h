@@ -49,7 +49,7 @@ struct inverse_impl
 {
   template <class M>
   static int op(E e, M& m) noexcept {
-    return detail::invert<N>(e, m);
+    return detail::invert(e, m);
   }
 
   static auto op(E e) {

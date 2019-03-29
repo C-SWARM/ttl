@@ -34,6 +34,7 @@
 #ifndef TTL_LIBRARY_MATRIX_H
 #define TTL_LIBRARY_MATRIX_H
 
+#include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/util/pow.h>
 #include <ttl/util/log2.h>
@@ -46,6 +47,40 @@ constexpr auto matrix_dimension(E&&) {
   using namespace ttl::util;
   return pow(dimension<E>(), log2<rank<E>()>::value);
 };
+
+// namespace detail {
+// template <int Rank>
+// struct to_matrix_impl {
+//   template <class Expression>
+//   static auto op(Expression&& e) {
+//     using namespace ttl::expressions;
+//     using namespace ttl::util;
+//     static constexpr auto M = matrix_dimension(e);
+//     static_assert(pow(M,2) == pow(dimension(e), Rank),
+//                   "Expression can not be a square matrix");
+//     using T = scalar_type<Expression>;
+//     Tensor<2, M, T> A;
+
+//     auto be = bind(e);
+
+//     auto index_t =
+//     return A;
+//   }
+// };
+
+// template <>
+// struct to_matrix_impl<2> {
+//   template <class Expression>
+//   static auto op(Expression&& e) {
+//     return force(std::forward<Expression>(e));
+//   }
+// };
+// }
+
+// template <class Expression>
+// constexpr auto to_matrix(Expression&& e) {
+//   return detail::to_matrix_impl<rank(e)>::op(std::forward<Expression>(e));
+// }
 } // namespace lib
 } // namespace ttl
 

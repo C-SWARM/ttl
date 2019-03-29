@@ -43,6 +43,16 @@ auto force(E&& e) {
   static_assert(dimension(e) >= 0, "forced expression needs dimension");
   return tensor_type<E>(std::forward<E>(e));
 }
+
+template <int R, int D, class T>
+Tensor<R, D, T> force(const Tensor<R, D, T>& t) {
+  return {t};
+}
+
+template <int R, int D, class T>
+Tensor<R, D, T> force(Tensor<R, D, T>&& t) {
+  return {std::move(t)};
+}
 }
 }
 
