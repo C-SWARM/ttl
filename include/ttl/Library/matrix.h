@@ -108,6 +108,60 @@ constexpr auto as_matrix(const Tensor<4,N,T>& A) {
     return A[m][n][o][p];
   };
 }
+
+template <int N, class T>
+constexpr auto as_vector(Tensor<1,N,T>&& x) {
+  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  return [&](int i) -> S& {
+    return x[i];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_vector(Tensor<1,N,T>& x) {
+  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  return [&](int i) -> S& {
+    return x[i];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_vector(const Tensor<1,N,T>& x) {
+  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  return [&](int i) -> S {
+    return x[i];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_vector(Tensor<2,N,T>&& x) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i) -> S& {
+    int m = i / N;
+    int n = i % N;
+    return x[m][n];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_vector(Tensor<2,N,T>& x) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i) -> S& {
+    int m = i / N;
+    int n = i % N;
+    return x[m][n];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_vector(const Tensor<2,N,T>& x) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i) -> S {
+    int m = i / N;
+    int n = i % N;
+    return x[m][n];
+  };
+}
 } // namespace lib
 } // namespace ttl
 

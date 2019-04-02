@@ -36,178 +36,53 @@
 
 #include <ttl/config.h>
 #include <ttl/Library/LinearAlgebra.hpp>
-#include <ttl/Library/binder.h>
+#include <ttl/Library/matrix.h>
 #include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
 
 namespace ttl {
-template <int M, class T>
-int solve(Tensor<2,M,T>&& A, Tensor<1,M,T>& b) {
-  return lib::detail::solve<M>([&](int i, int j) -> T& { return A[i][j]; },
-                               [&](int j) -> T& { return b[j]; });
-}
-
-template <int M, class T>
-int solve(const Tensor<2,M,T>& A, const Tensor<1,M,T>& b, Tensor<1,M,T>& x) noexcept {
-  using expressions::force;
-  return solve(force(A), (x = b));
-}
-
-template <int M, class T>
-int solve(Tensor<2,M,T>&& A, const Tensor<1,M,T>& b, Tensor<1,M,T>& x) noexcept {
-  return solve(std::move(A), (x = b));
-}
-
-template <int M, class T>
-int solve(const Tensor<2,M,T>& A, Tensor<1,M,T>&& b, Tensor<1,M,T>& x) noexcept {
-  using expressions::force;
-  return solve(force(A), (x = std::move(b)));
-}
-
-template <int M, class T>
-int solve(Tensor<2,M,T>&& A, Tensor<1,M,T>&& b, Tensor<1,M,T>& x) noexcept {
-  return solve(std::move(A), (x = std::move(b)));
-}
-
-template <int M, class T, class MatrixExpression>
-int solve(MatrixExpression A, const Tensor<1,M,T>& b, Tensor<1,M,T>& x) noexcept {
+namespace lib {
+/// The core solve operation captures A and b as a Matrix and Vector and
+/// forwards to the linear algebra solver.
+template <class Matrix, class Vector>
+int solve(Matrix&& A, Vector&& b) {
   using expressions::rank;
   using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(A) == 2, "Expression A must be a matrix");
-  static_assert(dimension(A) == M, "Dimensions must match");
-  return solve(expressions::force(A), b, x);
-}
+  static_assert(rank(A) == 2*rank(b), "A must be a matrix");
+  static_assert(dimension(A) == dimension(b), "A and b must be the same size");
 
-template <int M, class T, class MatrixExpression>
-int solve(MatrixExpression A, Tensor<1,M,T>&& b, Tensor<1,M,T>& x) noexcept {
+  using namespace lib;
+  static constexpr auto M = matrix_dimension(A);
+  return detail::solve<M>(as_matrix(std::forward<Matrix>(A)),
+                          as_vector(std::forward<Vector>(b)));
+}
+} // namespace lib
+
+/// The three-argument interface copies or evaluates A and b and returns the
+/// solution in x.
+template <class Matrix, class B, class X>
+int solve(Matrix&& A, B&& b, X& x) noexcept {
   using expressions::rank;
   using expressions::dimension;
+  static_assert(rank(b) == rank(x), "b and x must be the same rank");
+  static_assert(dimension(b) == dimension(x), "b and x must be the same size");
+
   using expressions::force;
-  static_assert(rank(A) == 2, "Expression A must be a matrix");
-  static_assert(dimension(A) == M, "Dimensions must match");
-  return solve(force(A), std::move(b), x);
+  x = force(std::forward<B>(b));
+  return lib::solve(force(std::forward<Matrix>(A)), x);
 }
 
-template <int M, class T, class VectorExpression>
-int solve(const Tensor<2,M,T>& A, VectorExpression b, Tensor<1,M,T>& x) noexcept {
-  using expressions::rank;
-  using expressions::dimension;
+/// The two-argument interface copies or evaluates A and b and returns a
+/// solution.
+template <class Matrix, class Vector>
+auto solve(Matrix&& A, Vector&& b) {
   using expressions::force;
-  static_assert(rank(b) == 1, "Expression b must be a vector");
-  static_assert(dimension(b) == 1, "Dimensions must match");
-  return solve(A, force(b), x);
-}
-
-template <int M, class T, class VectorExpression>
-int solve(Tensor<2,M,T>&& A, VectorExpression b, Tensor<1,M,T>& x) noexcept {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(b) == 1, "Expression b must be a vector");
-  static_assert(dimension(b) == 1, "Dimensions must match");
-  return solve(std::move(A), force(b), x);
-}
-
-template <int M, class T, class MatrixExpression, class VectorExpression>
-int solve(MatrixExpression A, VectorExpression b, Tensor<1,M,T>& x) noexcept {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(A) == 2, "Expression A must be a matrix");
-  static_assert(rank(b) == 1, "Expression b must be a vector");
-  static_assert(dimension(A) == dimension(b), "Dimensions must match");
-  return solve(force(A), force(b), x);
-}
-
-template <int M, class T>
-auto solve(const Tensor<2,M,T>& A, const Tensor<1,M,T>& b) {
-  using expressions::force;
-  expressions::tensor_type<Tensor<1,M,T>> x = b;
-  if (auto i = solve(force(A), x)) {
+  auto x = force(std::forward<Vector>(b));
+  if (auto i = lib::solve(force(std::forward<Matrix>(A)), x)) {
     throw i;
   }
   return x;
 }
-
-template <int M, class T>
-auto solve(Tensor<2,M,T>&& A, const Tensor<1,M,T>& b) {
-  expressions::tensor_type<Tensor<1,M,T>> x = b;
-  if (auto i = solve(std::move(A), x)) {
-    throw i;
-  }
-  return x;
-}
-
-template <int M, class T>
-auto solve(const Tensor<2,M,T>& A, Tensor<1,M,T>&& b) {
-  using expressions::force;
-  expressions::tensor_type<Tensor<1,M,T>> x = std::move(b);
-  if (auto i = solve(force(A), x)) {
-    throw i;
-  }
-  return x;
-}
-
-template <int M, class T>
-auto solve(Tensor<2,M,T>&& A, Tensor<1,M,T>&& b) {
-  expressions::tensor_type<Tensor<1,M,T>> x = std::move(b);
-  if (auto i = solve(std::move(A), x)) {
-    throw i;
-  }
-  return x;
-}
-
-template <class MatrixExpression, int M, class T>
-auto solve(MatrixExpression A, const Tensor<1,M,T>& b) {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(A) == 2, "Expression must be a matrix");
-  static_assert(dimension(A) == M, "Dimensions must match");
-  return solve(force(A), b);
-}
-
-template <class MatrixExpression, int M, class T>
-auto solve(MatrixExpression A, Tensor<1,M,T>&& b) {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(A) == 2, "Expression must be a matrix");
-  static_assert(dimension(A) == M, "Dimensions must match");
-  return solve(force(A), std::move(b));
-}
-
-template <int M, class T, class VectorExpression>
-auto solve(const Tensor<2,M,T>& A, VectorExpression b) {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(b) == 1, "Expression must be a vector");
-  static_assert(dimension(b) == M, "Dimensions must match");
-  return solve(A, force(b));
-}
-
-template <int M, class T, class VectorExpression>
-auto solve(Tensor<2,M,T>&& A, VectorExpression b) {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(b) == 1, "Expression must be a vector");
-  static_assert(dimension(b) == M, "Dimensions must match");
-  return solve(std::move(A), force(b));
-}
-
-template <class MatrixExpression, class VectorExpression>
-auto solve(MatrixExpression A, VectorExpression b) {
-  using expressions::rank;
-  using expressions::dimension;
-  using expressions::force;
-  static_assert(rank(A) == 2, "Expression must be a vector");
-  static_assert(rank(b) == 1, "Expression must be a vector");
-  static_assert(dimension(A) == dimension(b), "Dimensions must match");
-  return solve(force(A), force(b));
-}
-}
+} // namespace lib
 
 #endif // #define TTL_LIBRARY_SOLVE_H

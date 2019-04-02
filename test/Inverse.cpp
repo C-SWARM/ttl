@@ -62,7 +62,7 @@ TEST(Inverse, Basic_2_2) {
   EXPECT_DOUBLE_EQ(B(1,1), INVERSE(1,1));
 
   B = zero(i,j);
-  e = ttl::inverse<2, 2, double, false>(A,B);
+  e = ttl::inverse(A,B, false);
   EXPECT_EQ(e, 0);
 
   EXPECT_DOUBLE_EQ(B(0,0), INVERSE(0,0));
