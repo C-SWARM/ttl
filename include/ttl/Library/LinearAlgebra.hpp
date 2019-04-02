@@ -38,33 +38,10 @@
 #define TTL_LIBRARY_LINEAR_ALGEBRA_HPP
 
 #include <numeric>                              // std::iota
-#include <vector>
-
-#include <iostream>
-#include <iomanip>
 
 namespace ttl {
 namespace lib {
 namespace detail {
-
-template <int M, class Matrix>
-void printMatrix(Matrix&& A) {
-  std::cout << std::left << std::setw(4) << " ";
-  for (auto j = 0; j < M; ++j) {
-    std::cout << std::left << std::setw(20) << j;
-  }
-  std::cout << "\n";
-
-  for (auto i = 0; i < M; ++i) {
-    std::cout << std::left << std::setw(4) << i;
-    for (auto j = 0; j < M; ++j) {
-      std::cout << std::left << std::setw(20) << A(i,j);
-    }
-    std::cout << "\n";
-  }
-  std::cout << "\n";
-}
-
 /// Run the pivoting algorithm on a rank 2 tensor (i.e., matrix).
 ///
 /// The pivoting operation will restructure the matrix and thus we require a
@@ -119,16 +96,12 @@ pivot(Matrix&& A, Permutation&& perm, const int j)
 ///                     divide by zero in the returned row.
 template <int M, class Matrix, class Permutation>
 static inline int
-lu_ikj_pp(Matrix&& A, Permutation&& perm)
+lu_kij_pp(Matrix&& A, Permutation&& perm)
 {
-  using T = std::remove_reference_t<decltype(A(0,0))>;
-
-  for (auto i = 0; i < M; ++i) {
-    pivot<M>(A, perm, i);                       // @nb: passing as l-values
-
-    for (auto k = 0; k < i; ++k) {
-      T z = A(i, k) /= A(k, k);
-
+  for (auto k = 0; k < M - 1; ++k) {
+    pivot<M>(A, perm, k);
+    for (auto i = k + 1; i < M; ++i) {
+      auto z = A(i, k) /= A(k, k);
       for (auto j = k + 1; j < M; ++j) {
         A(i, j) -= z * A(k, j);
       }
@@ -139,7 +112,7 @@ lu_ikj_pp(Matrix&& A, Permutation&& perm)
   // in the loop to avoid an early loop exit and possible GPU divergence.
   int e = 0;
   for (auto i = 0; i < M; ++i) {
-    e = (not e and A(i, i) == T{0}) ? i : e;
+    e = (not e and A(i, i) == 0) ? i : e;
   }
   return e;
 }
@@ -172,7 +145,7 @@ solve(Matrix&& A, Vector&& b) noexcept
 {
   // 1. Perform LU factorization on the matrix. If this fails then we have a
   //    singular matrix. This permutes the vector at the same time.
-  if (auto i = lu_ikj_pp<M>(A, b)) {
+  if (auto i = lu_kij_pp<M>(A, b)) {
     return i;
   }
 
@@ -201,7 +174,7 @@ inverse(Matrix&& A, Inverse&& inv) noexcept
   // 1. Allocate and initialize a permutation.
   struct Permutation {
     Permutation() {
-      std::iota(data.begin(), data.end(), 0);
+      std::iota(std::begin(data), std::end(data), 0);
     }
 
     int& operator()(int i) {
@@ -215,11 +188,11 @@ inverse(Matrix&& A, Inverse&& inv) noexcept
       }
     }
 
-    std::array<int, M> data;
+    int data[M];
   } perm;
 
   // 2. Perform LU factorization on the matrix, and test for failure.
-  if (auto i = lu_ikj_pp<M>(A, perm)) {
+  if (auto i = lu_kij_pp<M>(A, perm)) {
     return i;
   }
 

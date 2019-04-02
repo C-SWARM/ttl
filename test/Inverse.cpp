@@ -304,8 +304,6 @@ TEST(Inverse, Basic_4_3) {
     FAIL();
   }
 
-  std::cerr << B(i,j,k,l) << "\n";
-
   auto C = force(B(i,j,k,l) * A(k,l,m,n));
 
   for (int q = 0; q < 2; ++q) {
@@ -376,25 +374,4 @@ TEST(Solve, Singular) {
   Tensor<1,3,double> x;
   singular = solve(A,b,x);
   EXPECT_NE(singular, 0);
-}
-
-TEST(LU, Basic_2_3) {
-  Tensor<2,3,double> B = {
-    7, -2, 1,
-    7, -2, 1,
-    7, -2, 1
-  };
-
-  int perm[3];
-
-  ttl::lib::detail::lu_ikj_pp<3>(
-      [&B](int i, int j) -> double& {
-        return B[i][j];
-      },
-      [&perm](int i) -> int& {
-        return perm[i];
-      });
-
-  std::cout.precision(17);
-  std::cout << ttl::lib::bind(B) << "\n";
 }

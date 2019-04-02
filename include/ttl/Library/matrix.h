@@ -38,6 +38,8 @@
 #include <ttl/Expressions/traits.h>
 #include <ttl/util/pow.h>
 #include <ttl/util/log2.h>
+#include <iostream>
+#include <iomanip>
 
 namespace ttl {
 namespace lib {
@@ -161,6 +163,25 @@ constexpr auto as_vector(const Tensor<2,N,T>& x) {
     int n = i % N;
     return x[m][n];
   };
+}
+
+template <int M, class Matrix>
+std::ostream& printMatrix(std::ostream& os, Matrix&& A) {
+  os << std::left << std::setw(4) << " ";
+  for (auto j = 0; j < M; ++j) {
+    os << std::left << std::setw(20) << j;
+  }
+  os << "\n";
+
+  for (auto i = 0; i < M; ++i) {
+    os << std::left << std::setw(4) << i;
+    for (auto j = 0; j < M; ++j) {
+      os << std::left << std::setw(20) << A(i,j);
+    }
+    os << "\n";
+  }
+  os << "\n";
+  return os;
 }
 } // namespace lib
 } // namespace ttl
