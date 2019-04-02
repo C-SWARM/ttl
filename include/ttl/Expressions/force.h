@@ -55,8 +55,9 @@ namespace expressions {
 ///                     it returns the tensor through the move operation.
 template <class Expression>
 tensor_type<Expression> force(Expression&& e) {
-  static_assert(dimension(e) >= 0, "forced expression needs dimension");
-  return e;
+  static constexpr int N = dimension_t<Expression>::value;
+  static_assert(N >= 0, "forced expression needs dimension");
+  return std::forward<Expression>(e);
 }
 } // namespace expressions
 } // namespace ttl

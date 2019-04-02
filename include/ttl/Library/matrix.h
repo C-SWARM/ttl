@@ -42,12 +42,12 @@
 namespace ttl {
 namespace lib {
 template <class E>
-constexpr auto matrix_dimension(E&&) {
-  using namespace ttl::expressions;
-  using namespace ttl::util;
-  return pow(dimension<E>(), log2<rank<E>()>::value);
-}
-
+struct matrix_dimension_t {
+  static constexpr int   Rank = expressions::rank_t<E>::value;
+  static constexpr int l2Rank = util::log2<Rank>::value;
+  static constexpr int      N = expressions::dimension_t<E>::value;
+  static constexpr int  value = util::pow(N, l2Rank);
+};
 
 template <int N, class T>
 constexpr auto as_matrix(Tensor<2,N,T>&& A) {

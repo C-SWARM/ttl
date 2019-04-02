@@ -46,13 +46,15 @@ namespace lib {
 /// forwards to the linear algebra solver.
 template <class Matrix, class Vector>
 int solve(Matrix&& A, Vector&& b) {
-  using expressions::rank;
-  using expressions::dimension;
-  static_assert(rank(A) == 2*rank(b), "A must be a matrix");
-  static_assert(dimension(A) == dimension(b), "A and b must be the same size");
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<Matrix>::value == 2 * rank_t<Vector>::value,
+                "A must be a matrix");
+  static_assert(dimension_t<Matrix>::value == dimension_t<Vector>::value,
+                "A and b must be the same size");
 
   using namespace lib;
-  static constexpr auto M = matrix_dimension(A);
+  static constexpr auto M = matrix_dimension_t<Matrix>::value;
   return detail::solve<M>(as_matrix(std::forward<Matrix>(A)),
                           as_vector(std::forward<Vector>(b)));
 }
@@ -62,10 +64,12 @@ int solve(Matrix&& A, Vector&& b) {
 /// solution in x.
 template <class Matrix, class B, class X>
 int solve(Matrix&& A, B&& b, X& x) noexcept {
-  using expressions::rank;
-  using expressions::dimension;
-  static_assert(rank(b) == rank(x), "b and x must be the same rank");
-  static_assert(dimension(b) == dimension(x), "b and x must be the same size");
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<B>::value == rank_t<X>::value,
+                "b and x must be the same rank");
+  static_assert(dimension_t<B>::value == dimension_t<X>::value,
+                "b and x must be the same size");
 
   using expressions::force;
   x = force(std::forward<B>(b));

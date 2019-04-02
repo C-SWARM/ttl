@@ -7,8 +7,6 @@ static constexpr Index<'i'> i;
 static constexpr Index<'j'> j;
 static constexpr Index<'k'> k;
 static constexpr Index<'l'> l;
-static constexpr Index<'m'> m;
-static constexpr Index<'n'> n;
 
 TEST(Identity, DimensionalityInference) {
   Tensor<2,2,double> M;

@@ -39,6 +39,7 @@ static constexpr double PI = 3.14;
 
 TEST(Tensor, CtorDefault) {
   ttl::Tensor<2, 2, double> A;
+  (void)A;
 }
 
 TEST(Tensor, LinearIndexing) {
@@ -256,7 +257,7 @@ TEST(Tensor, CopyCtorToConstData) {
 }
 
 TEST(Tensor, MoveCtor) {
-  ttl::Tensor<2, 2, int> A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -264,7 +265,7 @@ TEST(Tensor, MoveCtor) {
 }
 
 TEST(Tensor, MoveCtorWiden) {
-  ttl::Tensor<2, 2, double> A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  ttl::Tensor<2, 2, double> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0.0);
   EXPECT_EQ(A[0][1], 1.0);
   EXPECT_EQ(A[1][0], 2.0);
@@ -272,7 +273,7 @@ TEST(Tensor, MoveCtorWiden) {
 }
 
 TEST(Tensor, MoveCtorToConst) {
-  const ttl::Tensor<2, 2, int> A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  const ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -280,7 +281,7 @@ TEST(Tensor, MoveCtorToConst) {
 }
 
 TEST(Tensor, MoveCtorFromConstData) {
-  ttl::Tensor<2, 2, int> A = std::move(ttl::Tensor<2, 2, const int>{0, 1, 2, 3});
+  ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -288,7 +289,7 @@ TEST(Tensor, MoveCtorFromConstData) {
 }
 
 TEST(Tensor, MoveCtorToConstData) {
-  ttl::Tensor<2, 2, const int> A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  ttl::Tensor<2, 2, const int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -386,7 +387,7 @@ TEST(Tensor, CopyFromConstData) {
 
 TEST(Tensor, Move) {
   ttl::Tensor<2, 2, int> A;
-  A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -395,7 +396,7 @@ TEST(Tensor, Move) {
 
 TEST(Tensor, MoveWiden) {
   ttl::Tensor<2, 2, double> A;
-  A = std::move(ttl::Tensor<2, 2, int>{0, 1, 2, 3});
+  A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0.0);
   EXPECT_EQ(A[0][1], 1.0);
   EXPECT_EQ(A[1][0], 2.0);
@@ -404,7 +405,7 @@ TEST(Tensor, MoveWiden) {
 
 TEST(Tensor, MoveFromConstData) {
   ttl::Tensor<2, 2, int> A;
-  A = std::move(ttl::Tensor<2, 2, const int>{0, 1, 2, 3});
+  A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
   EXPECT_EQ(A[0][0], 0);
   EXPECT_EQ(A[0][1], 1);
   EXPECT_EQ(A[1][0], 2);
@@ -522,7 +523,7 @@ TEST(ExternalTensor, CopyCtorConst) {
 
 TEST(ExternalTensor, MoveCtor) {
   int a[4];
-  ttl::Tensor<2, 2, int*> A = std::move(ttl::Tensor<2, 2, int*>(a));
+  ttl::Tensor<2, 2, int*> A = ttl::Tensor<2, 2, int*>(a);
   A[0][0] = 0;
   A[0][1] = 1;
   A[1][0] = 2;
@@ -547,7 +548,7 @@ TEST(Tensor, CopyCtorExternal) {
 
 TEST(Tensor, MoveCtorExternal) {
   int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, int> A = std::move(ttl::Tensor<2, 2, int*>(a));
+  ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int*>(a);
   A[0][0] = 0;
   A[0][1] = 1;
   A[1][0] = 2;
@@ -574,7 +575,7 @@ TEST(Tensor, AssignExternal) {
 TEST(Tensor, MoveExternal) {
   int a[4] = {0,1,2,3};
   ttl::Tensor<2, 2, int> A;
-  A = std::move(ttl::Tensor<2, 2, int*>(a));
+  A = ttl::Tensor<2, 2, int*>(a);
   A[0][0] = 0;
   A[0][1] = 1;
   A[1][0] = 2;
@@ -633,7 +634,7 @@ TEST(ExternalTensor, AssignInternal) {
 TEST(ExternalTensor, MoveInternal) {
   int a[4];
   ttl::Tensor<2, 2, int*> A(a);
-  A = std::move(ttl::Tensor<2, 2, int>{0,1,2,3});
+  A = ttl::Tensor<2, 2, int>{0,1,2,3};
   EXPECT_EQ(a[0], 0);
   EXPECT_EQ(a[1], 1);
   EXPECT_EQ(a[2], 2);

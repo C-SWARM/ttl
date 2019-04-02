@@ -100,12 +100,14 @@ struct inverse_impl<3>
 
 template <class Matrix, class Inverse>
 int inverse(Matrix&& A, Inverse& inv) noexcept {
-  using expressions::rank;
-  using expressions::dimension;
-  static_assert(rank(A) == rank(inv), "A and inv must have the same rank");
-  static_assert(dimension(A) == dimension(inv), "A and inv must have the same dimension");
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<Matrix>::value == rank_t<Inverse>::value,
+                "A and inv must have the same rank");
+  static_assert(dimension_t<Matrix>::value == dimension_t<Inverse>::value,
+                "A and inv must have the same dimension");
 
-  static constexpr auto N = matrix_dimension(A);
+  static constexpr auto N = matrix_dimension_t<Matrix>::value;
   return inverse_impl<N>::op(std::forward<Matrix>(A), inv);
 }
 } // namespace lib

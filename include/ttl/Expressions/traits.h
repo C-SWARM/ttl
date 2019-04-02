@@ -90,27 +90,19 @@ template <class E>
 using scalar_type = typename traits<rinse<E>>::scalar_type;
 
 template <class E>
+using dimension_t = typename traits<rinse<E>>::dimension;
+
+template <class E>
 constexpr auto dimension() {
-  using dimension_t = typename traits<rinse<E>>::dimension;
-  return dimension_t::value;
+  return dimension_t<E>::value;
 }
 
 template <class E>
-constexpr auto dimension(E&&) {
-  using dimension_t = typename traits<rinse<E>>::dimension;
-  return dimension_t::value;
-}
-
-template <class E>
-constexpr auto rank(E&&) {
-  using rank_t = typename traits<rinse<E>>::rank;
-  return rank_t::value;
-}
+using rank_t = typename traits<rinse<E>>::rank;
 
 template <class E>
 constexpr auto rank() {
-  using rank_t = typename traits<rinse<E>>::rank;
-  return rank_t::value;
+  return rank_t<E>::value;
 }
 
 template <class E>

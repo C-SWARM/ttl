@@ -75,7 +75,8 @@ struct bind_impl<1>
 template <class E>
 constexpr auto bind(E&& e) {
   using namespace ttl::expressions;
-  return Bind<E,typename bind_impl<rank(e)>::type>(std::forward<E>(e));
+  constexpr int Rank = rank_t<E>::value;
+  return Bind<E,typename bind_impl<Rank>::type>(std::forward<E>(e));
 }
 } // namespace lib
 } // namespace ttl
