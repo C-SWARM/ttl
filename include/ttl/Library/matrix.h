@@ -47,6 +47,67 @@ constexpr auto matrix_dimension(E&&) {
   using namespace ttl::util;
   return pow(dimension<E>(), log2<rank<E>()>::value);
 }
+
+
+template <int N, class T>
+constexpr auto as_matrix(Tensor<2,N,T>&& A) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i, int j) -> S& {
+    return A[i][j];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_matrix(Tensor<2,N,T>& A) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i, int j) -> S& {
+    return A[i][j];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_matrix(const Tensor<2,N,T>& A) {
+  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  return [&](int i, int j) -> S {
+    return A[i][j];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_matrix(Tensor<4,N,T>&& A) {
+  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  return [&](int i, int j) -> S& {
+    int m = i / N;
+    int n = i % N;
+    int o = j / N;
+    int p = j % N;
+    return A[m][n][o][p];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_matrix(Tensor<4,N,T>& A) {
+  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  return [&](int i, int j) -> S& {
+    int m = i / N;
+    int n = i % N;
+    int o = j / N;
+    int p = j % N;
+    return A[m][n][o][p];
+  };
+}
+
+template <int N, class T>
+constexpr auto as_matrix(const Tensor<4,N,T>& A) {
+  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  return [&](int i, int j) -> S {
+    int m = i / N;
+    int n = i % N;
+    int o = j / N;
+    int p = j % N;
+    return A[m][n][o][p];
+  };
+}
 } // namespace lib
 } // namespace ttl
 

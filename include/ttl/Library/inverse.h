@@ -125,38 +125,12 @@ struct inverse_impl<MatrixExpression, 3>
 };
 } // namespace lib
 
-template <bool Zero, int N, class T, class U>
-int inverse(Tensor<2,N,T>&& A, Tensor<2,N,U>& inv) noexcept {
-  using expressions::scalar_type;
+template <bool Zero, class Matrix, class Inverse>
+int inverse(Matrix&& A, Inverse& inv) noexcept {
+  using namespace lib;
+  static constexpr auto N = matrix_dimension(A);
   if (Zero) inv = {};
-  return lib::detail::inverse<N>(
-      [&](int i, int j) -> scalar_type<decltype(A)>& {
-        return A[i][j];
-      },
-      [&](int i, int j) -> U& {
-        return inv[i][j];
-      });
-}
-
-template <bool Zero, int N, class T, class U>
-int inverse(Tensor<4,N,T>&& A, Tensor<4,N,U>& inv) noexcept {
-  using expressions::scalar_type;
-  if (Zero) inv = {};
-  return lib::detail::inverse<N*N>(
-      [&](int i, int j) -> scalar_type<decltype(A)>& {
-        int m = i / N;
-        int n = i % N;
-        int o = j / N;
-        int p = j % N;
-        return A[m][n][o][p];
-      },
-      [&](int i, int j) -> U& {
-        int m = i / N;
-        int n = i % N;
-        int o = j / N;
-        int p = j % N;
-        return inv[m][n][o][p];
-      });
+  return detail::inverse<N>(as_matrix(std::forward<Matrix>(A)), as_matrix(inv));
 }
 
 template <int R, int N, class T, bool Zero = true>
