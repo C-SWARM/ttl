@@ -44,104 +44,168 @@
 
 namespace ttl {
 namespace lib {
-template <class E, int N>
+template <class MatrixExpression, int N>
 struct inverse_impl
 {
-  template <class M>
-  static int op(E e, M& m) noexcept {
-    return detail::invert(e, m);
+  template <int M, class T>
+  static int op(MatrixExpression A, Tensor<2,M,T>& inv) noexcept {
+    static_assert(N == M, "Dimensions must match");
+    return detail::inverse<M, T>(A, inv);
   }
 
-  static auto op(E e) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(e, m)) {
+  static expressions::tensor_type<MatrixExpression> op(MatrixExpression A) {
+    using expressions::force;
+    expressions::tensor_type<MatrixExpression> inv = {};
+    if (int i = op(force(A), inv)) {
       throw i;
     }
-    return m;
+    return inv;
   }
 };
 
 /// Analytically expand 2x2 inverse.
-template <class E>
-struct inverse_impl<E, 2>
+template <class MatrixExpression>
+struct inverse_impl<MatrixExpression, 2>
 {
-  template <class M>
-  static int op(E f, M& m) noexcept {
-    auto d = det(f);
+  template <int M, class T>
+  static int op(MatrixExpression A, Tensor<2,M,T>& inv) noexcept {
+    auto d = det(A);
     if (!FPNEZ(d)) {
       return 1;
     }
     auto rd = 1/d;
-    m = {rd*f(1,1), -rd*f(0,1), -rd*f(1,0), rd*f(0,0)};
+    inv(0,0) =  rd * A(1,1);
+    inv(0,1) = -rd * A(0,1);
+    inv(1,0) = -rd * A(1,0);
+    inv(1,1) =  rd * A(0,0);
     return 0;
   }
 
-  static auto op(E f) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
+  static expressions::tensor_type<MatrixExpression> op(MatrixExpression A) {
+    using expressions::force;
+    expressions::tensor_type<MatrixExpression> inv;
+    if (int i = op(force(A), inv)) {
       throw i;
     }
-    return m;
+    return inv;
   }
 };
 
 /// Analytically expand 3x3 inverse.
-template <class E>
-struct inverse_impl<E, 3>
+template <class MatrixExpression>
+struct inverse_impl<MatrixExpression, 3>
 {
-  template <class M>
-  static int op(E f, M& m) noexcept {
-    auto d = det(f);
+  template <int M, class T>
+  static int op(MatrixExpression A, Tensor<2,M,T>& inv) noexcept {
+    auto d = det(A);
     if (!FPNEZ(d)) {
       return 1;
     }
-
-    auto t00 = f(2,2)*f(1,1) - f(2,1)*f(1,2); //a22a11-a21a12
-    auto t01 = f(2,2)*f(0,1) - f(2,1)*f(0,2); //a22a01-a21a02
-    auto t02 = f(1,2)*f(0,1) - f(1,1)*f(0,2); //a12a01-a11a02
-    auto t10 = f(2,2)*f(1,0) - f(2,0)*f(1,2); //a22a10-a20a12
-    auto t11 = f(2,2)*f(0,0) - f(2,0)*f(0,2); //a22a00-a20a02
-    auto t12 = f(1,2)*f(0,0) - f(1,0)*f(0,2); //a12a00-a10a02
-    auto t20 = f(2,1)*f(1,0) - f(2,0)*f(1,1); //a21a10-a20a11
-    auto t21 = f(2,1)*f(0,0) - f(2,0)*f(0,1); //a21a00-a20a01
-    auto t22 = f(1,1)*f(0,0) - f(1,0)*f(0,1); //a11a00-a10a01
     auto rd = 1/d;
-    m = {rd*t00, -rd*t01,  rd*t02,
-         -rd*t10,  rd*t11, -rd*t12,
-         rd*t20, -rd*t21,  rd*t22};
+    inv(0,0) =  rd * (A(2,2) * A(1,1) - A(2,1) * A(1,2)); //a22a11-a21a12
+    inv(0,1) = -rd * (A(2,2) * A(0,1) - A(2,1) * A(0,2)); //a22a01-a21a02
+    inv(0,2) =  rd * (A(1,2) * A(0,1) - A(1,1) * A(0,2)); //a12a01-a11a02
+    inv(1,0) = -rd * (A(2,2) * A(1,0) - A(2,0) * A(1,2)); //a22a10-a20a12
+    inv(1,1) =  rd * (A(2,2) * A(0,0) - A(2,0) * A(0,2)); //a22a00-a20a02
+    inv(1,2) = -rd * (A(1,2) * A(0,0) - A(1,0) * A(0,2)); //a12a00-a10a02
+    inv(2,0) =  rd * (A(2,1) * A(1,0) - A(2,0) * A(1,1)); //a21a10-a20a11
+    inv(2,1) = -rd * (A(2,1) * A(0,0) - A(2,0) * A(0,1)); //a21a00-a20a01
+    inv(2,2) =  rd * (A(1,1) * A(0,0) - A(1,0) * A(0,1)); //a11a00-a10a01
     return 0;
   }
 
-  static auto op(E f) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
+  static expressions::tensor_type<MatrixExpression> op(MatrixExpression A) {
+    using expressions::force;
+    expressions::tensor_type<MatrixExpression> inv;
+    if (int i = op(force(A), inv)) {
       throw i;
     }
-    return m;
+    return inv;
   }
 };
 } // namespace lib
 
-template <class E>
-auto inverse(E e) {
-  constexpr auto N = lib::matrix_dimension(e);
-  return lib::inverse_impl<E, N>::op(e);
+template <bool Zero, int N, class T, class U>
+int inverse(Tensor<2,N,T>&& A, Tensor<2,N,U>& inv) noexcept {
+  using expressions::scalar_type;
+  if (Zero) inv = {};
+  return lib::detail::inverse<N>(
+      [&](int i, int j) -> scalar_type<decltype(A)>& {
+        return A[i][j];
+      },
+      [&](int i, int j) -> U& {
+        return inv[i][j];
+      });
 }
 
-template <int R, int D, class S>
-auto inverse(const Tensor<R,D,S>& T) {
-  return inverse(lib::bind(T));
+template <bool Zero, int N, class T, class U>
+int inverse(Tensor<4,N,T>&& A, Tensor<4,N,U>& inv) noexcept {
+  using expressions::scalar_type;
+  if (Zero) inv = {};
+  return lib::detail::inverse<N*N>(
+      [&](int i, int j) -> scalar_type<decltype(A)>& {
+        int m = i / N;
+        int n = i % N;
+        int o = j / N;
+        int p = j % N;
+        return A[m][n][o][p];
+      },
+      [&](int i, int j) -> U& {
+        int m = i / N;
+        int n = i % N;
+        int o = j / N;
+        int p = j % N;
+        return inv[m][n][o][p];
+      });
 }
 
-template <class E, class M>
-int inverse(E e, M& out) noexcept {
-  constexpr auto N = lib::matrix_dimension(e);
-  return lib::inverse_impl<E, N>::op(e, out);
+template <int R, int N, class T, bool Zero = true>
+int inverse(Tensor<R,N,T>&& A, Tensor<R,N,T>& inv) noexcept {
+  return inverse<Zero>(std::move(A), inv);
 }
 
-template <int R, int D, class S, class T>
-int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
-  return inverse(lib::bind(A),out);
+template <int R, int N, class T, bool Zero = true>
+int inverse(const Tensor<R,N,T>& A, Tensor<R,N,T>& inv) noexcept {
+  using expressions::force;
+  return inverse<Zero>(force(A), inv);
+}
+
+template <int R, int N, class T, class MatrixExpression, bool Zero = true>
+int inverse(MatrixExpression A, Tensor<R,N,T>& inv) noexcept {
+  using expressions::rank;
+  using expressions::dimension;
+  using expressions::force;
+  static_assert(rank(A) == R, "Expression A must compatible with inv");
+  static_assert(dimension(A) == N, "Dimensions must match");
+  return inverse<Zero>(force(A), inv);
+}
+
+template <int R, int N, class T>
+auto inverse(const Tensor<R,N,T>& A) {
+  using expressions::force;
+  expressions::tensor_type<Tensor<R,N,T>> inv = {};
+  if (int i = inverse<false>(force(A), inv)) {
+    throw i;
+  }
+  return inv;
+}
+
+template <int R, int N, class T>
+auto inverse(Tensor<R,N,T>&& A) {
+  expressions::tensor_type<Tensor<R,N,T>> inv = {};
+  if (int i = inverse<false>(std::move(A), inv)) {
+    throw i;
+  }
+  return inv;
+}
+
+template <class MatrixExpression>
+auto inverse(MatrixExpression A) {
+  using expressions::rank;
+  using expressions::dimension;
+  using expressions::force;
+  static_assert(rank(A) == 2, "Expression A must be a matrix");
+  return inverse(force(A));
 }
 } // namespace ttl
 
