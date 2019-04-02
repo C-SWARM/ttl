@@ -38,22 +38,27 @@
 
 namespace ttl {
 namespace expressions {
-template <class E>
-auto force(E&& e) {
+/// The force operation forces the evaluation of a tensor expression.
+///
+/// The returned value is the tensor resulting from the evaluation of the
+/// expression. If the expression is a raw tensor then it will return a copy of
+/// the tensor. The returned value is stack allocated.
+///
+/// @tparam  Expression The expression type.
+///
+/// @param            e The expression.
+///
+/// @returns            A tensor with the result of evaluating the
+///                     expression. If the expression is a tensor or a reference
+///                     to a tensor, then this returns a copy of the tensor. If
+///                     the expression is an r-value reference to a tensor then
+///                     it returns the tensor through the move operation.
+template <class Expression>
+tensor_type<Expression> force(Expression&& e) {
   static_assert(dimension(e) >= 0, "forced expression needs dimension");
-  return tensor_type<E>(std::forward<E>(e));
+  return e;
 }
-
-template <int R, int D, class T>
-Tensor<R, D, T> force(const Tensor<R, D, T>& t) {
-  return {t};
-}
-
-template <int R, int D, class T>
-Tensor<R, D, T> force(Tensor<R, D, T>&& t) {
-  return {std::move(t)};
-}
-}
-}
+} // namespace expressions
+} // namespace ttl
 
 #endif // #ifndef TTL_EXPRESSIONS_FORCE_H
