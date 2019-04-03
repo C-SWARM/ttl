@@ -42,7 +42,6 @@ project(
 # -----------------------------------------------------------------------------
 # Configure-time project options.
 # -----------------------------------------------------------------------------
-option(TTL_WITH_LAPACK "use an external LAPACK for solve/inverse" ON)
 option(TTL_BUILD_TESTS "build the TTL unit tests" ON)
 
 # -----------------------------------------------------------------------------
@@ -69,14 +68,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -----------------------------------------------------------------------------
 include(CTest)
 include(CheckIncludeFileCXX)
-
-# -----------------------------------------------------------------------------
-# Figure out what form of lapack we're going to include and link to.
-# -----------------------------------------------------------------------------
-if (TTL_WITH_LAPACK)
-  CHECK_INCLUDE_FILE_CXX(mkl.h TTL_HAVE_MKL_H)
-  include(FindLAPACK)
-endif (TTL_WITH_LAPACK)
 
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.

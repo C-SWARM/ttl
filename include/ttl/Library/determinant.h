@@ -41,8 +41,8 @@
 namespace ttl {
 namespace lib {
 template <class E,
-          int R = expressions::rank<E>::value,
-          int D = expressions::dimension<E>::value>
+          int R = expressions::rank<E>(),
+          int D = expressions::dimension<E>()>
 struct det_impl;
 
 /// Analytical determinant for 2x2

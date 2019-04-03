@@ -44,102 +44,87 @@
 
 namespace ttl {
 namespace lib {
-template <class E, int N = matrix_dimension<E>()>
+template <int N>
 struct inverse_impl
 {
-  template <class M>
-  static int op(E e, M& m) noexcept {
-    return detail::invert<N>(e, m);
-  }
-
-  static auto op(E e) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(e, m)) {
-      throw i;
-    }
-    return m;
+  template <class Matrix, class Inverse>
+  static int op(Matrix&& A, Inverse& inv) noexcept {
+    using expressions::force;
+    return detail::inverse<N>(as_matrix(force(std::forward<Matrix>(A))),
+                              as_matrix(inv));
   }
 };
 
-/// Analytically expand 2x2 inverse.
-template <class E>
-struct inverse_impl<E, 2>
+/// Analytically compute 2x2 inverse.
+template <>
+struct inverse_impl<2>
 {
-  template <class M>
-  static int op(E f, M& m) noexcept {
-    auto d = det(f);
+  template <class Matrix, class Inverse>
+  static int op(Matrix&& A, Inverse& inv) noexcept {
+    auto d = det(A);
     if (!FPNEZ(d)) {
-      return 1;
+      return -1;
     }
     auto rd = 1/d;
-    m = {rd*f(1,1), -rd*f(0,1), -rd*f(1,0), rd*f(0,0)};
+    inv(0,0) =  rd * A(1,1);
+    inv(0,1) = -rd * A(0,1);
+    inv(1,0) = -rd * A(1,0);
+    inv(1,1) =  rd * A(0,0);
     return 0;
-  }
-
-  static auto op(E f) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
-      throw i;
-    }
-    return m;
   }
 };
 
-/// Analytically expand 3x3 inverse.
-template <class E>
-struct inverse_impl<E, 3>
+/// Analytically compute 3x3 inverse.
+template <>
+struct inverse_impl<3>
 {
-  template <class M>
-  static int op(E f, M& m) noexcept {
-    auto d = det(f);
+  template <class Matrix, class Inverse>
+  static int op(Matrix&& A, Inverse& inv) noexcept {
+    auto d = det(A);
     if (!FPNEZ(d)) {
-      return 1;
+      return -1;
     }
-
-    auto t00 = f(2,2)*f(1,1) - f(2,1)*f(1,2); //a22a11-a21a12
-    auto t01 = f(2,2)*f(0,1) - f(2,1)*f(0,2); //a22a01-a21a02
-    auto t02 = f(1,2)*f(0,1) - f(1,1)*f(0,2); //a12a01-a11a02
-    auto t10 = f(2,2)*f(1,0) - f(2,0)*f(1,2); //a22a10-a20a12
-    auto t11 = f(2,2)*f(0,0) - f(2,0)*f(0,2); //a22a00-a20a02
-    auto t12 = f(1,2)*f(0,0) - f(1,0)*f(0,2); //a12a00-a10a02
-    auto t20 = f(2,1)*f(1,0) - f(2,0)*f(1,1); //a21a10-a20a11
-    auto t21 = f(2,1)*f(0,0) - f(2,0)*f(0,1); //a21a00-a20a01
-    auto t22 = f(1,1)*f(0,0) - f(1,0)*f(0,1); //a11a00-a10a01
     auto rd = 1/d;
-    m = {rd*t00, -rd*t01,  rd*t02,
-         -rd*t10,  rd*t11, -rd*t12,
-         rd*t20, -rd*t21,  rd*t22};
+    inv(0,0) =  rd * (A(2,2) * A(1,1) - A(2,1) * A(1,2)); //a22a11-a21a12
+    inv(0,1) = -rd * (A(2,2) * A(0,1) - A(2,1) * A(0,2)); //a22a01-a21a02
+    inv(0,2) =  rd * (A(1,2) * A(0,1) - A(1,1) * A(0,2)); //a12a01-a11a02
+    inv(1,0) = -rd * (A(2,2) * A(1,0) - A(2,0) * A(1,2)); //a22a10-a20a12
+    inv(1,1) =  rd * (A(2,2) * A(0,0) - A(2,0) * A(0,2)); //a22a00-a20a02
+    inv(1,2) = -rd * (A(1,2) * A(0,0) - A(1,0) * A(0,2)); //a12a00-a10a02
+    inv(2,0) =  rd * (A(2,1) * A(1,0) - A(2,0) * A(1,1)); //a21a10-a20a11
+    inv(2,1) = -rd * (A(2,1) * A(0,0) - A(2,0) * A(0,1)); //a21a00-a20a01
+    inv(2,2) =  rd * (A(1,1) * A(0,0) - A(1,0) * A(0,1)); //a11a00-a10a01
     return 0;
   }
-
-  static auto op(E f) {
-    ttl::expressions::tensor_type<E> m;
-    if (int i = op(f, m)) {
-      throw i;
-    }
-    return m;
-  }
 };
+
+template <class Matrix, class Inverse>
+int inverse(Matrix&& A, Inverse& inv) noexcept {
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<Matrix>::value == rank_t<Inverse>::value,
+                "A and inv must have the same rank");
+  static_assert(dimension_t<Matrix>::value == dimension_t<Inverse>::value,
+                "A and inv must have the same dimension");
+
+  static constexpr auto N = matrix_dimension_t<Matrix>::value;
+  return inverse_impl<N>::op(std::forward<Matrix>(A), inv);
+}
 } // namespace lib
 
-template <class E>
-auto inverse(E e) {
-  return lib::inverse_impl<E>::op(e);
+template <class Matrix, class Inverse>
+int inverse(Matrix&& A, Inverse& inv, bool zero = true) noexcept {
+  if (zero) inv = {};
+  return lib::inverse(std::forward<Matrix>(A), inv);
 }
 
-template <int R, int D, class S>
-auto inverse(const Tensor<R,D,S>& T) {
-  return inverse(lib::bind(T));
-}
-
-template <class E, class M>
-int inverse(E e, M& out) noexcept {
-  return lib::inverse_impl<E>::op(e,out);
-}
-
-template <int R, int D, class S, class T>
-int inverse(const Tensor<R,D,S>& A, Tensor<R,D,T>& out) noexcept {
-  return inverse(lib::bind(A),out);
+template <class Matrix>
+auto inverse(Matrix&& A) {
+  expressions::tensor_type<Matrix> inv = {};
+  if (int i = lib::inverse(std::forward<Matrix>(A), inv)) {
+    throw i;
+  }
+  return inv;
 }
 } // namespace ttl
 

@@ -31,124 +31,197 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
+// Basic LUP code contributed by Andrew Lumsdaine
+// -----------------------------------------------------------------------------
+
 #ifndef TTL_LIBRARY_LINEAR_ALGEBRA_HPP
 #define TTL_LIBRARY_LINEAR_ALGEBRA_HPP
 
-#include <ttl/config.h>
-
-#if defined(TTL_WITH_LAPACK) && defined(TTL_HAVE_MKL_H)
-#include <mkl.h>
-#elif defined(TTL_WITH_LAPACK)
-#include <lapacke.h>
-#else
-#include <ttl/contrib/resice.hpp>
-#endif
+#include <numeric>                              // std::iota
 
 namespace ttl {
 namespace lib {
 namespace detail {
-#ifdef TTL_WITH_LAPACK
-#ifdef TTL_HAVE_MKL_H
-using ipiv_t = MKL_INT;
-#else
-using ipiv_t = lapack_int;
-#endif
+/// Run the pivoting algorithm on a rank 2 tensor (i.e., matrix).
+///
+/// The pivoting operation will restructure the matrix and thus we require a
+/// "real" matrix as `A` rather than simply a rank 2 tensor expression.
+///
+/// @tparam           M The size of the matrix.
+/// @tparam      Matrix The Matrix type.
+/// @tparam Permutation The type of the permutation array.
+///
+/// @param[in/out]    A The rank 2 tensor to pivot.
+/// @param[out]    perm The permutation.
+/// @param[in]        j The column that we are processing.
+///
+/// @returns            The row index that we swapped, for debugging purposes.
+template <int M, class Matrix, class Permutation>
+static inline int
+pivot(Matrix&& A, Permutation&& perm, const int j)
+{
+  // Find the maximum magnitude in column j
+  using T = std::remove_reference_t<decltype(A(0,0))>;
+  using std::abs;
+  using std::swap;
+  auto i = j;
+  T max = abs(A(j,j));
+  for (auto ii = j + 1; ii < M; ++ii) {
+    if (abs(A(ii, j)) > max) {
+      max = abs(A(ii, j));
+      i = ii;
+    }
+  }
 
-template <int N>
-static inline int getrf(double data[N*N], ipiv_t ipiv[N]) {
-  return LAPACKE_dgetrf(LAPACK_COL_MAJOR,N,N,data,N,ipiv);
-}
+  for (auto jj = 0; jj < M; ++jj) {
+    swap(A(i, jj), A(j, jj));
+  }
 
-template <int N>
-static inline int getri(double data[N*N], ipiv_t ipiv[N]) {
-  return LAPACKE_dgetri(LAPACK_COL_MAJOR,N,data,N,ipiv);
-}
+  swap(perm(j), perm(i));
 
-template <int N>
-static inline int gesv(double a[N*N], double b[N], ipiv_t pivot[N]) {
-  return LAPACKE_dgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
-}
-
-template <int N>
-static inline int gesv(float a[N*N], float b[N], ipiv_t pivot[N]) {
-  return LAPACKE_sgesv(LAPACK_COL_MAJOR, N, 1, a, N, pivot, b, N);
-}
-
-template <int N, class A, class B, class X>
-static inline int solve(A a, B b, X& x) noexcept {
-  // explicitly force a transpose into a temporary tensor on the stack... this
-  // prevents lapacke from having to transpose back and forth to column major
-  using namespace ttl::expressions;
-  ipiv_t ipiv[N];
-  auto ta = force(transpose(a));
-  x = force(b);
-  int i = gesv<N>(ta.data, x.data, ipiv);
   return i;
 }
 
-template <int N, class A, class B>
-static inline auto solve(A a, B b) {
-  // explicitly force a transpose into a temporary tensor on the stack... this
-  // prevents lapacke from having to transpose back and forth to column major
-  using namespace ttl::expressions;
-  ipiv_t ipiv[N];
-  auto ta = force(transpose(a));
-  auto tb = force(b);
-  if (int i = gesv<N>(ta.data, tb.data, ipiv)) {
-    throw i;
+/// Factor an expression.
+///
+/// @tparam           M The dimension of the matrix.
+/// @tparam      Matrix The matrix type.
+/// @tparam Permutation The type to store the permutation.
+///
+/// @param[in/out]    A The rank 2 tensor expression to factor.
+/// @param[out]    perm The permutation.
+///
+/// @returns          0 If the operation succeeded.
+///            positive Indicates that the factorization would have tried to
+///                     divide by zero in the returned row.
+template <int M, class Matrix, class Permutation>
+static inline int
+lu_kij_pp(Matrix&& A, Permutation&& perm)
+{
+  for (auto k = 0; k < M - 1; ++k) {
+    pivot<M>(A, perm, k);
+    for (auto i = k + 1; i < M; ++i) {
+      auto z = A(i, k) /= A(k, k);
+      for (auto j = k + 1; j < M; ++j) {
+        A(i, j) -= z * A(k, j);
+      }
+    }
   }
-  return tb;
+
+  // Check the diagonal for 0s. We do this here rather than terminating pivoting
+  // in the loop to avoid an early loop exit and possible GPU divergence.
+  int e = 0;
+  for (auto i = 0; i < M; ++i) {
+    e = (not e and A(i, i) == 0) ? i : e;
+  }
+  return e;
 }
 
-template <int N, class E, class M>
-static inline int invert(E e, M& m) noexcept {
-  // explicitly force a transpose into a temporary tensor on the stack... this
-  // prevents lapacke from having to transpose back and forth to column major
-  using namespace ttl::expressions;
-  ipiv_t ipiv[N];
-  auto A = force(transpose(e));
-  if (int i = getrf<N>(A.data, ipiv)) {
+/// Solve a system.
+///
+/// This will perform LUP on the matrix `A`, permute the vector `b`, and then
+/// perform the solve via lower and upper substitution. The result is returned
+/// in b.
+///
+/// It will return `0` on success and a positive number, `j`, between `1 and `M`
+/// to indicate if we have a diagonal element in `U(j-1,j-1)` that was `0`
+/// during factorization. If it returns non-zero then the results of `A` and `b`
+/// are invalidated.
+///
+/// @tparam           M The size of the matrix and vector.
+/// @tparam      Matrix The matrix type, must support `operator()(int,int)`.
+/// @tparam      Vector The vector type, must support `operator()(int)`.
+///
+/// @param[in/out]    A The matrix, will be factored and permuted into LUP.
+/// @param[in/out]    b The vector, will be written with the solution.
+///
+/// @returns          0 On success.
+///            non-zero The matrix is singular in that one of the diagonal
+///                     elements is identically 0. The returned value is the row
+///                     id that is 0 (1-based indexing for the id).
+template <int M, class Matrix, class Vector>
+static inline int
+solve(Matrix&& A, Vector&& b) noexcept
+{
+  // 1. Perform LU factorization on the matrix. If this fails then we have a
+  //    singular matrix. This permutes the vector at the same time.
+  if (auto i = lu_kij_pp<M>(A, b)) {
     return i;
   }
-  if (int i = getri<N>(A.data, ipiv)) {
-    return i;
+
+  // 2. Lower triangular solve.
+  for (auto i = 0; i < M; ++i) {
+    for (auto j = 0; j < i; ++j) {
+      b(i) -= A(i, j) * b(j);
+    }
   }
-  m = force(transpose(bind(A)));
+
+  // 3. Upper triangular solve.
+  for (auto i = M - 1; i >= 0; --i) {
+    for (auto j = i + 1; j < M; ++j) {
+      b(i) -= A(i, j) * b(j);
+    }
+    b(i) /= A(i, i);
+  }
+
   return 0;
 }
-#else
-template <int N, class E, class M>
-static inline int invert(E e, M& m) noexcept {
-  static constexpr Index<'i'> i;
-  static constexpr Index<'j'> j;
-  ttl::expressions::tensor_type<E> A = force(e);
-  Tensor<2, N, ttl::expressions::scalar_type<E>> b = identity<N>(i,j);
-  long ipiv[N];
-  return reseni_rovnic(A.data, m.data, b.data, N, N, 2, ipiv);
-}
 
-template <int N, class A, class B, class X>
-static inline int solve(A a, B b, X& x) noexcept {
-  ttl::expressions::tensor_type<A> fA = force(a);
-  ttl::expressions::tensor_type<B> fb = force(b);
-  long ipiv[N];
-  return reseni_rovnic(fA.data, x.data, fb.data, N, 1, 2, ipiv);
-}
+template <int M, class Matrix, class Inverse>
+static inline int
+inverse(Matrix&& A, Inverse&& inv) noexcept
+{
+  // 1. Allocate and initialize a permutation.
+  struct Permutation {
+    Permutation() {
+      std::iota(std::begin(data), std::end(data), 0);
+    }
 
-template <int N, class A, class B>
-static inline auto solve(A a, B b) {
-  ttl::expressions::tensor_type<A> fA = force(a);
-  ttl::expressions::tensor_type<B> fb = force(b);
-  ttl::expressions::tensor_type<B> x;
-  long ipiv[N];
-  if (int i = reseni_rovnic(fA.data, x.data, fb.data, N, 1, 2, ipiv)) {
-    throw i;
+    int& operator()(int i) {
+      return data[i];
+    }
+
+    void operator()(Inverse& inv) {
+      using T = std::remove_reference_t<decltype(inv(0,0))>;
+      for (auto i = 0; i < M; ++i) {
+        inv(i, data[i]) = T{1};
+      }
+    }
+
+    int data[M];
+  } perm;
+
+  // 2. Perform LU factorization on the matrix, and test for failure.
+  if (auto i = lu_kij_pp<M>(A, perm)) {
+    return i;
   }
-  return x;
+
+  // 3. Permute the Identity matrix.
+  perm(inv);
+
+  // 4. Lower triangular solve.
+  for (auto k = 0; k < M; ++k) {
+    for (auto i = 0; i < M; ++i) {
+      for (auto j = 0; j < i; ++j) {
+        inv(i, k) -= A(i, j) * inv(j, k);
+      }
+    }
+  }
+
+  // 5. Upper triangular solve.
+  for (auto k = 0; k < M; ++k) {
+    for (auto i = M - 1; i >= 0; --i) {
+      for (auto j = i + 1; j < M; ++j) {
+        inv(i, k) -= A(i, j) * inv(j, k);
+      }
+      inv(i, k) /= A(i, i);
+    }
+  }
+
+  return 0;
 }
-#endif
-}
-}
-}
+} // namespace detail
+} // namespace lib
+} // namespace ttl
 
 #endif // #define TTL_LIBRARY_LINEAR_ALGEBRA_HPP

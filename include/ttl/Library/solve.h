@@ -35,57 +35,58 @@
 #define TTL_LIBRARY_SOLVE_H
 
 #include <ttl/config.h>
-#include <ttl/Expressions/traits.h>
 #include <ttl/Library/LinearAlgebra.hpp>
-#include <ttl/Library/binder.h>
 #include <ttl/Library/matrix.h>
+#include <ttl/Expressions/force.h>
+#include <ttl/Expressions/traits.h>
 
 namespace ttl {
 namespace lib {
-template <class A, class B, int N = matrix_dimension<A>()>
-struct solve_impl
-{
-  template <class X>
-  static int op(A a, B b, X& x) noexcept {
-    return detail::solve<N>(a, b, x);
-  }
+/// The core solve operation captures A and b as a Matrix and Vector and
+/// forwards to the linear algebra solver.
+template <class Matrix, class Vector>
+int solve(Matrix&& A, Vector&& b) {
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<Matrix>::value == 2 * rank_t<Vector>::value,
+                "A must be a matrix");
+  static_assert(dimension_t<Matrix>::value == dimension_t<Vector>::value,
+                "A and b must be the same size");
 
-  static auto op(A a, B b) {
-    return detail::solve<N>(a, b);
-  }
-};
+  using namespace lib;
+  static constexpr auto M = matrix_dimension_t<Matrix>::value;
+  return detail::solve<M>(as_matrix(std::forward<Matrix>(A)),
+                          as_vector(std::forward<Vector>(b)));
+}
 } // namespace lib
 
-template <class A, class B>
-auto solve(A a, B b) {
-  return lib::solve_impl<A,B>::op(a, b);
+/// The three-argument interface copies or evaluates A and b and returns the
+/// solution in x.
+template <class Matrix, class B, class X>
+int solve(Matrix&& A, B&& b, X& x) noexcept {
+  using expressions::rank_t;
+  using expressions::dimension_t;
+  static_assert(rank_t<B>::value == rank_t<X>::value,
+                "b and x must be the same rank");
+  static_assert(dimension_t<B>::value == dimension_t<X>::value,
+                "b and x must be the same size");
+
+  using expressions::force;
+  x = force(std::forward<B>(b));
+  return lib::solve(force(std::forward<Matrix>(A)), x);
 }
 
-template <class E, int R, int D, class S>
-auto solve(E A, const Tensor<R,D,S>& b) {
-  return solve(A, lib::bind(b));
+/// The two-argument interface copies or evaluates A and b and returns a
+/// solution.
+template <class Matrix, class Vector>
+auto solve(Matrix&& A, Vector&& b) {
+  using expressions::force;
+  auto x = force(std::forward<Vector>(b));
+  if (auto i = lib::solve(force(std::forward<Matrix>(A)), x)) {
+    throw i;
+  }
+  return x;
 }
-
-template <int R, int D, class S, class T>
-auto solve(const Tensor<R,D,S>& A, const Tensor<R/2,D,T>& b) {
-  return solve(lib::bind(A), lib::bind(b));
-}
-
-template <class A, class B, class X>
-int solve(A a, B b, X& x) noexcept {
-  return lib::solve_impl<A,B>::op(a, b, x);
-}
-
-template <class E, int R, int D, class S, class T>
-int solve(E A, const Tensor<R,D,S>& b, Tensor<R/2,D,T>& x) noexcept {
-  return solve(A, lib::bind(b), x);
-}
-
-template <int R, int D, class S, class T>
-int solve(const Tensor<R,D,S>& A, const Tensor<R/2,D,T>& b,
-          Tensor<R/2,D,T>& x) noexcept {
-  return solve(lib::bind(A), lib::bind(b), x);
-}
-}
+} // namespace lib
 
 #endif // #define TTL_LIBRARY_SOLVE_H

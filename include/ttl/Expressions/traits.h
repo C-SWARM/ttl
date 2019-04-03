@@ -90,13 +90,23 @@ template <class E>
 using scalar_type = typename traits<rinse<E>>::scalar_type;
 
 template <class E>
-using dimension = typename traits<rinse<E>>::dimension;
+using dimension_t = typename traits<rinse<E>>::dimension;
 
 template <class E>
-using rank = typename traits<rinse<E>>::rank;
+constexpr auto dimension() {
+  return dimension_t<E>::value;
+}
 
 template <class E>
-using tensor_type = Tensor<rank<E>::value, dimension<E>::value, rinse<scalar_type<E>>>;
+using rank_t = typename traits<rinse<E>>::rank;
+
+template <class E>
+constexpr auto rank() {
+  return rank_t<E>::value;
+}
+
+template <class E>
+using tensor_type = Tensor<rank<E>(), dimension<E>(), rinse<scalar_type<E>>>;
 
 } // namespace expressions
 } // namespace traits

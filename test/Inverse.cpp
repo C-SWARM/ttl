@@ -39,27 +39,37 @@ using namespace ttl;
 static constexpr Index<'i'> i;
 static constexpr Index<'j'> j;
 static constexpr Index<'k'> k;
+static constexpr Index<'l'> l;
+static constexpr Index<'m'> m;
+static constexpr Index<'n'> n;
 
 TEST(Inverse, Basic_2_2) {
   ttl::Tensor<2,2,double> A = {1, 2, 3, 5},
                           B = ttl::inverse(A),
-                          C = B(i,j)*A(j,k),
-                          ID = identity(i,j);
+                    INVERSE = {-5, 2, 3, -1};
 
-  EXPECT_DOUBLE_EQ(C(0,0), ID(0,0));
-  EXPECT_DOUBLE_EQ(C(0,1), ID(0,1));
-  EXPECT_DOUBLE_EQ(C(1,0), ID(1,0));
-  EXPECT_DOUBLE_EQ(C(1,1), ID(1,1));
+  EXPECT_DOUBLE_EQ(B(0,0), INVERSE(0,0));
+  EXPECT_DOUBLE_EQ(B(0,1), INVERSE(0,1));
+  EXPECT_DOUBLE_EQ(B(1,0), INVERSE(1,0));
+  EXPECT_DOUBLE_EQ(B(1,1), INVERSE(1,1));
+
+  int e = ttl::inverse(A,B);
+  EXPECT_EQ(e, 0);
+
+  EXPECT_DOUBLE_EQ(B(0,0), INVERSE(0,0));
+  EXPECT_DOUBLE_EQ(B(0,1), INVERSE(0,1));
+  EXPECT_DOUBLE_EQ(B(1,0), INVERSE(1,0));
+  EXPECT_DOUBLE_EQ(B(1,1), INVERSE(1,1));
 
   B = zero(i,j);
-  int e = ttl::inverse(A,B);
-  C = B(i,j)*A(j,k);
-
+  e = ttl::inverse(A,B, false);
   EXPECT_EQ(e, 0);
-  EXPECT_DOUBLE_EQ(C(0,0), ID(0,0));
-  EXPECT_DOUBLE_EQ(C(0,1), ID(0,1));
-  EXPECT_DOUBLE_EQ(C(1,0), ID(1,0));
-  EXPECT_DOUBLE_EQ(C(1,1), ID(1,1));
+
+  EXPECT_DOUBLE_EQ(B(0,0), INVERSE(0,0));
+  EXPECT_DOUBLE_EQ(B(0,1), INVERSE(0,1));
+  EXPECT_DOUBLE_EQ(B(1,0), INVERSE(1,0));
+  EXPECT_DOUBLE_EQ(B(1,1), INVERSE(1,1));
+
 }
 
 TEST(Inverse, Singular_2_2) {
@@ -71,19 +81,19 @@ TEST(Inverse, Singular_2_2) {
   } catch (int) {
     singular = 1;
   }
-  EXPECT_EQ(singular, 1);
+  EXPECT_NE(singular, 0);
 
   singular = ttl::inverse(A, B);
-  EXPECT_EQ(singular, 1);
+  EXPECT_NE(singular, 0);
 }
 
 TEST(Inverse, Basic_2_3) {
-  const Tensor<2,3,const double> A = {1, 2, 3,
-                                      4, 5, 6,
-                                      7, 8, 10},
-                                 B = inverse(A),
-                                 C = B(i,j)*A(j,k),
-                                 ID = identity(i,j);
+  const Tensor<2,3,double> A = {1, 2, 3,
+                                4, 5, 6,
+                                7, 8, 10},
+                           B = inverse(A),
+                           C = B(i,j)*A(j,k),
+                          ID = identity(i,j);
 
   EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
   EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
@@ -120,106 +130,118 @@ TEST(Inverse, Singular_2_3) {
   } catch (int) {
     singular = 1;
   }
-  EXPECT_EQ(singular, 1);
+  EXPECT_NE(singular, 0);
 
-  decltype(A) B;
+  decltype(A) B = zero(i,j);
   singular = inverse(A,B);
-  EXPECT_EQ(singular, 1);
+  EXPECT_NE(singular, 0);
 }
 
 TEST(Inverse, Extern_2_3) {
-  const double a[9] = {1, 2, 3,
-                       4, 5, 6,
-                       7, 8, 10};
-  const Tensor<2,3,const double*> A(a);
+  double a[9] = {1, 2, 3,
+                 4, 5, 6,
+                 7, 8, 10};
+  const Tensor<2,3,double*> A(a);
   auto B = inverse(A);
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+
+  Tensor<2,3,double> C = B(i,j)*A(j,k);
+  Tensor<2,3,double> ID = identity(i,j);
+
+  EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, RValue_2_3) {
-  const Tensor<2,3,double> B = inverse(Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+  const Tensor<2,3,double> A = Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10};
+  const Tensor<2,3,double> B = inverse(Tensor<2,3,double>{A});
+  const Tensor<2,3,double> C = B(i,j)*A(j,k);
+  const Tensor<2,3,double> ID = identity(i,j);
+
+  EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, RValue_2_3_Infer) {
-  auto B = inverse(Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10});
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+  const Tensor<2,3,double> A = {1, 2, 3, 4, 5, 6, 7, 8, 10};
+  auto B = inverse(Tensor<2,3,double>{A});
+  const Tensor<2,3,double> C = B(i,j)*A(j,k);
+  const Tensor<2,3,double> ID = identity(i,j);
+
+  EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, RValueExpression_2_3) {
   const Tensor<2,3,double> A = {1, 2, 3,
                                 4, 5, 6,
                                 7, 8, 10},
-                           C = {},
-                           B = inverse(1*(A(i,j) + C(i,j)));
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+                           B = {},
+                           C = inverse(1*(A(i,j) + B(i,j))),
+                           D = C(i,j)*A(j,k),
+                          ID = identity(i,j);
+
+  EXPECT_NEAR(D(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(D(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(D(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(D(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(D(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(D(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(D(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(D(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(D(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, Expression_2_3) {
   const Tensor<2,3,double> A = {1, 2, 3,
                                 4, 5, 6,
                                 7, 8, 10},
-                           C = {};
-  auto e = 1*(A(i,j) + C(i,j));
-  const Tensor<2,3,double> B = inverse(e);
-  EXPECT_EQ(B(0,0), -2/3.0);
-  EXPECT_EQ(B(0,1), -(1.0 + 1/3.0));
-  EXPECT_EQ(B(0,2), 1);
-  EXPECT_EQ(B(1,0), -2/3.0);
-  EXPECT_EQ(B(1,1), 3.0 + 2/3.0);
-  EXPECT_EQ(B(1,2), -2);
-  EXPECT_EQ(B(2,0), 1);
-  EXPECT_EQ(B(2,1), -2);
-  EXPECT_EQ(B(2,2), 1);
+                           B = {},
+                          ID = identity(i,j);
+
+  auto e = 1*(A(i,j) + B(i,j));
+  auto C = inverse(e);
+  auto D = expressions::force(C(i,j) * A(j,k));
+
+  EXPECT_NEAR(D(0,0), ID(0,0), 1e-14);
+  EXPECT_NEAR(D(0,1), ID(0,1), 1e-14);
+  EXPECT_NEAR(D(0,2), ID(0,2), 1e-14);
+  EXPECT_NEAR(D(1,0), ID(1,0), 1e-14);
+  EXPECT_NEAR(D(1,1), ID(1,1), 1e-14);
+  EXPECT_NEAR(D(1,2), ID(1,2), 1e-14);
+  EXPECT_NEAR(D(2,0), ID(2,0), 1e-14);
+  EXPECT_NEAR(D(2,1), ID(2,1), 1e-14);
+  EXPECT_NEAR(D(2,2), ID(2,2), 1e-14);
 }
 
 TEST(Inverse, Basic_4_2) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  ttl::Index<'k'> k;
-  ttl::Index<'l'> l;
-  ttl::Index<'m'> m;
-  ttl::Index<'n'> n;
-
   ttl::Tensor<4,2,double> A = {1,2,3,4,
                                9,8,7,6,
                                11,13,12,14,
                                -16,17,-18,19},
-                          B = ttl::inverse(A),
-                          C = B(i,j,k,l)*A(k,l,m,n), ID;
-  ID(i,j,k,l) = ttl::identity(i,j,k,l);
+                          B = inverse(A),
+                          C = B(i,j,k,l)*A(k,l,m,n),
+                         ID = identity(i,j,k,l);
 
   for (int q = 0; q < 2; ++q) {
     for (int r = 0; r < 2; ++r) {
@@ -231,8 +253,7 @@ TEST(Inverse, Basic_4_2) {
     }
   }
 
-  B = zero(i,j,k,l);
-  int singular = inverse(A,B);
+  int singular = inverse(A, B);
   EXPECT_EQ(singular, 0);
 
   C = B(i,j,k,l)*A(k,l,m,n);
@@ -262,30 +283,28 @@ TEST(Inverse, Singular_4_2) {
   EXPECT_NE(singular, 0);
 }
 
-
 TEST(Inverse, Basic_4_3) {
-  ttl::Index<'i'> i;
-  ttl::Index<'j'> j;
-  ttl::Index<'k'> k;
-  ttl::Index<'l'> l;
-  ttl::Index<'m'> m;
-  ttl::Index<'n'> n;
-
-  ttl::Tensor<4,3,double> A, ID;
-  ID(i,j,k,l) = ttl::identity(i,j,k,l);
+  ttl::Tensor<4,3,double> A, B, ID = identity(i,j,k,l);
   for (int q = 0; q < 3; ++q) {
     for (int r = 0; r < 3; ++r) {
       for (int s = 0; s < 3; ++s) {
         for (int t = 0; t < 3; ++t) {
-          A(q,r,s,t) = (double)(q*27+r*9+s*3+t+1);
+          A(q,r,s,t) = 27.*q + 9.*r + 3.*s + 1.*t + 1.;
         }
       }
       A(q,r,q,r) = 1.;
     }
   }
 
-  auto B = ttl::inverse(A);
-  auto C = B(i,j,k,l)*A(k,l,m,n);
+  try {
+    B = inverse(A);
+  }
+  catch (int e) {
+    std::cerr << "Matrix A found to be singular in column " << e << "\n";
+    FAIL();
+  }
+
+  auto C = force(B(i,j,k,l) * A(k,l,m,n));
 
   for (int q = 0; q < 2; ++q) {
     for (int r = 0; r < 2; ++r) {

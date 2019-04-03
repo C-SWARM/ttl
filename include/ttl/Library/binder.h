@@ -55,10 +55,28 @@ struct bind_impl<1>
   using type = std::tuple<Index<1>>;
 };
 
+/// This binds a tensor anonymously.
+///
+/// Some of the library APIs allow users to operate directly on Tensors, rather
+/// than requiring bound expressions, however the library implementations are
+/// designed to work on bound expressions.
+///
+/// This function will turn a Tensor into a bound expression, using a sequence
+/// of library-defined indices (these indices don't have useful names and, while
+/// they can match with other indices, they shouldn't be used in compound
+/// expressions).
+///
+/// @tparam           E The type of the expression we're binding (probably a
+///                     Tensor template).
+///
+/// @param            e The expression that we're binding.
+///
+/// @return             A fully bound expression.
 template <class E>
 constexpr auto bind(E&& e) {
   using namespace ttl::expressions;
-  return Bind<E,typename bind_impl<rank<E>::value>::type>(std::forward<E>(e));
+  constexpr int Rank = rank_t<E>::value;
+  return Bind<E,typename bind_impl<Rank>::type>(std::forward<E>(e));
 }
 } // namespace lib
 } // namespace ttl
