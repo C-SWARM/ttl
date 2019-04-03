@@ -61,11 +61,10 @@ static inline int
 pivot(Matrix&& A, Permutation&& perm, const int j)
 {
   // Find the maximum magnitude in column j
-  using T = std::remove_reference_t<decltype(A(0,0))>;
   using std::abs;
   using std::swap;
   auto i = j;
-  T max = abs(A(j,j));
+  auto max = abs(A(j,j));
   for (auto ii = j + 1; ii < M; ++ii) {
     if (abs(A(ii, j)) > max) {
       max = abs(A(ii, j));
