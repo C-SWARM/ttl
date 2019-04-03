@@ -105,6 +105,111 @@ struct forall_impl<M, M, D>
   }
 };
 
+template <int n, int D>
+struct forall_impl<n, n + 2, D>
+{
+  template <class Index, class Op>
+  static void op(Index index, Op&& op) {
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n+1>(index).set(j);
+        op(index);
+      }
+    }
+  }
+};
+
+template <int n, int D>
+struct forall_impl<n, n + 3, D>
+{
+  template <class Index, class Op>
+  static void op(Index index, Op&& op) {
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          op(index);
+        }
+      }
+    }
+  }
+};
+
+template <int n, int D>
+struct forall_impl<n, n + 4, D>
+{
+  template <class Index, class Op>
+  static void op(Index index, Op&& op) {
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            op(index);
+          }
+        }
+      }
+    }
+  }
+};
+
+template <int n, int D>
+struct forall_impl<n, n + 5, D>
+{
+  template <class Index, class Op>
+  static void op(Index index, Op&& op) {
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            for (int m = 0; m < D; ++m) {
+              std::get<n + 4>(index).set(m);
+              op(index);
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+template <int n, int D>
+struct forall_impl<n, n + 6, D>
+{
+  template <class Index, class Op>
+  static void op(Index index, Op&& op) {
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            for (int m = 0; m < D; ++m) {
+              std::get<n + 4>(index).set(m);
+              for (int o = 0; o < D; ++o) {
+                std::get<n + 5>(index).set(o);
+                op(index);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 /// The recursive contraction template.
 ///
 /// This template is instantiated to generate a loop for each inner dimension
