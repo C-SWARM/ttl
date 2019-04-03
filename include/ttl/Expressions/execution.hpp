@@ -215,31 +215,142 @@ struct forall_impl<n, n + 6, D>
 /// This template is instantiated to generate a loop for each inner dimension
 /// for the expression. Each loop accumulates the result of the nested loops'
 /// outputs.
-template <class E,
-          int n = std::tuple_size<outer_type<E>>::value,
-          int M = std::tuple_size<concat<outer_type<E>, inner_type<E>>>::value>
+template <int n, int M, int D>
 struct contract_impl
 {
-  static constexpr auto D = dimension<E>();
-
   template <class Index, class Op>
   static auto op(Index index, Op&& op) noexcept {
     decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
-      s += contract_impl<E, n+1>::op(index, std::forward<Op>(op));
+      s += contract_impl<n + 1, M, D>::op(index, std::forward<Op>(op));
     }
     return s;
   }
 };
 
 /// The contraction base case evaluates the lambda on the current index.
-template <class E, int M>
-struct contract_impl<E, M, M>
+template <int M, int D>
+struct contract_impl<M, M, D>
 {
   template <class Index, class Op>
   static constexpr auto op(Index index, Op&& op) noexcept {
     return op(index);
+  }
+};
+
+template <int n, int D>
+struct contract_impl<n, n + 2, D>
+{
+  template <class Index, class Op>
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        s += op(index);
+      }
+    }
+    return s;
+  }
+};
+
+template <int n, int D>
+struct contract_impl<n, n + 3, D>
+{
+  template <class Index, class Op>
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          s += op(index);
+        }
+      }
+    }
+    return s;
+  }
+};
+
+template <int n, int D>
+struct contract_impl<n, n + 4, D>
+{
+  template <class Index, class Op>
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            s += op(index);
+          }
+        }
+      }
+    }
+    return s;
+  }
+};
+
+template <int n, int D>
+struct contract_impl<n, n + 5, D>
+{
+  template <class Index, class Op>
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            for (int m = 0; m < D; ++m) {
+              std::get<n + 4>(index).set(m);
+              s += op(index);
+            }
+          }
+        }
+      }
+    }
+    return s;
+  }
+};
+
+template <int n, int D>
+struct contract_impl<n, n + 6, D>
+{
+  template <class Index, class Op>
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
+    for (int i = 0; i < D; ++i) {
+      std::get<n>(index).set(i);
+      for (int j = 0; j < D; ++j) {
+        std::get<n + 1>(index).set(j);
+        for (int k = 0; k < D; ++k) {
+          std::get<n + 2>(index).set(k);
+          for (int l = 0; l < D; ++l) {
+            std::get<n + 3>(index).set(l);
+            for (int m = 0; m < D; ++m) {
+              std::get<n + 4>(index).set(m);
+              for (int o = 0; o < D; ++o) {
+                std::get<n + 5>(index).set(o);
+                s += op(index);
+              }
+            }
+          }
+        }
+      }
+    }
+    return s;
   }
 };
 
@@ -248,9 +359,10 @@ struct contract_impl<E, M, M>
 /// the Expression's inner type.
 template <class E, class Index>
 constexpr auto extend(Index i) {
+  using std::tuple_cat;
   using Outer = outer_type<E>;
   using Inner = inner_type<E>;
-  return std::tuple_cat(transform(Outer{}, i), Inner{});
+  return tuple_cat(transform(Outer{}, i), Inner{});
 }
 } // namespace detail
 
@@ -268,7 +380,11 @@ constexpr auto extend(Index i) {
 ///                     inner loop invocations.
 template <class E, class Index, class Op>
 constexpr auto contract(Index i, Op&& op) noexcept {
-  using impl = detail::contract_impl<E>;
+  using std::tuple_size;
+  constexpr int n = tuple_size<outer_type<E>>::value;
+  constexpr int M = tuple_size<concat<outer_type<E>, inner_type<E>>>::value;
+  constexpr int D = dimension<E>();
+  using impl = detail::contract_impl<n, M, D>;
   return impl::op(detail::extend<E>(i), std::forward<Op>(op));
 }
 
