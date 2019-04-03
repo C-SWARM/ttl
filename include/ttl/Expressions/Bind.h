@@ -45,8 +45,8 @@
 
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
+#include <ttl/Expressions/execution.hpp>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/contract.h>
 #include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>

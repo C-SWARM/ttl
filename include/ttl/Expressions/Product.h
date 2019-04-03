@@ -34,8 +34,8 @@
 #ifndef TTL_EXPRESSIONS_TENSOR_PRODUCT_H
 #define TTL_EXPRESSIONS_TENSOR_PRODUCT_H
 
+#include <ttl/Expressions/execution.hpp>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/contract.h>
 #include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/promote.h>
 

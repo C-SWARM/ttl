@@ -31,8 +31,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#ifndef TTL_EXPRESSIONS_CONTRACT_H
-#define TTL_EXPRESSIONS_CONTRACT_H
+#ifndef TTL_EXPRESSIONS_EXECUTION_HPP
+#define TTL_EXPRESSIONS_EXECUTION_HPP
 
 #include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
@@ -179,4 +179,4 @@ constexpr void forall(Op&& op) noexcept {
 } // namespace expressions
 } // namespace ttl
 
-#endif // #define TTL_EXPRESSIONS_CONTRACT_H
+#endif // #define TTL_EXPRESSIONS_EXECUTION_HPP
