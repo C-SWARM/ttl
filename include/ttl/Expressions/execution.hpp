@@ -41,6 +41,9 @@
 namespace ttl {
 namespace expressions {
 namespace detail {
+template <int n>
+using int_constant = std::integral_constant<int, n>;
+
 /// The recursive template class that evaluates tensor expressions.
 ///
 /// The fundamental goal of ttl is to generate loops over tensor dimension,
@@ -62,8 +65,11 @@ namespace detail {
 /// @tparam           n The current dimension that we need to traverse.
 /// @tparam           M The total number of free indices to enumerate.
 /// @tparam           D The dimensionality of the space.
+template <class n, class M, int D>
+struct forall_impl;
+
 template <int n, int M, int D>
-struct forall_impl
+struct forall_impl<int_constant<n>, int_constant<M>, D>
 {
   /// The evaluation routine just iterates through the values of the nth
   /// dimension of the tensor, recursively calling the template.
@@ -75,9 +81,10 @@ struct forall_impl
   /// @param       op The operator we're going to evaluate for each index.
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
+    using next = forall_impl<int_constant<n + 1>, int_constant<M>, D>;
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
-      forall_impl<n + 1, M, D>::op(index, std::forward<Op>(op));
+      next::op(index, std::forward<Op>(op));
     }
   }
 };
@@ -86,7 +93,7 @@ struct forall_impl
 ///
 /// @tparam         M The total number of dimensions to enumerate.
 template <int M, int D>
-struct forall_impl<M, M, D>
+struct forall_impl<int_constant<M>, int_constant<M>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -106,7 +113,7 @@ struct forall_impl<M, M, D>
 };
 
 template <int n, int D>
-struct forall_impl<n, n + 2, D>
+struct forall_impl<int_constant<n>, int_constant<n + 2>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -121,7 +128,7 @@ struct forall_impl<n, n + 2, D>
 };
 
 template <int n, int D>
-struct forall_impl<n, n + 3, D>
+struct forall_impl<int_constant<n>, int_constant<n + 3>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -139,7 +146,7 @@ struct forall_impl<n, n + 3, D>
 };
 
 template <int n, int D>
-struct forall_impl<n, n + 4, D>
+struct forall_impl<int_constant<n>, int_constant<n + 4>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -160,7 +167,7 @@ struct forall_impl<n, n + 4, D>
 };
 
 template <int n, int D>
-struct forall_impl<n, n + 5, D>
+struct forall_impl<int_constant<n>, int_constant<n + 5>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -184,7 +191,7 @@ struct forall_impl<n, n + 5, D>
 };
 
 template <int n, int D>
-struct forall_impl<n, n + 6, D>
+struct forall_impl<int_constant<n>, int_constant<n + 6>, D>
 {
   template <class Index, class Op>
   static void op(Index index, Op&& op) {
@@ -210,41 +217,62 @@ struct forall_impl<n, n + 6, D>
   }
 };
 
+/// The dispatch routine for the forall loop.
+template <class E, class Op>
+constexpr void forall(Op&& op) {
+  using std::tuple_size;
+  using Index = outer_type<E>;
+  constexpr int n = 0;
+  constexpr int M = tuple_size<Index>::value;
+  constexpr int D = dimension<E>();
+  using impl = forall_impl<int_constant<n>, int_constant<M>, D>;
+  impl::op(Index{}, std::forward<Op>(op));
+}
+
 /// The recursive contraction template.
 ///
 /// This template is instantiated to generate a loop for each inner dimension
 /// for the expression. Each loop accumulates the result of the nested loops'
 /// outputs.
-template <int n, int M, int D>
-struct contract_impl
+///
+/// @tparam           n The starting index.
+/// @tparam           M The final index.
+/// @tparam           D The dimensionality.
+/// @tparam           T The contracted type.
+template <class n, class M, int D, class T>
+struct contract_impl;
+
+template <int n, int M, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<M>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    using next = contract_impl<int_constant<n + 1>, int_constant<M>, D, T>;
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
-      s += contract_impl<n + 1, M, D>::op(index, std::forward<Op>(op));
+      s += next::op(index, std::forward<Op>(op));
     }
     return s;
   }
 };
 
 /// The contraction base case evaluates the lambda on the current index.
-template <int M, int D>
-struct contract_impl<M, M, D>
+template <int M, int D, class T>
+struct contract_impl<int_constant<M>, int_constant<M>, D, T>
 {
   template <class Index, class Op>
-  static constexpr auto op(Index index, Op&& op) noexcept {
+  static constexpr T op(Index index, Op&& op) noexcept {
     return op(index);
   }
 };
 
-template <int n, int D>
-struct contract_impl<n, n + 2, D>
+template <int n, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<n + 2>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -256,12 +284,12 @@ struct contract_impl<n, n + 2, D>
   }
 };
 
-template <int n, int D>
-struct contract_impl<n, n + 3, D>
+template <int n, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<n + 3>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -276,12 +304,12 @@ struct contract_impl<n, n + 3, D>
   }
 };
 
-template <int n, int D>
-struct contract_impl<n, n + 4, D>
+template <int n, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<n + 4>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -299,12 +327,12 @@ struct contract_impl<n, n + 4, D>
   }
 };
 
-template <int n, int D>
-struct contract_impl<n, n + 5, D>
+template <int n, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<n + 5>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -325,12 +353,12 @@ struct contract_impl<n, n + 5, D>
   }
 };
 
-template <int n, int D>
-struct contract_impl<n, n + 6, D>
+template <int n, int D, class T>
+struct contract_impl<int_constant<n>, int_constant<n + 6>, D, T>
 {
   template <class Index, class Op>
-  static auto op(Index index, Op&& op) noexcept {
-    decltype(op(index)) s{};
+  static T op(Index index, Op&& op) noexcept {
+    T s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -354,6 +382,17 @@ struct contract_impl<n, n + 6, D>
   }
 };
 
+template <class E, class Index, class Op>
+constexpr auto contract(Index i, Op&& op) noexcept {
+  using std::tuple_size;
+  constexpr int n = tuple_size<outer_type<E>>::value;
+  constexpr int M = tuple_size<Index>::value;
+  constexpr int D = dimension<E>();
+  using T = scalar_type<E>;
+  using impl = contract_impl<int_constant<n>, int_constant<M>, D, T>;
+  return impl::op(i, std::forward<Op>(op));
+}
+
 /// Simple local utility to take an external index, select the subset of indices
 /// that appear in the Expression's outer type, and extend it with indices for
 /// the Expression's inner type.
@@ -371,6 +410,7 @@ constexpr auto extend(Index i) {
 /// template to expand the inner loops.
 ///
 /// @tparam           E The type of the expression being contracted.
+/// @tparam       Index The type of the index generated externally.
 /// @tparam          Op The type of the operation to evaluate in the inner loop.
 ///
 /// @param            i The partial index generated externally.
@@ -380,22 +420,22 @@ constexpr auto extend(Index i) {
 ///                     inner loop invocations.
 template <class E, class Index, class Op>
 constexpr auto contract(Index i, Op&& op) noexcept {
-  using std::tuple_size;
-  constexpr int n = tuple_size<outer_type<E>>::value;
-  constexpr int M = tuple_size<concat<outer_type<E>, inner_type<E>>>::value;
-  constexpr int D = dimension<E>();
-  using impl = detail::contract_impl<n, M, D>;
-  return impl::op(detail::extend<E>(i), std::forward<Op>(op));
+  return detail::contract<E>(detail::extend<E>(i), std::forward<Op>(op));
 }
 
 /// The external entry point for evaluating an expression.
 ///
+/// This simply evaluates the passed operation for all indices in the outer type
+/// of the expression.
+///
+/// @tparam           E The type of the expression being contracted.
+/// @tparam          Op The type of the operation to evaluate in the inner loop.
+///
+/// @param            i The partial index generated externally.
+/// @param           op The lambda expression to evaluate in the inner loop.
 template <class E, class Op>
 constexpr void forall(Op&& op) noexcept {
-  using Index = outer_type<E>;
-  constexpr int M = std::tuple_size<Index>::value;
-  constexpr int D = dimension<E>();
-  detail::forall_impl<0,M,D>::op(Index{}, std::forward<Op>(op));
+  detail::forall<E>(std::forward<Op>(op));
 }
 } // namespace expressions
 } // namespace ttl
