@@ -36,6 +36,8 @@
 #ifndef TTL_EXPRESSIONS_PACK_H
 #define TTL_EXPRESSIONS_PACK_H
 
+#include <ostream>
+#include <tuple>
 #include <type_traits>
 
 namespace ttl {
