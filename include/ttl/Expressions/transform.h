@@ -34,7 +34,7 @@
 #ifndef TTL_EXPRESSIONS_TRANSFORM_H
 #define TTL_EXPRESSIONS_TRANSFORM_H
 
-#include <ttl/Expressions/pack.h>
+#include <ttl/mp/index_of.hpp>
 #include <tuple>
 
 namespace ttl {
@@ -64,10 +64,10 @@ struct select
   /// This specialization finds the index of the type T in the From pack, and
   /// returns its value. We check to make sure that the index is actually
   /// found.
-  template <class From,
-            int n = index_of<T, From>::value,     // intel can't handle these in
-            int N = std::tuple_size<From>::value> // constexpr function
+  template <class From>
   static constexpr T op(const T, const From from) {
+    constexpr int n = mp::index_of<T, From>::value;
+    constexpr int N = std::tuple_size<From>::value;
     static_assert(n < N, "Index space is incompatible");
     return std::get<n>(from);
   }
@@ -92,18 +92,18 @@ template <class Index, int n = 0, int N = std::tuple_size<Index>::value>
 struct transform_impl
 {
   template <class From>
-  static constexpr auto op(const Index to, const From from) noexcept {
+  static constexpr auto op(Index to, From from) noexcept {
     return std::tuple_cat(head(std::get<n>(to), from), tail(to, from));
   }
 
  private:
   template <class From, class T>
-  static constexpr auto head(const T to, const From from) noexcept {
+  static constexpr auto head(T to, From from) noexcept {
     return std::make_tuple(select<T>::op(to, from));
   }
 
   template <class From>
-  static constexpr auto tail(const Index to, const From from) noexcept {
+  static constexpr auto tail(Index to, From from) noexcept {
     return transform_impl<Index, n+1>::op(to, from);
   }
 };
@@ -113,7 +113,7 @@ template <template <class...> class Pack, class... I, int N>
 struct transform_impl<Pack<I...>, N, N>
 {
   template <class From>
-  static constexpr auto op(const Pack<I...>, const From) noexcept {
+  static constexpr auto op(Pack<I...>, From) noexcept {
     return Pack<>{};
   }
 };
@@ -121,12 +121,12 @@ struct transform_impl<Pack<I...>, N, N>
 } // namespace detail
 
 template <class To, class From>
-constexpr To transform(const To to, const From from) noexcept {
+constexpr To transform(To to, From from) noexcept {
   return detail::transform_impl<To>::op(to, from);
 }
 
 template <class To, class From>
-constexpr To transform(const From from) noexcept {
+constexpr To transform(From from) noexcept {
   return detail::transform_impl<To>::op(To{}, from);
 }
 } // namespace expressions

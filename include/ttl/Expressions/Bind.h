@@ -42,7 +42,6 @@
 #ifndef TTL_EXPRESSIONS_TENSOR_BIND_H
 #define TTL_EXPRESSIONS_TENSOR_BIND_H
 
-
 #include <ttl/Index.h>
 #include <ttl/Tensor.h>
 #include <ttl/Expressions/execution.hpp>
@@ -50,6 +49,10 @@
 #include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
+#include <ttl/mp/duplicate.hpp>
+#include <ttl/mp/non_integer.hpp>
+#include <ttl/mp/subset.hpp>
+#include <ttl/mp/unique.hpp>
 #include <utility>
 
 namespace ttl {
@@ -70,8 +73,12 @@ class Bind;
 template <class E, class Index>
 struct traits<Bind<E, Index>> : public traits<rinse<E>>
 {
-  using outer_type = unique<non_integral<Index>>;
-  using inner_type = duplicate<non_integral<Index>>;
+ private:
+  using index_t = mp::non_integer_t<Index>;
+
+ public:
+  using outer_type = mp::unique_t<index_t>;
+  using inner_type = mp::duplicate_t<index_t>;
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
@@ -79,7 +86,7 @@ template <class E, class Index>
 class Bind : public Expression<Bind<E, Index>>
 {
   /// The Bind storage type is an expression, or a reference to a Tensor.
-  using Child = iif<is_expression_t<E>, E, E&>;
+  using Child = mp::iif_t<is_expression_t<E>::value, E, E&>;
 
  public:
   /// A Bind expression keeps a reference to the E it wraps, and a
@@ -109,7 +116,7 @@ class Bind : public Expression<Bind<E, Index>>
     static_assert(dimension_t<RHS>::value ==  N or
                   dimension_t<RHS>::value == -1,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<outer_type<Bind>, outer_type<RHS>>::value,
+    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) = rhs.eval(i);
@@ -136,7 +143,7 @@ class Bind : public Expression<Bind<E, Index>>
   Bind& operator+=(RHS&& rhs) {
     static_assert(dimension_t<RHS>::value == N,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(equivalent<outer_type<Bind>, outer_type<RHS>>::value,
+    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) += rhs.eval(i);

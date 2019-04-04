@@ -36,8 +36,9 @@
 
 #include <ttl/Expressions/execution.hpp>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/promote.h>
+#include <ttl/mp/duplicate.hpp>
+#include <ttl/mp/unique.hpp>
 
 namespace ttl {
 namespace expressions {
@@ -72,8 +73,8 @@ struct traits<Product<L, R>>
   static constexpr int dim = ((l_dim < r_dim) ? r_dim : l_dim);
 
  public:
-  using outer_type = set_xor<l_outer_type, r_outer_type>;
-  using inner_type = set_and<l_outer_type, r_outer_type>;
+  using outer_type = mp::xor_t<l_outer_type, r_outer_type>;
+  using inner_type = mp::and_t<l_outer_type, r_outer_type>;
   using scalar_type = promote<L, R>;
   using dimension = std::integral_constant<int, dim>;
   using rank = typename std::tuple_size<outer_type>::type;

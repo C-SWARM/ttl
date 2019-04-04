@@ -36,7 +36,7 @@
 
 #include <ttl/Index.h>
 #include <ttl/Expressions/Bind.h>
-#include <ttl/Expressions/pack.h>
+#include <ttl/mp/cat.hpp>
 #include <tuple>
 
 namespace ttl {
@@ -46,7 +46,7 @@ struct bind_impl
 {
   static_assert(N > 0, "Unexpected index size");
   using next = typename bind_impl<N-1>::type;
-  using type = expressions::concat<std::tuple<Index<N>>, next>;
+  using type = mp::cat_t<std::tuple<Index<N>>, next>;
 };
 
 template <>

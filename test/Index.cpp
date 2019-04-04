@@ -34,7 +34,7 @@
 #include <ttl/ttl.h>
 
 using namespace ttl;
-using namespace ttl::expressions;
+using namespace ttl::mp;
 using std::tuple;
 using std::is_same;
 
@@ -60,11 +60,11 @@ using   l_int_i = tuple<int, i>;
 using   l_i_int = tuple<i, int>;
 using l_i_int_k = tuple<i, int, k>;
 
-static_assert( equivalent<tuple<>, non_integral<tuple<int>>>::value, "failed");
+static_assert( equivalent_t<tuple<>, non_integer_t<tuple<int>>>::value, "failed");
 
-static_assert( equivalent<l_i, non_integral<l_int_i>>::value, "failed");
-static_assert( equivalent<l_i, non_integral<l_i_int>>::value, "failed");
-static_assert( equivalent<l_ik, non_integral<l_i_int_k>>::value, "failed");
+static_assert( equivalent_t<l_i,     non_integer_t<l_int_i>>::value, "failed");
+static_assert( equivalent_t<l_i,     non_integer_t<l_i_int>>::value, "failed");
+static_assert( equivalent_t<l_ik,    non_integer_t<l_i_int_k>>::value, "failed");
 
 // Test equivalency
 static_assert(  is_same< l_i,     l_i >::value, "failed");
@@ -74,21 +74,21 @@ static_assert( !is_same< l_ij,   l_ji >::value, "failed");
 static_assert(  is_same< l_ijk, l_ijk >::value, "failed");
 static_assert( !is_same< l_ijk, l_kij >::value, "failed");
 
-static_assert(  equivalent< l_i,     l_i >::value, "failed");
-static_assert( !equivalent< l_i,     l_j >::value, "failed");
-static_assert(  equivalent< l_ij,   l_ij >::value, "failed");
-static_assert(  equivalent< l_ij,   l_ji >::value, "failed");
-static_assert(  equivalent< l_ijk, l_ijk >::value, "failed");
-static_assert(  equivalent< l_ijk, l_kij >::value, "failed");
+static_assert(  equivalent_t< l_i,     l_i >::value, "failed");
+static_assert( !equivalent_t< l_i,     l_j >::value, "failed");
+static_assert(  equivalent_t< l_ij,   l_ij >::value, "failed");
+static_assert(  equivalent_t< l_ij,   l_ji >::value, "failed");
+static_assert(  equivalent_t< l_ijk, l_ijk >::value, "failed");
+static_assert(  equivalent_t< l_ijk, l_kij >::value, "failed");
 
 // Create some joined lists
-using   j_ii = concat< l_i,  l_i  >;
-using   j_ij = concat< l_i,  l_j  >;
-using   j_ji = concat< l_j,  l_i  >;
-using  j_ijk = concat< j_ij, l_k  >;
-using  j_kij = concat< l_k,  j_ij >;
-using j_ijij = concat< j_ij, j_ij >;
-using j_jiij = concat< j_ji, j_ij >;
+using   j_ii = cat_t< l_i,  l_i  >;
+using   j_ij = cat_t< l_i,  l_j  >;
+using   j_ji = cat_t< l_j,  l_i  >;
+using  j_ijk = cat_t< j_ij, l_k  >;
+using  j_kij = cat_t< l_k,  j_ij >;
+using j_ijij = cat_t< j_ij, j_ij >;
+using j_jiij = cat_t< j_ji, j_ij >;
 
 static_assert (index_of<i, j_ii>::value == 0, "failed\n");
 static_assert (index_of<i, j_ij>::value == 0, "failed\n");
@@ -106,20 +106,20 @@ static_assert( !is_same< l_ijk, j_kij >::value, "failed");
 static_assert(  is_same<j_ijij, tuple<i,j,i,j>>::value, "failed");
 static_assert(  is_same<j_jiij, tuple<j,i,i,j>>::value, "failed");
 
-static_assert(  equivalent< l_ij,  j_ij  >::value, "failed");
-static_assert(  equivalent< l_ji,  j_ij  >::value, "failed");
-static_assert(  equivalent< l_ijk, j_ijk >::value, "failed");
-static_assert(  equivalent< l_ijk, j_kij >::value, "failed");
+static_assert(  equivalent_t< l_ij,  j_ij  >::value, "failed");
+static_assert(  equivalent_t< l_ji,  j_ij  >::value, "failed");
+static_assert(  equivalent_t< l_ijk, j_ijk >::value, "failed");
+static_assert(  equivalent_t< l_ijk, j_kij >::value, "failed");
 
 // Create some intersections
-using i_empty1 = set_and< l_i,   l_j   >;
-using     i_i1 = set_and< l_i,   l_i   >;
-using     i_i2 = set_and< l_i,   j_ij  >;
-using     i_i3 = set_and< l_ji,  l_ik  >;
-using    i_ij1 = set_and< j_ij,  l_ij  >;
-using    i_ij2 = set_and< l_ij,  j_ji  >;
-using    i_ij3 = set_and< l_ij,  j_ijk >;
-using    i_ij4 = set_and< l_ijk, j_ji  >;
+using i_empty1 = and_t< l_i,   l_j   >;
+using     i_i1 = and_t< l_i,   l_i   >;
+using     i_i2 = and_t< l_i,   j_ij  >;
+using     i_i3 = and_t< l_ji,  l_ik  >;
+using    i_ij1 = and_t< j_ij,  l_ij  >;
+using    i_ij2 = and_t< l_ij,  j_ji  >;
+using    i_ij3 = and_t< l_ij,  j_ijk >;
+using    i_ij4 = and_t< l_ijk, j_ji  >;
 
 // Check intersections
 static_assert( is_same< i_empty1, l_empty >::value, "failed");
@@ -131,12 +131,12 @@ static_assert( is_same< i_ij3, l_ij >::value, "failed");
 static_assert( is_same< i_ij4, l_ij >::value, "failed");
 
 // Create some symmetric differences
-using x_empty1 = set_xor< l_i,   l_i   >;
-using x_empty2 = set_xor< l_ij,  l_ji  >;
-using x_empty3 = set_xor< l_ijk, j_kij >;
-using    x_ij1 = set_xor< l_i,   l_j   >;
-using    x_jk1 = set_xor< l_ji,  l_ik  >;
-using    x_jk2 = set_xor< l_ijk, l_i   >;
+using x_empty1 = xor_t< l_i,   l_i   >;
+using x_empty2 = xor_t< l_ij,  l_ji  >;
+using x_empty3 = xor_t< l_ijk, j_kij >;
+using    x_ij1 = xor_t< l_i,   l_j   >;
+using    x_jk1 = xor_t< l_ji,  l_ik  >;
+using    x_jk2 = xor_t< l_ijk, l_i   >;
 
 // Check symmetric differences
 static_assert( is_same< x_empty1, l_empty >::value, "failed");

@@ -51,55 +51,65 @@
 
 #include <ttl/Expressions/Bind.h>
 #include <ttl/Expressions/DeltaOp.h>
-#include <ttl/Expressions/pack.h>
-#include <type_traits>
 
 namespace ttl {
-namespace expressions {
-namespace detail {
+namespace mp {
+template <class T>
+struct list {
+  using car = std::tuple<>;
+  using cdr = std::tuple<>;
+};
 
-template <class Pack, int n = 0, int N = std::tuple_size<Pack>::value>
-struct split
-{
-  using next = split<cdr<Pack>, n+2, N>;
-  using lhs = concat<car<Pack>, typename next::lhs>;
+template <class T0, class... T>
+struct list<std::tuple<T0, T...>> {
+  using car = std::tuple<T0>;
+  using cdr = std::tuple<T...>;
+};
+
+template <class T>
+using car = typename list<T>::car;
+
+template <class T>
+using cdr = typename list<T>::cdr;
+
+template <class T, size_t n>
+struct take_n {
+  using next = take_n<cdr<T>, n - 1>;
+  using lhs = cat_t<car<T>, typename next::lhs>;
   using rhs = typename next::rhs;
 };
 
-template <int N, template <class...> class Pack, class... LHS>
-struct split<Pack<LHS...>, N, N>
-{
-  using lhs = Pack<>;
-  using rhs = Pack<LHS...>;
+template <class T>
+struct take_n<T, 0u> {
+  using lhs = std::tuple<>;
+  using rhs = T;
 };
 
-template <class LHS, class RHS>
-struct merge
-{
-  using next = merge<cdr<LHS>,cdr<RHS>>;
-  using first = concat<car<LHS>,car<RHS>>;
-  using type = concat<first, typename next::type>;
+template <class T, class U>
+struct merge {
+  using  next = merge<cdr<T>, cdr<U>>;
+  using first = cat_t<car<T>, car<U>>;
+  using  type = cat_t<first, typename next::type>;
 };
 
-template <template <class...> class Pack>
-struct merge<Pack<>, Pack<>>
-{
-  using type = Pack<>;
+template <>
+struct merge<std::tuple<>, std::tuple<>> {
+  using type = std::tuple<>;
 };
 
-template <class Pack>
-struct shuffle
-{
-  using lhs = typename split<Pack>::lhs;
-  using rhs = typename split<Pack>::rhs;
-  using type = typename merge<lhs,rhs>::type;
+template <class T>
+struct shuffle {
+  using split = take_n<T, std::tuple_size<T>::value / 2>;
+  using   lhs = typename split::lhs;
+  using   rhs = typename split::rhs;
+  using  type = typename merge<lhs, rhs>::type;
 };
 
-template <class... I>
-using shuffle_t = typename shuffle<std::tuple<I...>>::type;
+template <class T>
+using shuffle_t = typename shuffle<T>::type;
+} // namespace mp
 
-} // namespace detail
-
+namespace expressions {
 template <int D>
 constexpr auto identity(std::tuple<>) {
   return DeltaOp<D, std::tuple<>>();
@@ -112,11 +122,11 @@ constexpr auto identity(std::tuple<T0, T1, T...>) {
 }
 } // namespace expressions
 
-template <int D = -1, class... I>
-constexpr auto identity(I...) {
-  static_assert(sizeof...(I) % 2 == 0, "The identity must have even rank.");
-  using type = expressions::detail::shuffle_t<I...>;
-  return expressions::identity<D>(type{}).to(std::tuple<I...>{});
+template <int D = -1, class... Index>
+constexpr auto identity(Index...) {
+  static_assert(sizeof...(Index) % 2 == 0, "The identity must have even rank.");
+  using type = mp::shuffle_t<std::tuple<Index...>>;
+  return expressions::identity<D>(type{}).to(std::tuple<Index...>{});
 }
 } // namespace ttl
 

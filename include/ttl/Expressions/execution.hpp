@@ -34,13 +34,11 @@
 #ifndef TTL_EXPRESSIONS_EXECUTION_HPP
 #define TTL_EXPRESSIONS_EXECUTION_HPP
 
-#include <ttl/Expressions/pack.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/transform.h>
 
 namespace ttl {
 namespace expressions {
-namespace detail {
 template <int n>
 using int_constant = std::integral_constant<int, n>;
 
@@ -217,18 +215,6 @@ struct forall_impl<int_constant<n>, int_constant<n + 6>, D>
   }
 };
 
-/// The dispatch routine for the forall loop.
-template <class E, class Op>
-constexpr void forall(Op&& op) {
-  using std::tuple_size;
-  using Index = outer_type<E>;
-  constexpr int n = 0;
-  constexpr int M = tuple_size<Index>::value;
-  constexpr int D = dimension<E>();
-  using impl = forall_impl<int_constant<n>, int_constant<M>, D>;
-  impl::op(Index{}, std::forward<Op>(op));
-}
-
 /// The recursive contraction template.
 ///
 /// This template is instantiated to generate a loop for each inner dimension
@@ -383,7 +369,7 @@ struct contract_impl<int_constant<n>, int_constant<n + 6>, D, T>
 };
 
 template <class E, class Index, class Op>
-constexpr auto contract(Index i, Op&& op) noexcept {
+constexpr auto contractExtended(Index i, Op&& op) noexcept {
   using std::tuple_size;
   constexpr int n = tuple_size<outer_type<E>>::value;
   constexpr int M = tuple_size<Index>::value;
@@ -403,7 +389,6 @@ constexpr auto extend(Index i) {
   using Inner = inner_type<E>;
   return tuple_cat(transform(Outer{}, i), Inner{});
 }
-} // namespace detail
 
 /// The external entry point for contraction takes the external index set and
 /// the lambda to apply in the inner loop, and instantiates the recursive
@@ -420,7 +405,7 @@ constexpr auto extend(Index i) {
 ///                     inner loop invocations.
 template <class E, class Index, class Op>
 constexpr auto contract(Index i, Op&& op) noexcept {
-  return detail::contract<E>(detail::extend<E>(i), std::forward<Op>(op));
+  return contractExtended<E>(extend<E>(i), std::forward<Op>(op));
 }
 
 /// The external entry point for evaluating an expression.
@@ -435,7 +420,13 @@ constexpr auto contract(Index i, Op&& op) noexcept {
 /// @param           op The lambda expression to evaluate in the inner loop.
 template <class E, class Op>
 constexpr void forall(Op&& op) noexcept {
-  detail::forall<E>(std::forward<Op>(op));
+  using std::tuple_size;
+  using Index = outer_type<E>;
+  constexpr int n = 0;
+  constexpr int M = tuple_size<Index>::value;
+  constexpr int D = dimension<E>();
+  using impl = forall_impl<int_constant<n>, int_constant<M>, D>;
+  impl::op(Index{}, std::forward<Op>(op));
 }
 } // namespace expressions
 } // namespace ttl
