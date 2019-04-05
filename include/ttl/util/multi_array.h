@@ -62,7 +62,9 @@ struct multi_array {
 
 template <int D, class Storage, class T>
 struct multi_array<0, D, Storage, T> {
-  constexpr multi_array(size_t n, Storage data) noexcept : data_(data(n)) {
+  constexpr multi_array(size_t n, Storage data) noexcept
+      : data_(data.get(n))
+  {
   }
 
   constexpr auto operator=(std::remove_reference_t<T> rhs) noexcept {
@@ -87,7 +89,7 @@ struct multi_array<0, D, Storage, T> {
 
 template <int R, int D, class Storage>
 constexpr auto make_multi_array(Storage&& data) {
-  using T = decltype(data(0));
+  using T = decltype(data.get(0));
   return multi_array<R, D, Storage, T>{ 0, std::forward<Storage>(data) };
 }
 } // namespace util

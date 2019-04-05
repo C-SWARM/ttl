@@ -56,17 +56,18 @@ namespace ttl {
 /// @tparam      Scalar The tensor's scalar storage (only used explicitly when
 ///                     casting to the derived tensor type).
 template <int Rank, int Dimension, class Scalar>
-class Tensor
+class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimension, Rank)>
 {
  public:
+  /// The size is the number of scalars in the tensor.
+  static constexpr size_t size() {
+    return util::pow(Dimension, Rank);
+  }
+
   static constexpr int R = Rank;
   static constexpr int D = Dimension;
   using T = Scalar;
-
-  /// The size is the number of scalars in the tensor.
-  static constexpr size_t size() {
-    return util::pow(D, R);
-  }
+  using Storage = StackStorage<std::remove_const_t<T>, size()>;
 
   /// Standard default constructor.
   ///
@@ -83,11 +84,12 @@ class Tensor
   /// @code
   ///
   /// @param       list The initializer list for the tensor.
-  Tensor(std::initializer_list<T> list) noexcept {
+  Tensor(std::initializer_list<T> list) noexcept
+  {
     using std::begin;
     std::size_t min = std::min(size(), list.size());
-    auto p = std::copy_n(list.begin(), min, begin(data_)); // copy prefix
-    std::fill_n(p, size() - min, 0);                       // 0-fill suffix
+    auto p = std::copy_n(list.begin(), min, Storage::begin()); // copy prefix
+    std::fill_n(p, size() - min, 0);                           // 0-fill suffix
   }
 
   /// Allow initialization from tensors of compatible type.
@@ -111,7 +113,7 @@ class Tensor
   template <class S>
   Tensor(const Tensor<R,D,S>& rhs) noexcept {
     using std::begin;
-    std::copy_n(begin(rhs), size(), begin(data_));
+    std::copy_n(begin(rhs), size(), Storage::begin());
   }
 
   /// Allow initialization from tensors of compatible type.
@@ -132,7 +134,7 @@ class Tensor
   template <class S>
   Tensor(Tensor<R,D,S>&& rhs) noexcept {
     using std::begin;
-    std::copy_n(begin(std::move(rhs)), size(), begin(data_));
+    std::copy_n(begin(std::move(rhs)), size(), Storage::begin());
   }
 
   /// Allow initialization from expressions of compatible type.
@@ -210,34 +212,8 @@ class Tensor
   template <class S>
   Tensor& fill(S scalar) noexcept {
     using std::begin;
-    std::fill_n(begin(data_), size(), scalar);
+    std::fill_n(Storage::begin(), size(), scalar);
     return *this;
-  }
-
-  /// Direct linear indexing into the tensor.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> A;
-  ///   int i = A.get(0);
-  /// @code
-  ///
-  /// @param          i The index to access.
-  /// @returns          The scalar value at @p i.
-  constexpr const auto get(int i) const noexcept {
-    return data_(i);
-  }
-
-  /// Direct linear indexing into the tensor.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> A;
-  ///   A.get(0) = 42;
-  /// @code
-  ///
-  /// @param          i The index to access.
-  /// @returns          A reference to the scalar value at @p i.
-  constexpr auto& get(int i) noexcept {
-    return data_(i);
   }
 
   /// Multidimensional indexing into the tensor, used during evaluation.
@@ -255,7 +231,7 @@ class Tensor
   constexpr const auto eval(Index index) const noexcept {
     using NIndex = std::tuple_size<Index>;
     static_assert(R == NIndex::value, "Index size does not match tensor rank");
-    return data_(util::linearize<D>(index));
+    return Storage::get(util::linearize<D>(index));
   }
 
   /// Multidimensional indexing into the tensor, used during evaluation.
@@ -273,7 +249,7 @@ class Tensor
   template <class Index, int N = std::tuple_size<Index>::value>
   constexpr auto& eval(Index index) noexcept {
     static_assert(R == N, "Index size does not match tensor rank");
-    return data_(util::linearize<D>(index));
+    return Storage::get(util::linearize<D>(index));
   }
 
   /// Bind a Bind expression to a tensor.
@@ -341,7 +317,7 @@ class Tensor
   /// @returns          An object suitable for further indexing or use in scalar
   ///                   contexts if it's totally indexed.
   constexpr auto operator[](int i) const noexcept {
-    return util::make_multi_array<R,D>(data_)[i];
+    return util::make_multi_array<R,D>(*this)[i];
   }
 
   /// Provide multidimensional array notation for direct element access.
@@ -351,27 +327,7 @@ class Tensor
   /// @returns          An object suitable for further indexing or use in scalar
   ///                   contexts if it's totally indexed.
   constexpr auto operator[](int i) noexcept {
-    return util::make_multi_array<R,D>(data_)[i];
-  }
-
-  /// Provide a sequential iterator to the underlying storage.
-  constexpr auto begin() const noexcept {
-    return std::begin(data_);
-  }
-
-  /// Provide a sequential iterator to the underlying storage.
-  constexpr auto begin() noexcept {
-    return std::begin(data_);
-  }
-
-  /// Provide a sequential iterator to the underlying storage.
-  constexpr auto end() const noexcept {
-    return std::end(data_);
-  }
-
-  /// Provide a sequential iterator to the underlying storage.
-  constexpr auto end() noexcept {
-    return std::end(data_);
+    return util::make_multi_array<R,D>(*this)[i];
   }
 
  private:
@@ -383,8 +339,6 @@ class Tensor
     make_bind(*this, outer_type<E>{}) = std::forward<E>(rhs);
     return *this;
   }
-
-  StackStorage<std::remove_const_t<T>, size()> data_;
 };
 
 /// The tensor specialization for external storage.

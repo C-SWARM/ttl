@@ -8,14 +8,6 @@ class StackStorage {
  public:
   using T = Scalar;
 
-  constexpr const T& operator()(size_t i) const noexcept {
-    return data_[i];
-  }
-
-  constexpr T& operator()(size_t i) noexcept {
-    return data_[i];
-  }
-
   constexpr auto begin() const noexcept {
     return data_.begin();
   }
@@ -30,6 +22,32 @@ class StackStorage {
 
   constexpr auto end() noexcept {
     return data_.end();
+  }
+
+  /// Direct linear indexing into the storage.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A;
+  ///   int i = A.get(0);
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          The scalar value at @p i.
+  constexpr const T& get(size_t i) const noexcept {
+    return data_[i];
+  }
+
+  /// Direct linear indexing into the storage.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A;
+  ///   int i = A.get(0);
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          The scalar value at @p i.
+  constexpr T& get(size_t i) noexcept {
+    return data_[i];
   }
 
  private:
