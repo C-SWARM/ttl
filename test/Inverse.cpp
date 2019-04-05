@@ -137,26 +137,26 @@ TEST(Inverse, Singular_2_3) {
   EXPECT_NE(singular, 0);
 }
 
-TEST(Inverse, Extern_2_3) {
-  double a[9] = {1, 2, 3,
-                 4, 5, 6,
-                 7, 8, 10};
-  const Tensor<2,3,double*> A(a);
-  auto B = inverse(A);
+// TEST(Inverse, Extern_2_3) {
+//   double a[9] = {1, 2, 3,
+//                  4, 5, 6,
+//                  7, 8, 10};
+//   const Tensor<2,3,double*> A(a);
+//   auto B = inverse(A);
 
-  Tensor<2,3,double> C = B(i,j)*A(j,k);
-  Tensor<2,3,double> ID = identity(i,j);
+//   Tensor<2,3,double> C = B(i,j)*A(j,k);
+//   Tensor<2,3,double> ID = identity(i,j);
 
-  EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
-  EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
-  EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
-  EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
-  EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
-  EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
-  EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
-  EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
-  EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
-}
+//   EXPECT_NEAR(C(0,0), ID(0,0), 1e-14);
+//   EXPECT_NEAR(C(0,1), ID(0,1), 1e-14);
+//   EXPECT_NEAR(C(0,2), ID(0,2), 1e-14);
+//   EXPECT_NEAR(C(1,0), ID(1,0), 1e-14);
+//   EXPECT_NEAR(C(1,1), ID(1,1), 1e-14);
+//   EXPECT_NEAR(C(1,2), ID(1,2), 1e-14);
+//   EXPECT_NEAR(C(2,0), ID(2,0), 1e-14);
+//   EXPECT_NEAR(C(2,1), ID(2,1), 1e-14);
+//   EXPECT_NEAR(C(2,2), ID(2,2), 1e-14);
+// }
 
 TEST(Inverse, RValue_2_3) {
   const Tensor<2,3,double> A = Tensor<2,3,double>{1, 2, 3, 4, 5, 6, 7, 8, 10};

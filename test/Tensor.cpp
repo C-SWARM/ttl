@@ -60,12 +60,12 @@ TEST(Tensor, ArrayIndexing) {
   EXPECT_EQ(A[1], 1.0);
 }
 
-TEST(Tensor, ExternArrayIndexing) {
-  double a[2] = {0.0, 1.0};
-  ttl::Tensor<1, 2, double*> A{a};
-  EXPECT_EQ(A[0], 0.0);
-  EXPECT_EQ(A[1], 1.0);
-}
+// TEST(Tensor, ExternArrayIndexing) {
+//   double a[2] = {0.0, 1.0};
+//   ttl::Tensor<1, 2, double*> A{a};
+//   EXPECT_EQ(A[0], 0.0);
+//   EXPECT_EQ(A[1], 1.0);
+// }
 
 TEST(Tensor, ConstArrayIndexing) {
   const ttl::Tensor<1, 2, double> A = {0.0, 1.0};
@@ -430,232 +430,232 @@ TEST(Tensor, FillWiden) {
   EXPECT_EQ(A[1][1], 2.0);
 }
 
-TEST(ExternalTensor, Ctor) {
-  int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, int*> A(a);
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
+// TEST(ExternalTensor, Ctor) {
+//   int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, int*> A(a);
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
 
-  ttl::Tensor<2, 2, const int*> B(a);
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
+//   ttl::Tensor<2, 2, const int*> B(a);
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
 
-  const ttl::Tensor<2, 2, int*> C(a);
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
+//   const ttl::Tensor<2, 2, int*> C(a);
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
 
-  const ttl::Tensor<2, 2, const int*> D(a);
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+//   const ttl::Tensor<2, 2, const int*> D(a);
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(Tensor, CtorList) {
-  int a[4];
-  ttl::Tensor<2, 2, int*> {a, {0, 1, 2, 3}};
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(Tensor, CtorList) {
+//   int a[4];
+//   ttl::Tensor<2, 2, int*> {a, {0, 1, 2, 3}};
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(ExternalTensor, CtorPointer) {
-  int a[8] = {0,1,2,3,4,5,6,7};
-  ttl::Tensor<2, 2, int*> A(&a[2]);
-  EXPECT_EQ(A[0][0], 2);
-  EXPECT_EQ(A[0][1], 3);
-  EXPECT_EQ(A[1][0], 4);
-  EXPECT_EQ(A[1][1], 5);
-}
+// TEST(ExternalTensor, CtorPointer) {
+//   int a[8] = {0,1,2,3,4,5,6,7};
+//   ttl::Tensor<2, 2, int*> A(&a[2]);
+//   EXPECT_EQ(A[0][0], 2);
+//   EXPECT_EQ(A[0][1], 3);
+//   EXPECT_EQ(A[1][0], 4);
+//   EXPECT_EQ(A[1][1], 5);
+// }
 
-TEST(ExternalTensor, CtorConst) {
-  const int a[4] = {0,1,2,3};
-  ttl::Tensor<2,2,const int*> A(a);
-  const ttl::Tensor<2,2,const int*> B(a);
-}
+// TEST(ExternalTensor, CtorConst) {
+//   const int a[4] = {0,1,2,3};
+//   ttl::Tensor<2,2,const int*> A(a);
+//   const ttl::Tensor<2,2,const int*> B(a);
+// }
 
-TEST(ExternalTensor, ArrayIndexing) {
-  double a[4];
-  ttl::Tensor<2, 2, double*> A(a);
-  A[0][0] = 0.0;
-  A[0][1] = 1.0;
-  A[1][0] = E;
-  A[1][1] = PI;
-  EXPECT_EQ(a[0], 0.0);
-  EXPECT_EQ(a[1], 1.0);
-  EXPECT_EQ(a[2], E);
-  EXPECT_EQ(a[3], PI);
-}
+// TEST(ExternalTensor, ArrayIndexing) {
+//   double a[4];
+//   ttl::Tensor<2, 2, double*> A(a);
+//   A[0][0] = 0.0;
+//   A[0][1] = 1.0;
+//   A[1][0] = E;
+//   A[1][1] = PI;
+//   EXPECT_EQ(a[0], 0.0);
+//   EXPECT_EQ(a[1], 1.0);
+//   EXPECT_EQ(a[2], E);
+//   EXPECT_EQ(a[3], PI);
+// }
 
-TEST(ExternalTensor, CopyCtor) {
-  int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, int*> A(a);
-  ttl::Tensor<2, 2, int*> B = A;
-  EXPECT_EQ(B[0][0], a[0]);
-  EXPECT_EQ(B[0][1], a[1]);
-  EXPECT_EQ(B[1][0], a[2]);
-  EXPECT_EQ(B[1][1], a[3]);
-}
+// TEST(ExternalTensor, CopyCtor) {
+//   int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, int*> A(a);
+//   ttl::Tensor<2, 2, int*> B = A;
+//   EXPECT_EQ(B[0][0], a[0]);
+//   EXPECT_EQ(B[0][1], a[1]);
+//   EXPECT_EQ(B[1][0], a[2]);
+//   EXPECT_EQ(B[1][1], a[3]);
+// }
 
-TEST(ExternalTensor, CopyCtorConst) {
-  const int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, const int*> A(a);
-  ttl::Tensor<2, 2, const int*> B = A;
-  EXPECT_EQ(B[0][0], a[0]);
-  EXPECT_EQ(B[0][1], a[1]);
-  EXPECT_EQ(B[1][0], a[2]);
-  EXPECT_EQ(B[1][1], a[3]);
+// TEST(ExternalTensor, CopyCtorConst) {
+//   const int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, const int*> A(a);
+//   ttl::Tensor<2, 2, const int*> B = A;
+//   EXPECT_EQ(B[0][0], a[0]);
+//   EXPECT_EQ(B[0][1], a[1]);
+//   EXPECT_EQ(B[1][0], a[2]);
+//   EXPECT_EQ(B[1][1], a[3]);
 
-  const ttl::Tensor<2, 2, const int*> C(a);
-  const ttl::Tensor<2, 2, const int*> D = C;
-  EXPECT_EQ(D[0][0], a[0]);
-  EXPECT_EQ(D[0][1], a[1]);
-  EXPECT_EQ(D[1][0], a[2]);
-  EXPECT_EQ(D[1][1], a[3]);
-}
+//   const ttl::Tensor<2, 2, const int*> C(a);
+//   const ttl::Tensor<2, 2, const int*> D = C;
+//   EXPECT_EQ(D[0][0], a[0]);
+//   EXPECT_EQ(D[0][1], a[1]);
+//   EXPECT_EQ(D[1][0], a[2]);
+//   EXPECT_EQ(D[1][1], a[3]);
+// }
 
-TEST(ExternalTensor, MoveCtor) {
-  int a[4];
-  ttl::Tensor<2, 2, int*> A = ttl::Tensor<2, 2, int*>(a);
-  A[0][0] = 0;
-  A[0][1] = 1;
-  A[1][0] = 2;
-  A[1][1] = 3;
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(ExternalTensor, MoveCtor) {
+//   int a[4];
+//   ttl::Tensor<2, 2, int*> A = ttl::Tensor<2, 2, int*>(a);
+//   A[0][0] = 0;
+//   A[0][1] = 1;
+//   A[1][0] = 2;
+//   A[1][1] = 3;
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(Tensor, CopyCtorExternal) {
-  const int a[4] = {0,1,2,3};
-  const ttl::Tensor<2, 2, const int*> A(a);
-  ttl::Tensor<2, 2, int> B = A;
-  B[1][1] = 0;
-  EXPECT_EQ(B[0][0], 0);
-  EXPECT_EQ(B[0][1], 1);
-  EXPECT_EQ(B[1][0], 2);
-  EXPECT_EQ(B[1][1], 0);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(Tensor, CopyCtorExternal) {
+//   const int a[4] = {0,1,2,3};
+//   const ttl::Tensor<2, 2, const int*> A(a);
+//   ttl::Tensor<2, 2, int> B = A;
+//   B[1][1] = 0;
+//   EXPECT_EQ(B[0][0], 0);
+//   EXPECT_EQ(B[0][1], 1);
+//   EXPECT_EQ(B[1][0], 2);
+//   EXPECT_EQ(B[1][1], 0);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(Tensor, MoveCtorExternal) {
-  int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int*>(a);
-  A[0][0] = 0;
-  A[0][1] = 1;
-  A[1][0] = 2;
-  A[1][1] = 3;
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(Tensor, MoveCtorExternal) {
+//   int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int*>(a);
+//   A[0][0] = 0;
+//   A[0][1] = 1;
+//   A[1][0] = 2;
+//   A[1][1] = 3;
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(Tensor, AssignExternal) {
-  const int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, const int*> A(a);
-  ttl::Tensor<2, 2, int> B;
-  B = A;
-  B[1][1] = 0;
-  EXPECT_EQ(B[0][0], 0);
-  EXPECT_EQ(B[0][1], 1);
-  EXPECT_EQ(B[1][0], 2);
-  EXPECT_EQ(B[1][1], 0);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(Tensor, AssignExternal) {
+//   const int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, const int*> A(a);
+//   ttl::Tensor<2, 2, int> B;
+//   B = A;
+//   B[1][1] = 0;
+//   EXPECT_EQ(B[0][0], 0);
+//   EXPECT_EQ(B[0][1], 1);
+//   EXPECT_EQ(B[1][0], 2);
+//   EXPECT_EQ(B[1][1], 0);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(Tensor, MoveExternal) {
-  int a[4] = {0,1,2,3};
-  ttl::Tensor<2, 2, int> A;
-  A = ttl::Tensor<2, 2, int*>(a);
-  A[0][0] = 0;
-  A[0][1] = 1;
-  A[1][0] = 2;
-  A[1][1] = 3;
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(Tensor, MoveExternal) {
+//   int a[4] = {0,1,2,3};
+//   ttl::Tensor<2, 2, int> A;
+//   A = ttl::Tensor<2, 2, int*>(a);
+//   A[0][0] = 0;
+//   A[0][1] = 1;
+//   A[1][0] = 2;
+//   A[1][1] = 3;
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(ExternalTensor, Assign) {
-  int a[4];
-  ttl::Tensor<2, 2, int*> A(a);
-  A = {0,1,2,3};
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(ExternalTensor, Assign) {
+//   int a[4];
+//   ttl::Tensor<2, 2, int*> A(a);
+//   A = {0,1,2,3};
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(ExternalTensor, AssignZeroSuffix) {
-  int a[4];
-  ttl::Tensor<2, 2, int*> A(a);
-  A = {0, 1, 2};
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 0);
-}
+// TEST(ExternalTensor, AssignZeroSuffix) {
+//   int a[4];
+//   ttl::Tensor<2, 2, int*> A(a);
+//   A = {0, 1, 2};
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 0);
+// }
 
-TEST(ExternalTensor, AssignIgnoreOverflow) {
-  int a[8] = {};
-  ttl::Tensor<2, 2, int*> A(a);
-  A = {0, 1, 2, 3, 4, 5, 6, 7};
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-  EXPECT_EQ(a[4], 0);
-  EXPECT_EQ(a[5], 0);
-  EXPECT_EQ(a[6], 0);
-  EXPECT_EQ(a[7], 0);
-}
+// TEST(ExternalTensor, AssignIgnoreOverflow) {
+//   int a[8] = {};
+//   ttl::Tensor<2, 2, int*> A(a);
+//   A = {0, 1, 2, 3, 4, 5, 6, 7};
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+//   EXPECT_EQ(a[4], 0);
+//   EXPECT_EQ(a[5], 0);
+//   EXPECT_EQ(a[6], 0);
+//   EXPECT_EQ(a[7], 0);
+// }
 
-TEST(ExternalTensor, AssignInternal) {
-  ttl::Tensor<2, 2, int> B = {0,1,2,3};
-  int a[4] ;
-  ttl::Tensor<2, 2, int*> A(a);
-  A = B;
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(ExternalTensor, AssignInternal) {
+//   ttl::Tensor<2, 2, int> B = {0,1,2,3};
+//   int a[4] ;
+//   ttl::Tensor<2, 2, int*> A(a);
+//   A = B;
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(ExternalTensor, MoveInternal) {
-  int a[4];
-  ttl::Tensor<2, 2, int*> A(a);
-  A = ttl::Tensor<2, 2, int>{0,1,2,3};
-  EXPECT_EQ(a[0], 0);
-  EXPECT_EQ(a[1], 1);
-  EXPECT_EQ(a[2], 2);
-  EXPECT_EQ(a[3], 3);
-}
+// TEST(ExternalTensor, MoveInternal) {
+//   int a[4];
+//   ttl::Tensor<2, 2, int*> A(a);
+//   A = ttl::Tensor<2, 2, int>{0,1,2,3};
+//   EXPECT_EQ(a[0], 0);
+//   EXPECT_EQ(a[1], 1);
+//   EXPECT_EQ(a[2], 2);
+//   EXPECT_EQ(a[3], 3);
+// }
 
-TEST(ExternalTensor, Fill) {
-  double a[4];
-  ttl::Tensor<2, 2, double*> A(a);
-  A.fill(E);
-  EXPECT_EQ(a[0], E);
-  EXPECT_EQ(a[1], E);
-  EXPECT_EQ(a[2], E);
-  EXPECT_EQ(a[3], E);
-}
+// TEST(ExternalTensor, Fill) {
+//   double a[4];
+//   ttl::Tensor<2, 2, double*> A(a);
+//   A.fill(E);
+//   EXPECT_EQ(a[0], E);
+//   EXPECT_EQ(a[1], E);
+//   EXPECT_EQ(a[2], E);
+//   EXPECT_EQ(a[3], E);
+// }
 
-TEST(ExternalTensor, FillRvalue) {
-  double a[4];
-  ttl::Tensor<2, 2, double*>(a).fill(E);
-  EXPECT_EQ(a[0], E);
-  EXPECT_EQ(a[1], E);
-  EXPECT_EQ(a[2], E);
-  EXPECT_EQ(a[3], E);
-}
+// TEST(ExternalTensor, FillRvalue) {
+//   double a[4];
+//   ttl::Tensor<2, 2, double*>(a).fill(E);
+//   EXPECT_EQ(a[0], E);
+//   EXPECT_EQ(a[1], E);
+//   EXPECT_EQ(a[2], E);
+//   EXPECT_EQ(a[3], E);
+// }

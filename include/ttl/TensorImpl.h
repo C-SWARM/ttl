@@ -404,265 +404,265 @@ class Tensor : public TensorBase<R,D,S>
 /// During construction this specialization captures a reference to external
 /// storage, and then tries to provide the same value semantics as the basic
 /// tensor class.
-template <int R, int D, class S>
-class Tensor<R,D,S*> : public TensorBase<R,D,S*>
-{
-  static constexpr int Size = util::pow(D,R);
+// template <int R, int D, class S>
+// class Tensor<R,D,S*> : public TensorBase<R,D,S*>
+// {
+//   static constexpr int Size = util::pow(D,R);
 
- public:
-  /// No default construction (we _must_ have external space)
-  constexpr Tensor() noexcept = delete;
+//  public:
+//   /// No default construction (we _must_ have external space)
+//   constexpr Tensor() noexcept = delete;
 
-  /// Copy and move constructors just capture the same external buffer.
-  constexpr Tensor(const Tensor&) noexcept = default;
-  constexpr Tensor(Tensor&&) noexcept = default;
+//   /// Copy and move constructors just capture the same external buffer.
+//   constexpr Tensor(const Tensor&) noexcept = default;
+//   constexpr Tensor(Tensor&&) noexcept = default;
 
-  /// Initialize the tensor with an external buffer of data.
-  ///
-  /// This constructor captures a reference to a buffer of the right type and
-  /// size.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,int*> A(a);
-  ///   Tensor<1,4,int*> A(a);
-  ///   Tensor<2,2,const int*> A(a);
-  /// @code
-  ///
-  /// @param       data The external buffer.
-  Tensor(S (*data)[Size]) : data(data) {
-  }
+//   /// Initialize the tensor with an external buffer of data.
+//   ///
+//   /// This constructor captures a reference to a buffer of the right type and
+//   /// size.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,int*> A(a);
+//   ///   Tensor<1,4,int*> A(a);
+//   ///   Tensor<2,2,const int*> A(a);
+//   /// @code
+//   ///
+//   /// @param       data The external buffer.
+//   Tensor(S (*data)[Size]) : data(data) {
+//   }
 
-  /// Allow a simple pointer to be used as the external buffer.
-  ///
-  /// This constructor interprets the pointer as the right sized buffer.
-  ///
-  /// @code
-  ///   int a[8];
-  ///   Tensor<2,2,int*> A(&a[4]);
-  /// @code
-  ///
-  /// @param       data The external buffer.
-  Tensor(S* data) : Tensor(reinterpret_cast<S(*)[Size]>(data)) {
-  }
+//   /// Allow a simple pointer to be used as the external buffer.
+//   ///
+//   /// This constructor interprets the pointer as the right sized buffer.
+//   ///
+//   /// @code
+//   ///   int a[8];
+//   ///   Tensor<2,2,int*> A(&a[4]);
+//   /// @code
+//   ///
+//   /// @param       data The external buffer.
+//   Tensor(S* data) : Tensor(reinterpret_cast<S(*)[Size]>(data)) {
+//   }
 
-  /// Copy construction makes the new tensor use the same buffer as the rhs.
-  ///
-  /// This uses built in type promotion rules to ensure that a pointer to the @p
-  /// T type is compatible with a pointer to the @p S type. We expect this to
-  /// only work for cv types.
-  ///
-  /// This will only match external tensor types. It is not possible to
-  /// initialize an external tensor with an internal tensor.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,int*> A(a);
-  ///   Tensor<2,2,const int*> B = A;
-  /// @code
-  ///
-  /// @tparam       T The pointed to scalar type for the right-hand-side.
-  /// @param      rhs The right hand side tensor.
-  template <class T>
-  Tensor(const Tensor<R,D,T*>& rhs) noexcept : data(rhs.data) {
-  }
+//   /// Copy construction makes the new tensor use the same buffer as the rhs.
+//   ///
+//   /// This uses built in type promotion rules to ensure that a pointer to the @p
+//   /// T type is compatible with a pointer to the @p S type. We expect this to
+//   /// only work for cv types.
+//   ///
+//   /// This will only match external tensor types. It is not possible to
+//   /// initialize an external tensor with an internal tensor.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,int*> A(a);
+//   ///   Tensor<2,2,const int*> B = A;
+//   /// @code
+//   ///
+//   /// @tparam       T The pointed to scalar type for the right-hand-side.
+//   /// @param      rhs The right hand side tensor.
+//   template <class T>
+//   Tensor(const Tensor<R,D,T*>& rhs) noexcept : data(rhs.data) {
+//   }
 
-  /// Move construction captures the buffer from the rhs.
-  ///
-  ///
-  /// This uses built in type promotion rules to ensure that a pointer to the @p
-  /// T type is compatible with a pointer to the @p S type. We expect this to
-  /// only work for cv types.
-  ///
-  /// This will only match external tensor types. It is not possible to
-  /// initialize an external tensor with an internal tensor.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,const int*> B = std::move(Tensor<2,2,int*>(a));
-  /// @code
-  ///
-  /// @tparam       T The pointed to scalar type for the right-hand-side.
-  /// @param      rhs The right hand side tensor.
-  template <class T>
-  Tensor(Tensor<R,D,T*>&& rhs) noexcept : data(std::move(rhs.data)) {
-  }
+//   /// Move construction captures the buffer from the rhs.
+//   ///
+//   ///
+//   /// This uses built in type promotion rules to ensure that a pointer to the @p
+//   /// T type is compatible with a pointer to the @p S type. We expect this to
+//   /// only work for cv types.
+//   ///
+//   /// This will only match external tensor types. It is not possible to
+//   /// initialize an external tensor with an internal tensor.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,const int*> B = std::move(Tensor<2,2,int*>(a));
+//   /// @code
+//   ///
+//   /// @tparam       T The pointed to scalar type for the right-hand-side.
+//   /// @param      rhs The right hand side tensor.
+//   template <class T>
+//   Tensor(Tensor<R,D,T*>&& rhs) noexcept : data(std::move(rhs.data)) {
+//   }
 
-  /// Allow list initialization of tensors.
-  ///
-  /// @code
-  ///  int a[]
-  ///  Tensor<R,D,S*> T = {a , {...}};
-  /// @code
-  ///
-  /// @param       list The initializer list for the tensor.
-  Tensor(S* data, std::initializer_list<S> list) noexcept : Tensor(data) {
-    this->copy(list);
-  }
+//   /// Allow list initialization of tensors.
+//   ///
+//   /// @code
+//   ///  int a[]
+//   ///  Tensor<R,D,S*> T = {a , {...}};
+//   /// @code
+//   ///
+//   /// @param       list The initializer list for the tensor.
+//   Tensor(S* data, std::initializer_list<S> list) noexcept : Tensor(data) {
+//     this->copy(list);
+//   }
 
-  /// Allow initialization from expressions of compatible type.
-  ///
-  /// @code
-  ///   int a[]
-  ///   const Tensor<R,D,S*> A = {a, B(i,j)};
-  /// @code
-  ///
-  /// @tparam         E The type of the right-hand-side expression.
-  /// @param       data The external data buffer.
-  /// @param        rhs The right hand side expression.
-  template <class E>
-  Tensor(S* data, const expressions::Expression<E>&& rhs) noexcept
-      : Tensor(data)
-  {
-    this->apply(std::move(rhs));
-  }
+//   /// Allow initialization from expressions of compatible type.
+//   ///
+//   /// @code
+//   ///   int a[]
+//   ///   const Tensor<R,D,S*> A = {a, B(i,j)};
+//   /// @code
+//   ///
+//   /// @tparam         E The type of the right-hand-side expression.
+//   /// @param       data The external data buffer.
+//   /// @param        rhs The right hand side expression.
+//   template <class E>
+//   Tensor(S* data, const expressions::Expression<E>&& rhs) noexcept
+//       : Tensor(data)
+//   {
+//     this->apply(std::move(rhs));
+//   }
 
-  /// Allow initialization from expressions of compatible type.
-  ///
-  /// @code
-  ///   auto b = B(i,j);
-  ///   int a[]
-  ///   const Tensor<R,D,S*> A = {a, b};
-  /// @code
-  ///
-  /// @tparam         E The type of the right-hand-side expression.
-  /// @param       data The external data buffer.
-  /// @param        rhs The right hand side expression.
-  template <class E>
-  Tensor(S* data, const expressions::Expression<E>& rhs) noexcept
-      : Tensor(data)
-  {
-    this->apply(rhs);
-  }
+//   /// Allow initialization from expressions of compatible type.
+//   ///
+//   /// @code
+//   ///   auto b = B(i,j);
+//   ///   int a[]
+//   ///   const Tensor<R,D,S*> A = {a, b};
+//   /// @code
+//   ///
+//   /// @tparam         E The type of the right-hand-side expression.
+//   /// @param       data The external data buffer.
+//   /// @param        rhs The right hand side expression.
+//   template <class E>
+//   Tensor(S* data, const expressions::Expression<E>& rhs) noexcept
+//       : Tensor(data)
+//   {
+//     this->apply(rhs);
+//   }
 
-  /// Copy the data from the rhs.
-  ///
-  /// As opposed to construction, the copy operator actually copies the data
-  /// from the rhs tensor. This implements the value semantics expected from
-  /// tensors.
-  ///
-  /// @param        rhs The right hand side of the assignment.
-  /// @returns          A reference to *this;
-  constexpr Tensor& operator=(const Tensor& rhs) noexcept {
-    return this->copy(rhs);
-  }
+//   /// Copy the data from the rhs.
+//   ///
+//   /// As opposed to construction, the copy operator actually copies the data
+//   /// from the rhs tensor. This implements the value semantics expected from
+//   /// tensors.
+//   ///
+//   /// @param        rhs The right hand side of the assignment.
+//   /// @returns          A reference to *this;
+//   constexpr Tensor& operator=(const Tensor& rhs) noexcept {
+//     return this->copy(rhs);
+//   }
 
-  /// Move the data from the rhs.
-  ///
-  /// As opposed to construction, the move operator actually copies the data
-  /// from the rhs tensor. This implements the value semantics expected from
-  /// tensors.
-  ///
-  /// @param        rhs The right hand side of the assignment.
-  /// @returns          A reference to *this;
-  constexpr Tensor& operator=(Tensor&& rhs) noexcept {
-    return this->copy(std::move(rhs));
-  }
+//   /// Move the data from the rhs.
+//   ///
+//   /// As opposed to construction, the move operator actually copies the data
+//   /// from the rhs tensor. This implements the value semantics expected from
+//   /// tensors.
+//   ///
+//   /// @param        rhs The right hand side of the assignment.
+//   /// @returns          A reference to *this;
+//   constexpr Tensor& operator=(Tensor&& rhs) noexcept {
+//     return this->copy(std::move(rhs));
+//   }
 
-  /// Assign an initializer list to the external tensor.
-  ///
-  /// The normal "in-place" storage tensor gets this functionality from its
-  /// initializer list constructor, but we need it explicitly since we have no
-  /// initializer list constructor.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,int*> A(a);
-  ///   A = {0,1,2,3};
-  /// @code
-  ///
-  /// @param        rhs The right hand side of the assignment.
-  /// @returns          A reference to *this.
-  constexpr Tensor& operator=(std::initializer_list<S> list) noexcept {
-    return this->copy(list);
-  }
+//   /// Assign an initializer list to the external tensor.
+//   ///
+//   /// The normal "in-place" storage tensor gets this functionality from its
+//   /// initializer list constructor, but we need it explicitly since we have no
+//   /// initializer list constructor.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,int*> A(a);
+//   ///   A = {0,1,2,3};
+//   /// @code
+//   ///
+//   /// @param        rhs The right hand side of the assignment.
+//   /// @returns          A reference to *this.
+//   constexpr Tensor& operator=(std::initializer_list<S> list) noexcept {
+//     return this->copy(list);
+//   }
 
-  /// Copy the data from any type of right hand side tensor.
-  ///
-  /// This supports both in place and external tensor assignments, and
-  /// implements the expected value-type copy. T->S compatibility is governed by
-  /// the std::copy_n semantics.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,int*> A(a);
-  ///   Tensor<2,2,int> B = {0,1,2,3};
-  ///   A = B;
-  /// @code
-  ///
-  /// @tparam         T The scalar type for the right hand side tensor.
-  /// @param        rhs The right hand side tensor.
-  /// @returns          A reference to *this.
-  template <class T>
-  constexpr Tensor& operator=(const Tensor<R,D,T>& rhs) noexcept {
-    return this->copy(rhs);
-  }
+//   /// Copy the data from any type of right hand side tensor.
+//   ///
+//   /// This supports both in place and external tensor assignments, and
+//   /// implements the expected value-type copy. T->S compatibility is governed by
+//   /// the std::copy_n semantics.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,int*> A(a);
+//   ///   Tensor<2,2,int> B = {0,1,2,3};
+//   ///   A = B;
+//   /// @code
+//   ///
+//   /// @tparam         T The scalar type for the right hand side tensor.
+//   /// @param        rhs The right hand side tensor.
+//   /// @returns          A reference to *this.
+//   template <class T>
+//   constexpr Tensor& operator=(const Tensor<R,D,T>& rhs) noexcept {
+//     return this->copy(rhs);
+//   }
 
-  /// Copy the data from any type of right hand side tensor.
-  ///
-  /// This supports both in place and external tensor assignments, and
-  /// implements the expected value-type copy. T->S compatibility is governed by
-  /// the std::copy_n semantics.
-  ///
-  /// @code
-  ///   int a[4];
-  ///   Tensor<2,2,int*> A(a);
-  ///   Tensor<2,2,int> B = {0,1,2,3};
-  ///   A = B;
-  /// @code
-  ///
-  /// @tparam         T The scalar type for the right hand side tensor.
-  /// @param        rhs The right hand side tensor.
-  /// @returns          A reference to *this.
-  template <class T>
-  constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
-    return this->copy(std::move(rhs));
-  }
+//   /// Copy the data from any type of right hand side tensor.
+//   ///
+//   /// This supports both in place and external tensor assignments, and
+//   /// implements the expected value-type copy. T->S compatibility is governed by
+//   /// the std::copy_n semantics.
+//   ///
+//   /// @code
+//   ///   int a[4];
+//   ///   Tensor<2,2,int*> A(a);
+//   ///   Tensor<2,2,int> B = {0,1,2,3};
+//   ///   A = B;
+//   /// @code
+//   ///
+//   /// @tparam         T The scalar type for the right hand side tensor.
+//   /// @param        rhs The right hand side tensor.
+//   /// @returns          A reference to *this.
+//   template <class T>
+//   constexpr Tensor& operator=(Tensor<R,D,T>&& rhs) noexcept {
+//     return this->copy(std::move(rhs));
+//   }
 
-  /// Allow assignment from expressions of compatible type without explicit bind
-  ///
-  /// @code
-  ///   int a[]
-  ///   Tensor<R,D,S*> A(a);
-  ///   A = B(i,j)
-  /// @code
-  ///
-  /// @tparam         E The type of the right-hand-side expression.
-  /// @param        rhs The right hand side expression.
-  /// @returns          A reference to *this for chaining.
-  template <class E>
-  constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
-    return this->apply(std::move(rhs));
-  }
+//   /// Allow assignment from expressions of compatible type without explicit bind
+//   ///
+//   /// @code
+//   ///   int a[]
+//   ///   Tensor<R,D,S*> A(a);
+//   ///   A = B(i,j)
+//   /// @code
+//   ///
+//   /// @tparam         E The type of the right-hand-side expression.
+//   /// @param        rhs The right hand side expression.
+//   /// @returns          A reference to *this for chaining.
+//   template <class E>
+//   constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
+//     return this->apply(std::move(rhs));
+//   }
 
-  /// Allow assignment from expressions of compatible type without explicit bind
-  ///
-  /// @code
-  ///   auto b = B(i,j);
-  ///   int a[]
-  ///   Tensor<R,D,S*> A(a);
-  ///   A = b
-  /// @code
-  ///
-  /// @tparam         E The type of the right-hand-side expression.
-  /// @param        rhs The right hand side expression.
-  /// @returns          A reference to *this for chaining.
-  template <class E>
-  constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
-    return this->apply(rhs);
-  }
+//   /// Allow assignment from expressions of compatible type without explicit bind
+//   ///
+//   /// @code
+//   ///   auto b = B(i,j);
+//   ///   int a[]
+//   ///   Tensor<R,D,S*> A(a);
+//   ///   A = b
+//   /// @code
+//   ///
+//   /// @tparam         E The type of the right-hand-side expression.
+//   /// @param        rhs The right hand side expression.
+//   /// @returns          A reference to *this for chaining.
+//   template <class E>
+//   constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
+//     return this->apply(rhs);
+//   }
 
-  /// Direct multidimensional array access to the data.
-  constexpr const auto operator[](int i) const noexcept {
-    return util::make_multi_array<R, D>(data)[i];
-  }
+//   /// Direct multidimensional array access to the data.
+//   constexpr const auto operator[](int i) const noexcept {
+//     return util::make_multi_array<R, D>(data)[i];
+//   }
 
-  constexpr auto operator[](int i) noexcept {
-    return util::make_multi_array<R, D>(data)[i];
-  }
+//   constexpr auto operator[](int i) noexcept {
+//     return util::make_multi_array<R, D>(data)[i];
+//   }
 
-  ExternalStorage<S, Size> data;
-};
+//   ExternalStorage<S, Size> data;
+// };
 
 /// Special-case Rank 0 tensors.
 ///

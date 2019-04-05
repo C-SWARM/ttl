@@ -43,12 +43,12 @@ TEST(Determinant, Basic_2_2) {
   EXPECT_EQ(d, -2);
 }
 
-TEST(Determinant, External_2_2) {
-  int a[4];
-  const ttl::Tensor<2,2,int*> A = {a, {1,2,3,4}};
-  int d = ttl::det(A);
-  EXPECT_EQ(d, -2);
-}
+// TEST(Determinant, External_2_2) {
+//   int a[4];
+//   const ttl::Tensor<2,2,int*> A = {a, {1,2,3,4}};
+//   int d = ttl::det(A);
+//   EXPECT_EQ(d, -2);
+// }
 
 TEST(Determinant, RValue_2_2) {
   int d = ttl::det(ttl::Tensor<2,2,int>{1,2,3,4});
