@@ -39,6 +39,8 @@
 
 #include <ttl/Tensor.h>
 #include <ttl/Expressions.h>
+#include <ttl/Storage/StackStorage.hpp>
+#include <ttl/Storage/ExternalStorage.hpp>
 #include <ttl/util/linearize.h>
 #include <ttl/util/multi_array.h>
 #include <ttl/util/pow.h>
@@ -47,82 +49,6 @@
 #include <algorithm>
 
 namespace ttl {
-
-template <size_t N, class Scalar>
-class StackStorage {
- public:
-  using T = Scalar;
-
-  constexpr const T& operator()(size_t i) const noexcept {
-    return data_[i];
-  }
-
-  constexpr T& operator()(size_t i) noexcept {
-    return data_[i];
-  }
-
-  constexpr auto begin() const noexcept {
-    return data_.begin();
-  }
-
-  constexpr auto begin() noexcept {
-    return data_.begin();
-  }
-
-  constexpr auto end() const noexcept {
-    return data_.end();
-  }
-
-  constexpr auto end() noexcept {
-    return data_.end();
-  }
-
- private:
-  std::array<T, N> data_;
-};
-
-template <size_t N, class Scalar>
-class ExternalStorage {
- public:
-  using T = Scalar;
-
-  constexpr ExternalStorage(T (*data)[N]) noexcept : data_(*data) {
-  }
-
-  // constexpr ExternalStorage(const ExternalStorage&) = default;
-  // constexpr ExternalStorage(ExternalStorage&&) = default;
-
-  // constexpr ExternalStorage& operator=(const ExternalStorage&) = default;
-  // constexpr ExternalStorage& operator=(ExternalStorage&&) = default;
-
-  constexpr const T& operator()(size_t i) const noexcept {
-    return data_[i];
-  }
-
-  constexpr T& operator()(size_t i) noexcept {
-    return data_[i];
-  }
-
-  constexpr auto begin() const noexcept {
-    return std::begin(data_);
-  }
-
-  constexpr auto begin() noexcept {
-    return std::begin(data_);
-  }
-
-  constexpr auto end() const noexcept {
-    return std::end(data_);
-  }
-
-  constexpr auto end() noexcept {
-    return std::end(data_);
-  }
-
- private:
-  T (&data_)[N];
-};
-
 /// Common functionality for the tensor specializations.
 ///
 /// @tparam           R The tensor's rank.
@@ -470,7 +396,7 @@ class Tensor : public TensorBase<R,D,S>
     return util::make_multi_array<R,D>(data)[i];
   }
 
-  StackStorage<util::pow(D, R), std::remove_const_t<S>> data;
+  StackStorage<std::remove_const_t<S>, util::pow(D, R)> data;
 };
 
 /// The tensor specialization for external storage.
@@ -735,7 +661,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
     return util::make_multi_array<R, D>(data)[i];
   }
 
-  ExternalStorage<Size, S> data;
+  ExternalStorage<S, Size> data;
 };
 
 /// Special-case Rank 0 tensors.
