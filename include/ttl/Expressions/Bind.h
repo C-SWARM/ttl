@@ -171,6 +171,11 @@ class Bind : public Expression<Bind<E, Index>>
   Child t_;                                     ///<! The underlying tree.
   const Index i_;                               ///<! The bound index.
 };
+
+template <class Child, class Index>
+constexpr Bind<Child, Index> make_bind(Child&& child, Index index) {
+  return { std::forward<Child>(child), index };
+}
 } // namespace expressions
 } // namespace ttl
 

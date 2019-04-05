@@ -49,224 +49,29 @@
 #include <algorithm>
 
 namespace ttl {
-/// Common functionality for the tensor specializations.
+/// Tensor template implementation.
 ///
-/// @tparam           R The tensor's rank.
-/// @tparam           D The tensor's dimension.
-/// @tparam           S The tensor's scalar storage (only used explicitly when
+/// @tparam        Rank The tensor's rank.
+/// @tparam   Dimension The tensor's dimension.
+/// @tparam      Scalar The tensor's scalar storage (only used explicitly when
 ///                     casting to the derived tensor type).
-template <int R, int D, class S>
-class TensorBase
-{
- private:
-  using TensorType = Tensor<R,D,S>;
-
-  static constexpr std::size_t Size = util::pow(D,R); ///!< Number of elements
-
-  constexpr const TensorType& derived() const noexcept {
-    return *static_cast<const TensorType*>(this);
-  }
-
-  constexpr TensorType& derived() noexcept {
-    return *static_cast<TensorType*>(this);
-  }
-
- protected:
-  /// Copy data from an initializer list.
-  template <class T>
-  auto& copy(std::initializer_list<T> list) noexcept {
-    using std::begin;
-    // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
-    auto size = Size;
-    std::size_t min = std::min(size, list.size());
-    auto p = std::copy_n(list.begin(), min, begin(derived().data));     // copy prefix
-    std::fill_n(p, Size - min, 0);   // 0-fill suffix
-    return derived();
-  }
-
-  /// Copy data from another Tensor.
-  template <class T>
-  auto& copy(const Tensor<R,D,T>& rhs) noexcept {
-    using std::begin;
-    std::copy_n(begin(rhs.data), Size, begin(derived().data));
-    return derived();
-  }
-
-  /// Copy data from an r-value reference.
-  template <class T>
-  auto& copy(Tensor<R,D,T>&& rhs) noexcept {
-    using std::begin;
-    std::copy_n(begin(std::move(rhs).data), Size, begin(derived().data));
-    return derived();
-  }
-
-  /// Create a bind expression that pairs this Tensor with an Index expression.
-  template <class Index>                        // required for icc 16
-  constexpr const auto bind(const Index index) const noexcept {
-    return expressions::Bind<const TensorType, Index>(derived(), index);
-  }
-
-  /// Create a bind expression that pairs this Tensor with an Index epxression.
-  template <class Index>                        // required for icc 16
-  constexpr auto bind(const Index index) noexcept {
-    return expressions::Bind<TensorType, Index>(derived(), index);
-  }
-
-  /// Bind and evaulate an expression when this is the LHS.
-  template <class E>
-  auto& apply(E&& rhs) noexcept {
-    bind(expressions::outer_type<E>{}) = std::forward<E>(rhs);
-    return derived();
-  }
-
- public:
-  /// Fill a tensor with a scalar value.
-  ///
-  /// @code
-  ///   auto T = Tensor<R,D,int>().fill(1);
-  /// @code
-  ///
-  /// @tparam         T The type of the scalar, must be compatible with S.
-  /// @param     scalar The actual scalar.
-  /// @returns          A reference to the tensor so that fill() can be
-  ///                   chained.
-  template <class T>
-  auto& fill(T scalar) noexcept {
-    using std::begin;
-    std::fill_n(begin(derived().data), Size, scalar);
-    return derived();
-  }
-
-  /// Basic linear indexing into the tensor.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> T;
-  ///   int i = T[0];
-  /// @code
-  ///
-  /// @param          i The index to access.
-  /// @returns          The scalar value at @p i.
-  constexpr const auto get(int i) const noexcept {
-    return derived().data(i);
-  }
-
-  /// Basic linear indexing into the tensor.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> T;
-  ///   T[0] = 42;
-  /// @code
-  ///
-  /// @param          i The index to access.
-  /// @returns          A reference to the scalar value at @p i.
-  constexpr auto& get(int i) noexcept {
-    return derived().data(i);
-  }
-
-  /// Multidimensional indexing into the tensor, used during evaluation.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> T
-  ///   Index I = {0,1,...}
-  ///   int i = T.eval(I)
-  /// @code
-  ///
-  /// @tparam     Index The tuple type for the index.
-  /// @param      index The multidimension index to access.
-  /// @returns          The scalar value at the linearized @p index.
-  template <class Index>
-  constexpr const auto eval(Index index) const noexcept {
-    using NIndex = std::tuple_size<Index>;
-    static_assert(R == NIndex::value, "Index size does not match tensor rank");
-    return derived().data(util::linearize<D>(index));
-  }
-
-  /// Multidimensional indexing into the tensor, used during evaluation.
-  ///
-  /// @code
-  ///   Tensor<R,D,int> T
-  ///   Index I = {0,1,...}
-  ///   T.eval(I) = 42
-  /// @code
-  ///
-  /// @tparam     Index The tuple type for the index.
-  /// @param      index The multidimension index to access.
-  /// @returns          The a reference to the scalar value at the linearized @p
-  ///                   index.
-  template <class Index, int N = std::tuple_size<Index>::value>
-  constexpr auto& eval(Index index) noexcept {
-    static_assert(R == N, "Index size does not match tensor rank");
-    return derived().data(util::linearize<D>(index));
-  }
-
-  /// Bind a Bind expression to a tensor.
-  ///
-  /// This is the core operation that provides the tensor syntax that we want to
-  /// provide. The user binds a tensor to a set of indices, and the TTL
-  /// expression template structure can
-  ///
-  /// 1) Type check expressions.
-  /// 2) Generate loops over indices during evaluation and contraction.
-  ///
-  /// @code
-  ///  Index<'i'> i;
-  ///  Index<'j'> j;
-  ///  Index<'k'> k;
-  ///  Tensor<R,D,S> A, B, C;
-  ///  C(i,j) = A(i,k)*B(k,j)
-  /// @code
-  ///
-  /// @tparam...      I The index types to bind to the tensor.
-  /// @param... indices The index values.
-  /// @returns          A Bind expression that can serves as the leaf
-  ///                   expression in TTL expressions.
-  template <class... I>
-  constexpr const auto operator()(I... indices) const noexcept {
-    static_assert(R == sizeof...(I), "Index size does not match tensor rank");
-    return bind(std::make_tuple(indices...));
-  }
-
-  /// Bind a Bind expression to a tensor.
-  ///
-  /// This is the core operation that provides the tensor syntax that we want to
-  /// provide. The user binds a tensor to a set of indices, and the TTL
-  /// expression template structure can
-  ///
-  /// 1) Type check expressions.
-  /// 2) Generate loops over indices during evaluation and contraction.
-  ///
-  /// @code
-  ///  Index<'i'> i;
-  ///  Index<'j'> j;
-  ///  Index<'k'> k;
-  ///  Tensor<R,D,S> A, B, C;
-  ///  C(i,j) = A(i,k)*B(k,j)
-  /// @code
-  ///
-  /// @tparam...      I The index types to bind to the tensor.
-  /// @param... indices The index values.
-  /// @returns          A Bind expression that can serves as the leaf
-  ///                   expression in TTL expressions.
-  template <class... I>
-  constexpr auto operator()(I... indices) noexcept {
-    static_assert(R == sizeof...(I), "Index size does not match tensor rank");
-    return bind(std::make_tuple(indices...));
-  }
-};
-
-/// The normal tensor type.
-///
-/// The Tensor stores an array of scalar values, and provides the necessary
-/// constructors and assignment operators so that the tensor can be used as a
-/// value-type aggregate.
-template <int R, int D, class S>
-class Tensor : public TensorBase<R,D,S>
+template <int Rank, int Dimension, class Scalar>
+class Tensor
 {
  public:
+  static constexpr int R = Rank;
+  static constexpr int D = Dimension;
+  using T = Scalar;
+
+  /// The size is the number of scalars in the tensor.
+  static constexpr size_t size() {
+    return util::pow(D, R);
+  }
+
   /// Standard default constructor.
   ///
   /// The default constructor leaves the tensor data uninitialized. To
-  /// initialize a tensor to 0 use Tensor<R,D,S> T = {};
+  /// initialize a tensor to 0 use Tensor<R,D,T> A = {};
   constexpr Tensor() noexcept = default;
   constexpr Tensor(const Tensor&) noexcept = default;
   constexpr Tensor(Tensor&&) noexcept = default;
@@ -274,12 +79,15 @@ class Tensor : public TensorBase<R,D,S>
   /// Allow list initialization of tensors.
   ///
   /// @code
-  ///  Tensor<R,D,S> T = {0,1,...};
+  ///  Tensor<R,D,T> A = {0,1,...};
   /// @code
   ///
   /// @param       list The initializer list for the tensor.
-  Tensor(std::initializer_list<S> list) noexcept {
-    this->copy(list);
+  Tensor(std::initializer_list<T> list) noexcept {
+    using std::begin;
+    std::size_t min = std::min(size(), list.size());
+    auto p = std::copy_n(list.begin(), min, begin(data_)); // copy prefix
+    std::fill_n(p, size() - min, 0);                       // 0-fill suffix
   }
 
   /// Allow initialization from tensors of compatible type.
@@ -298,11 +106,12 @@ class Tensor : public TensorBase<R,D,S>
   /// The copy is performed using the promotion and compatibility rules of the
   /// std::copy_n algorithm.
   ///
-  /// @tparam         T The scalar type for the right hand side.
+  /// @tparam         S The scalar type for the right hand side.
   /// @param        rhs The tensor to copy from.
-  template <class T>
-  Tensor(const Tensor<R,D,T>& rhs) noexcept {
-    this->copy(rhs);
+  template <class S>
+  Tensor(const Tensor<R,D,S>& rhs) noexcept {
+    using std::begin;
+    std::copy_n(begin(rhs), size(), begin(data_));
   }
 
   /// Allow initialization from tensors of compatible type.
@@ -318,11 +127,12 @@ class Tensor : public TensorBase<R,D,S>
   /// The copy is performed using the promotion and compatibility rules of the
   /// std::copy_n algorithm.
   ///
-  /// @tparam         T The scalar type for the right hand side.
+  /// @tparam         S The scalar type for the right hand side.
   /// @param        rhs The tensor rvalue to copy from.
-  template <class T>
-  Tensor(Tensor<R,D,T>&& rhs) noexcept {
-    this->copy(std::move(rhs));
+  template <class S>
+  Tensor(Tensor<R,D,S>&& rhs) noexcept {
+    using std::begin;
+    std::copy_n(begin(std::move(rhs)), size(), begin(data_));
   }
 
   /// Allow initialization from expressions of compatible type.
@@ -335,7 +145,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @param        rhs The right hand side expression.
   template <class E>
   Tensor(const expressions::Expression<E>&& rhs) noexcept {
-    this->apply(std::move(rhs));
+    apply(std::move(rhs));
   }
 
   /// Allow initialization from expressions of compatible type.
@@ -349,7 +159,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @param        rhs The right hand side expression.
   template <class E>
   Tensor(const expressions::Expression<E>& rhs) noexcept {
-    this->apply(rhs);
+    apply(rhs);
   }
 
   /// Normal assignment and move operators.
@@ -368,7 +178,7 @@ class Tensor : public TensorBase<R,D,S>
   /// @returns          A reference to *this for chaining.
   template <class E>
   constexpr Tensor& operator=(const expressions::Expression<E>&& rhs) noexcept {
-    return this->apply(std::move(rhs));
+    return apply(std::move(rhs));
   }
 
   /// Allow assignment from expressions of compatible type without explicit bind
@@ -384,19 +194,197 @@ class Tensor : public TensorBase<R,D,S>
   /// @returns          A reference to *this for chaining.
   template <class E>
   constexpr Tensor& operator=(const expressions::Expression<E>& rhs) noexcept {
-    return this->apply(rhs);
+    return apply(rhs);
   }
 
+  /// Fill a tensor with a scalar value.
+  ///
+  /// @code
+  ///   auto T = Tensor<R,D,int>().fill(1);
+  /// @code
+  ///
+  /// @tparam         T The type of the scalar, must be compatible with S.
+  /// @param     scalar The actual scalar.
+  /// @returns          A reference to the tensor so that fill() can be
+  ///                   chained.
+  template <class S>
+  Tensor& fill(S scalar) noexcept {
+    using std::begin;
+    std::fill_n(begin(data_), size(), scalar);
+    return *this;
+  }
+
+  /// Direct linear indexing into the tensor.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A;
+  ///   int i = A.get(0);
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          The scalar value at @p i.
+  constexpr const auto get(int i) const noexcept {
+    return data_(i);
+  }
+
+  /// Direct linear indexing into the tensor.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A;
+  ///   A.get(0) = 42;
+  /// @code
+  ///
+  /// @param          i The index to access.
+  /// @returns          A reference to the scalar value at @p i.
+  constexpr auto& get(int i) noexcept {
+    return data_(i);
+  }
+
+  /// Multidimensional indexing into the tensor, used during evaluation.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A
+  ///   Index I = {0,1,...}
+  ///   int i = A.eval(I)
+  /// @code
+  ///
+  /// @tparam     Index The tuple type for the index.
+  /// @param      index The multidimension index to access.
+  /// @returns          The scalar value at the linearized @p index.
+  template <class Index>
+  constexpr const auto eval(Index index) const noexcept {
+    using NIndex = std::tuple_size<Index>;
+    static_assert(R == NIndex::value, "Index size does not match tensor rank");
+    return data_(util::linearize<D>(index));
+  }
+
+  /// Multidimensional indexing into the tensor, used during evaluation.
+  ///
+  /// @code
+  ///   Tensor<R,D,int> A
+  ///   Index I = {0,1,...}
+  ///   A.eval(I) = 42
+  /// @code
+  ///
+  /// @tparam     Index The tuple type for the index.
+  /// @param      index The multidimension index to access.
+  /// @returns          The a reference to the scalar value at the linearized @p
+  ///                   index.
+  template <class Index, int N = std::tuple_size<Index>::value>
+  constexpr auto& eval(Index index) noexcept {
+    static_assert(R == N, "Index size does not match tensor rank");
+    return data_(util::linearize<D>(index));
+  }
+
+  /// Bind a Bind expression to a tensor.
+  ///
+  /// This is the core operation that provides the tensor syntax that we want to
+  /// provide. The user binds a tensor to a set of indices, and the TTL
+  /// expression template structure can
+  ///
+  /// 1) Type check expressions.
+  /// 2) Generate loops over indices during evaluation and contraction.
+  ///
+  /// @code
+  ///  Index<'i'> i;
+  ///  Index<'j'> j;
+  ///  Index<'k'> k;
+  ///  Tensor<R,D,T> A, B, C;
+  ///  C(i,j) = A(i,k)*B(k,j)
+  /// @code
+  ///
+  /// @tparam...  Index The index types to bind to the tensor.
+  /// @param... indices The index values.
+  /// @returns          A Bind expression that can serves as the leaf
+  ///                   expression in TTL expressions.
+  template <class... Index>
+  constexpr const auto operator()(Index&&... indices) const noexcept {
+    constexpr int N = sizeof...(Index);
+    static_assert(R == N, "Index size does not match tensor rank");
+    auto i = std::make_tuple(std::forward<Index>(indices)...);
+    return expressions::make_bind(*this, i);
+  }
+
+  /// Bind a Bind expression to a tensor.
+  ///
+  /// This is the core operation that provides the tensor syntax that we want to
+  /// provide. The user binds a tensor to a set of indices, and the TTL
+  /// expression template structure can
+  ///
+  /// 1) Type check expressions.
+  /// 2) Generate loops over indices during evaluation and contraction.
+  ///
+  /// @code
+  ///  Index<'i'> i;
+  ///  Index<'j'> j;
+  ///  Index<'k'> k;
+  ///  Tensor<R,D,T> A, B, C;
+  ///  C(i,j) = A(i,k)*B(k,j)
+  /// @code
+  ///
+  /// @tparam...      I The index types to bind to the tensor.
+  /// @param... indices The index values.
+  /// @returns          A Bind expression that can serves as the leaf
+  ///                   expression in TTL expressions.
+  template <class... Index>
+  constexpr auto operator()(Index&&... indices) noexcept {
+    constexpr int N = sizeof...(Index);
+    static_assert(R == N, "Index size does not match tensor rank");
+    auto i = std::make_tuple(std::forward<Index>(indices)...);
+    return expressions::make_bind(*this, i);
+  }
+
+  /// Provide multidimensional array notation for direct element access.
+  ///
+  /// @param          i The index into the 1st dimension.
+  ///
+  /// @returns          An object suitable for further indexing or use in scalar
+  ///                   contexts if it's totally indexed.
   constexpr auto operator[](int i) const noexcept {
-    return util::make_multi_array<R,D>(data)[i];
+    return util::make_multi_array<R,D>(data_)[i];
   }
 
-  /// Direct multidimensional array access to the data.
+  /// Provide multidimensional array notation for direct element access.
+  ///
+  /// @param          i The index into the 1st dimension.
+  ///
+  /// @returns          An object suitable for further indexing or use in scalar
+  ///                   contexts if it's totally indexed.
   constexpr auto operator[](int i) noexcept {
-    return util::make_multi_array<R,D>(data)[i];
+    return util::make_multi_array<R,D>(data_)[i];
   }
 
-  StackStorage<std::remove_const_t<S>, util::pow(D, R)> data;
+  /// Provide a sequential iterator to the underlying storage.
+  constexpr auto begin() const noexcept {
+    return std::begin(data_);
+  }
+
+  /// Provide a sequential iterator to the underlying storage.
+  constexpr auto begin() noexcept {
+    return std::begin(data_);
+  }
+
+  /// Provide a sequential iterator to the underlying storage.
+  constexpr auto end() const noexcept {
+    return std::end(data_);
+  }
+
+  /// Provide a sequential iterator to the underlying storage.
+  constexpr auto end() noexcept {
+    return std::end(data_);
+  }
+
+ private:
+  /// Bind and evaulate an expression.
+  template <class E>
+  Tensor& apply(E&& rhs) noexcept {
+    using expressions::make_bind;
+    using expressions::outer_type;
+    make_bind(*this, outer_type<E>{}) = std::forward<E>(rhs);
+    return *this;
+  }
+
+  StackStorage<std::remove_const_t<T>, size()> data_;
 };
 
 /// The tensor specialization for external storage.
