@@ -36,22 +36,60 @@
 
 namespace ttl {
 namespace util {
-namespace detail {
-template <int R, int D, class S>
-struct multi_array_impl
-{
-  using type = typename multi_array_impl<R-1,D,S>::type[D];
+template <int R, int D, class Storage, class T>
+struct multi_array {
+  constexpr multi_array(size_t n, Storage data) noexcept
+      : n_(n), data_(data)
+  {
+  }
+
+  constexpr const multi_array<R - 1, D, Storage, T>
+  operator[](size_t i) const noexcept
+  {
+    return { n_ + i * util::pow(D, R - 1), data_ };
+  }
+
+  constexpr multi_array<R - 1, D, Storage, T>
+  operator[](size_t i) noexcept
+  {
+    return { n_ + i * util::pow(D, R - 1), data_ };
+  }
+
+ private:
+  size_t n_;
+  Storage data_;
 };
 
-template <int D, class S>
-struct multi_array_impl<0,D,S>
-{
-  using type = S;
-};
-} // namespace detail
+template <int D, class Storage, class T>
+struct multi_array<0, D, Storage, T> {
+  constexpr multi_array(size_t n, Storage data) noexcept : data_(data(n)) {
+  }
 
-template <int R, int D, class S>
-using multi_array = typename detail::multi_array_impl<R,D,S>::type;
+  constexpr auto operator=(std::remove_reference_t<T> rhs) noexcept {
+    return (data_ = rhs);
+  }
+
+  constexpr operator T() const noexcept {
+    return data_;
+  }
+
+  constexpr const auto operator&() const noexcept {
+    return &data_;
+  }
+
+  constexpr auto operator&() noexcept {
+    return &data_;
+  }
+
+ private:
+  T data_;
+};
+
+template <int R, int D, class Storage>
+constexpr auto make_multi_array(Storage&& data) {
+  using T = decltype(data(0));
+  return multi_array<R, D, Storage, T>{ 0, std::forward<Storage>(data) };
+}
 } // namespace util
 } // namespace ttl
 

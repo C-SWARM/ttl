@@ -48,6 +48,81 @@
 
 namespace ttl {
 
+template <size_t N, class Scalar>
+class StackStorage {
+ public:
+  using T = Scalar;
+
+  constexpr const T& operator()(size_t i) const noexcept {
+    return data_[i];
+  }
+
+  constexpr T& operator()(size_t i) noexcept {
+    return data_[i];
+  }
+
+  constexpr auto begin() const noexcept {
+    return data_.begin();
+  }
+
+  constexpr auto begin() noexcept {
+    return data_.begin();
+  }
+
+  constexpr auto end() const noexcept {
+    return data_.end();
+  }
+
+  constexpr auto end() noexcept {
+    return data_.end();
+  }
+
+ private:
+  std::array<T, N> data_;
+};
+
+template <size_t N, class Scalar>
+class ExternalStorage {
+ public:
+  using T = Scalar;
+
+  constexpr ExternalStorage(T (*data)[N]) noexcept : data_(*data) {
+  }
+
+  // constexpr ExternalStorage(const ExternalStorage&) = default;
+  // constexpr ExternalStorage(ExternalStorage&&) = default;
+
+  // constexpr ExternalStorage& operator=(const ExternalStorage&) = default;
+  // constexpr ExternalStorage& operator=(ExternalStorage&&) = default;
+
+  constexpr const T& operator()(size_t i) const noexcept {
+    return data_[i];
+  }
+
+  constexpr T& operator()(size_t i) noexcept {
+    return data_[i];
+  }
+
+  constexpr auto begin() const noexcept {
+    return std::begin(data_);
+  }
+
+  constexpr auto begin() noexcept {
+    return std::begin(data_);
+  }
+
+  constexpr auto end() const noexcept {
+    return std::end(data_);
+  }
+
+  constexpr auto end() noexcept {
+    return std::end(data_);
+  }
+
+ private:
+  T (&data_)[N];
+};
+
 /// Common functionality for the tensor specializations.
 ///
 /// @tparam           R The tensor's rank.
@@ -74,25 +149,28 @@ class TensorBase
   /// Copy data from an initializer list.
   template <class T>
   auto& copy(std::initializer_list<T> list) noexcept {
+    using std::begin;
     // http://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
     auto size = Size;
     std::size_t min = std::min(size, list.size());
-    std::copy_n(list.begin(), min, derived().data);     // copy prefix
-    std::fill_n(&derived().data[min], Size - min, 0);   // 0-fill suffix
+    auto p = std::copy_n(list.begin(), min, begin(derived().data));     // copy prefix
+    std::fill_n(p, Size - min, 0);   // 0-fill suffix
     return derived();
   }
 
   /// Copy data from another Tensor.
   template <class T>
   auto& copy(const Tensor<R,D,T>& rhs) noexcept {
-    std::copy_n(rhs.data, Size, derived().data);
+    using std::begin;
+    std::copy_n(begin(rhs.data), Size, begin(derived().data));
     return derived();
   }
 
   /// Copy data from an r-value reference.
   template <class T>
   auto& copy(Tensor<R,D,T>&& rhs) noexcept {
-    std::copy_n(std::move(rhs.data), Size, derived().data);
+    using std::begin;
+    std::copy_n(begin(std::move(rhs).data), Size, begin(derived().data));
     return derived();
   }
 
@@ -128,7 +206,8 @@ class TensorBase
   ///                   chained.
   template <class T>
   auto& fill(T scalar) noexcept {
-    std::fill_n(derived().data, Size, scalar);
+    using std::begin;
+    std::fill_n(begin(derived().data), Size, scalar);
     return derived();
   }
 
@@ -142,7 +221,7 @@ class TensorBase
   /// @param          i The index to access.
   /// @returns          The scalar value at @p i.
   constexpr const auto get(int i) const noexcept {
-    return derived().data[i];
+    return derived().data(i);
   }
 
   /// Basic linear indexing into the tensor.
@@ -155,7 +234,7 @@ class TensorBase
   /// @param          i The index to access.
   /// @returns          A reference to the scalar value at @p i.
   constexpr auto& get(int i) noexcept {
-    return derived().data[i];
+    return derived().data(i);
   }
 
   /// Multidimensional indexing into the tensor, used during evaluation.
@@ -173,7 +252,7 @@ class TensorBase
   constexpr const auto eval(Index index) const noexcept {
     using NIndex = std::tuple_size<Index>;
     static_assert(R == NIndex::value, "Index size does not match tensor rank");
-    return derived().data[util::linearize<D>(index)];
+    return derived().data(util::linearize<D>(index));
   }
 
   /// Multidimensional indexing into the tensor, used during evaluation.
@@ -191,7 +270,7 @@ class TensorBase
   template <class Index, int N = std::tuple_size<Index>::value>
   constexpr auto& eval(Index index) noexcept {
     static_assert(R == N, "Index size does not match tensor rank");
-    return derived().data[util::linearize<D>(index)];
+    return derived().data(util::linearize<D>(index));
   }
 
   /// Bind a Bind expression to a tensor.
@@ -383,22 +462,15 @@ class Tensor : public TensorBase<R,D,S>
   }
 
   constexpr auto operator[](int i) const noexcept {
-    using Multi = util::multi_array<R,D,const S>;
-    return (*reinterpret_cast<const Multi*>(&data))[i];
+    return util::make_multi_array<R,D>(data)[i];
   }
 
   /// Direct multidimensional array access to the data.
-  constexpr auto operator[](int i) noexcept
-    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
-  {
-    using Multi = util::multi_array<R,D,S>;
-    return (*reinterpret_cast<Multi*>(&data))[i];
+  constexpr auto operator[](int i) noexcept {
+    return util::make_multi_array<R,D>(data)[i];
   }
 
-  // We remove the constness from the type for tensors so that we can use the
-  // default constructor to leave the data uninitialized. If we don't do this
-  // then expressions like Tensor<R,D,const S> T = {}; don't work.
-  std::remove_const_t<S> data[util::pow(D,R)];  ///!< scalar storage
+  StackStorage<util::pow(D, R), std::remove_const_t<S>> data;
 };
 
 /// The tensor specialization for external storage.
@@ -432,7 +504,7 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
   /// @code
   ///
   /// @param       data The external buffer.
-  Tensor(S (*data)[Size]) : data(*data) {
+  Tensor(S (*data)[Size]) : data(data) {
   }
 
   /// Allow a simple pointer to be used as the external buffer.
@@ -656,18 +728,14 @@ class Tensor<R,D,S*> : public TensorBase<R,D,S*>
 
   /// Direct multidimensional array access to the data.
   constexpr const auto operator[](int i) const noexcept {
-    using Multi = util::multi_array<R,D,const S>;
-    return (*reinterpret_cast<const Multi*>(&data))[i];
+    return util::make_multi_array<R, D>(data)[i];
   }
 
-  constexpr auto operator[](int i) noexcept
-    -> util::multi_array<R-1,D,S>& // icc https://software.intel.com/en-us/forums/intel-c-compiler/topic/709454
-  {
-    using Multi = util::multi_array<R,D,S>;
-    return (*reinterpret_cast<Multi*>(&data))[i];
+  constexpr auto operator[](int i) noexcept {
+    return util::make_multi_array<R, D>(data)[i];
   }
 
-  S (&data)[Size];                              ///!< The external storage
+  ExternalStorage<Size, S> data;
 };
 
 /// Special-case Rank 0 tensors.
@@ -678,12 +746,24 @@ template <int D, class S>
 class Tensor<0,D,S>
 {
  public:
-  auto& operator()() {
+  constexpr Tensor() noexcept = default;
+
+  constexpr Tensor(S s) noexcept : data(s) {
+  }
+
+  constexpr auto operator=(S s) noexcept {
+    return (data = s);
+  }
+
+  constexpr auto operator()() const noexcept {
     return data;
   }
 
-  auto& operator[](int i) {
-    assert(i==0);
+  constexpr auto& operator()() noexcept {
+    return data;
+  }
+
+  constexpr operator S() const noexcept {
     return data;
   }
 

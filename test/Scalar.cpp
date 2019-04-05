@@ -36,13 +36,13 @@
 
 TEST(Tensor, ScalarTensor) {
   ttl::Tensor<0, 2, double> A = {1.2};
-  EXPECT_EQ(A[0], 1.2);
+  EXPECT_EQ(A, 1.2);
 }
 
 TEST(Tensor, ScalarAssign) {
   ttl::Tensor<0, 2, double> A;
-  A[0] = 1.4;
-  EXPECT_EQ(A[0], 1.4);
+  A = 1.4;
+  EXPECT_EQ(A, 1.4);
 }
 
 TEST(Tensor, ScalarExpression) {
