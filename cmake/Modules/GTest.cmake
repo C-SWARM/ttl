@@ -8,5 +8,6 @@ download_project(
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(BUILD_GMOCK OFF CACHE BOOL "build dependent tests")
 
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
