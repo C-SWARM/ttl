@@ -77,19 +77,33 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   constexpr Tensor(const Tensor&) noexcept = default;
   constexpr Tensor(Tensor&&) noexcept = default;
 
-  /// Allow list initialization of tensors.
+  constexpr Tensor(std::initializer_list<T> list) noexcept : Storage(list) {
+  }
+
+  // template <class... Args>
+  // constexpr Tensor(Args&&... args) noexcept :
+  //     Storage(std::forward<Args>(args)...) {
+  // }
+
+  /// Normal assignment and move operators.
+  constexpr Tensor& operator=(const Tensor&) noexcept = default;
+  constexpr Tensor& operator=(Tensor&&) noexcept = default;
+
+  /// We can always assign to tensors from initializer lists.
+  ///
+  /// This works for all Tensor types, independent from the storage class.
   ///
   /// @code
-  ///  Tensor<R,D,T> A = {0,1,...};
+  ///  Tensor<R,D,T> A;
+  ///  A = {0,1,...};
   /// @code
   ///
   /// @param       list The initializer list for the tensor.
-  Tensor(std::initializer_list<T> list) noexcept
-  {
-    using std::begin;
-    std::size_t min = std::min(size(), list.size());
-    auto p = std::copy_n(list.begin(), min, Storage::begin()); // copy prefix
-    std::fill_n(p, size() - min, 0);                           // 0-fill suffix
+  ///
+  /// @returns          A reference to the Tensor.
+  constexpr Tensor& operator=(std::initializer_list<T> list) noexcept {
+    Storage::operator=(list);
+    return *this;
   }
 
   /// Allow initialization from tensors of compatible type.
@@ -164,10 +178,6 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
     apply(rhs);
   }
 
-  /// Normal assignment and move operators.
-  constexpr Tensor& operator=(const Tensor&) noexcept = default;
-  constexpr Tensor& operator=(Tensor&&) noexcept = default;
-
   /// Allow assignment from expressions of compatible type without explicit bind
   ///
   /// @code
@@ -229,8 +239,8 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   /// @returns          The scalar value at the linearized @p index.
   template <class Index>
   constexpr const auto eval(Index index) const noexcept {
-    using NIndex = std::tuple_size<Index>;
-    static_assert(R == NIndex::value, "Index size does not match tensor rank");
+    constexpr int N = std::tuple_size<Index>::value;
+    static_assert(R == N, "Index size does not match tensor rank");
     return Storage::get(util::linearize<D>(index));
   }
 
@@ -246,8 +256,9 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   /// @param      index The multidimension index to access.
   /// @returns          The a reference to the scalar value at the linearized @p
   ///                   index.
-  template <class Index, int N = std::tuple_size<Index>::value>
+  template <class Index>
   constexpr auto& eval(Index index) noexcept {
+    constexpr int N = std::tuple_size<Index>::value;
     static_assert(R == N, "Index size does not match tensor rank");
     return Storage::get(util::linearize<D>(index));
   }

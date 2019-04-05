@@ -1,25 +1,49 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <initializer_list>
 
 namespace ttl {
-template <class Scalar, size_t N>
+template <class T, size_t N>
 class StackStorage {
  public:
-  using T = Scalar;
+  /// Stack storage constructors... all of the default stuff is fine.
+  constexpr StackStorage() noexcept = default;
+  constexpr StackStorage(const StackStorage&) noexcept = default;
+  constexpr StackStorage(StackStorage&&) noexcept = default;
+  constexpr StackStorage& operator=(const StackStorage&) noexcept = default;
+  constexpr StackStorage& operator=(StackStorage&&) noexcept = default;
 
+  /// Stack storage can be initialized or assigned from initializer lists.
+  template <class S>
+  constexpr StackStorage(std::initializer_list<S> list) noexcept
+      : data_(copy(list))
+  {
+  }
+
+  template <class S>
+  constexpr StackStorage& operator=(std::initializer_list<S> list) noexcept {
+    data_ = copy(list);
+    return *this;
+  }
+
+  /// Get a linear iterator to the storage array.
   constexpr auto begin() const noexcept {
     return data_.begin();
   }
 
+  /// Get a linear iterator to the storage array.
   constexpr auto begin() noexcept {
     return data_.begin();
   }
 
+  /// Get a linear iterator to the storage array.
   constexpr auto end() const noexcept {
     return data_.end();
   }
 
+  /// Get a linear iterator to the storage array.
   constexpr auto end() noexcept {
     return data_.end();
   }
@@ -51,6 +75,15 @@ class StackStorage {
   }
 
  private:
+  template <class S>
+  static constexpr std::array<T, N> copy(std::initializer_list<S> list) noexcept {
+    std::array<T, N> i;
+    auto min = std::min(N, list.size());
+    auto p = std::copy_n(list.begin(), min, i.begin());
+    std::fill_n(p, N - min, 0);
+    return i;
+  }
+
   std::array<T, N> data_;
 };
 } // namespace ttl
