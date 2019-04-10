@@ -202,14 +202,14 @@ TEST(Tensor, CopyCtor) {
   EXPECT_EQ(B[1][1], A[1][1]);
 }
 
-TEST(Tensor, CopyCtorWiden) {
-  ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
-  ttl::Tensor<2, 2, float> B = A;
-  EXPECT_EQ(B[0][0], A[0][0]);
-  EXPECT_EQ(B[0][1], A[0][1]);
-  EXPECT_EQ(B[1][0], A[1][0]);
-  EXPECT_EQ(B[1][1], A[1][1]);
-}
+// TEST(Tensor, CopyCtorWiden) {
+//   ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
+//   ttl::Tensor<2, 2, float> B = A;
+//   EXPECT_EQ(B[0][0], A[0][0]);
+//   EXPECT_EQ(B[0][1], A[0][1]);
+//   EXPECT_EQ(B[1][0], A[1][0]);
+//   EXPECT_EQ(B[1][1], A[1][1]);
+// }
 
 TEST(Tensor, CopyCtorFromConst) {
   const ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
@@ -238,23 +238,23 @@ TEST(Tensor, CopyCtorFromConstToConst) {
   EXPECT_EQ(B[1][1], A[1][1]);
 }
 
-TEST(Tensor, CopyCtorFromConstData) {
-  ttl::Tensor<2, 2, const int> A = {0, 1, 2, 3};
-  ttl::Tensor<2, 2, int> B = A;
-  EXPECT_EQ(B[0][0], A[0][0]);
-  EXPECT_EQ(B[0][1], A[0][1]);
-  EXPECT_EQ(B[1][0], A[1][0]);
-  EXPECT_EQ(B[1][1], A[1][1]);
-}
+// TEST(Tensor, CopyCtorFromConstData) {
+//   ttl::Tensor<2, 2, const int> A = {0, 1, 2, 3};
+//   ttl::Tensor<2, 2, int> B = A;
+//   EXPECT_EQ(B[0][0], A[0][0]);
+//   EXPECT_EQ(B[0][1], A[0][1]);
+//   EXPECT_EQ(B[1][0], A[1][0]);
+//   EXPECT_EQ(B[1][1], A[1][1]);
+// }
 
-TEST(Tensor, CopyCtorToConstData) {
-  ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
-  ttl::Tensor<2, 2, const int> B = A;
-  EXPECT_EQ(B[0][0], A[0][0]);
-  EXPECT_EQ(B[0][1], A[0][1]);
-  EXPECT_EQ(B[1][0], A[1][0]);
-  EXPECT_EQ(B[1][1], A[1][1]);
-}
+// TEST(Tensor, CopyCtorToConstData) {
+//   ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
+//   ttl::Tensor<2, 2, const int> B = A;
+//   EXPECT_EQ(B[0][0], A[0][0]);
+//   EXPECT_EQ(B[0][1], A[0][1]);
+//   EXPECT_EQ(B[1][0], A[1][0]);
+//   EXPECT_EQ(B[1][1], A[1][1]);
+// }
 
 TEST(Tensor, MoveCtor) {
   ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
@@ -264,13 +264,13 @@ TEST(Tensor, MoveCtor) {
   EXPECT_EQ(A[1][1], 3);
 }
 
-TEST(Tensor, MoveCtorWiden) {
-  ttl::Tensor<2, 2, double> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
-  EXPECT_EQ(A[0][0], 0.0);
-  EXPECT_EQ(A[0][1], 1.0);
-  EXPECT_EQ(A[1][0], 2.0);
-  EXPECT_EQ(A[1][1], 3.0);
-}
+// TEST(Tensor, MoveCtorWiden) {
+//   ttl::Tensor<2, 2, double> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
+//   EXPECT_EQ(A[0][0], 0.0);
+//   EXPECT_EQ(A[0][1], 1.0);
+//   EXPECT_EQ(A[1][0], 2.0);
+//   EXPECT_EQ(A[1][1], 3.0);
+// }
 
 TEST(Tensor, MoveCtorToConst) {
   const ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
@@ -280,21 +280,21 @@ TEST(Tensor, MoveCtorToConst) {
   EXPECT_EQ(A[1][1], 3);
 }
 
-TEST(Tensor, MoveCtorFromConstData) {
-  ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
-  EXPECT_EQ(A[0][0], 0);
-  EXPECT_EQ(A[0][1], 1);
-  EXPECT_EQ(A[1][0], 2);
-  EXPECT_EQ(A[1][1], 3);
-}
+// TEST(Tensor, MoveCtorFromConstData) {
+//   ttl::Tensor<2, 2, int> A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
+//   EXPECT_EQ(A[0][0], 0);
+//   EXPECT_EQ(A[0][1], 1);
+//   EXPECT_EQ(A[1][0], 2);
+//   EXPECT_EQ(A[1][1], 3);
+// }
 
-TEST(Tensor, MoveCtorToConstData) {
-  ttl::Tensor<2, 2, const int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
-  EXPECT_EQ(A[0][0], 0);
-  EXPECT_EQ(A[0][1], 1);
-  EXPECT_EQ(A[1][0], 2);
-  EXPECT_EQ(A[1][1], 3);
-}
+// TEST(Tensor, MoveCtorToConstData) {
+//   ttl::Tensor<2, 2, const int> A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
+//   EXPECT_EQ(A[0][0], 0);
+//   EXPECT_EQ(A[0][1], 1);
+//   EXPECT_EQ(A[1][0], 2);
+//   EXPECT_EQ(A[1][1], 3);
+// }
 
 TEST(Tensor, Assign) {
   ttl::Tensor<2, 2, int> A;
@@ -355,15 +355,15 @@ TEST(Tensor, Copy) {
   EXPECT_EQ(B[1][1], A[1][1]);
 }
 
-TEST(Tensor, CopyWiden) {
-  ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
-  ttl::Tensor<2, 2, float> B;
-  B = A;
-  EXPECT_EQ(B[0][0], A[0][0]);
-  EXPECT_EQ(B[0][1], A[0][1]);
-  EXPECT_EQ(B[1][0], A[1][0]);
-  EXPECT_EQ(B[1][1], A[1][1]);
-}
+// TEST(Tensor, CopyWiden) {
+//   ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
+//   ttl::Tensor<2, 2, float> B;
+//   B = A;
+//   EXPECT_EQ(B[0][0], A[0][0]);
+//   EXPECT_EQ(B[0][1], A[0][1]);
+//   EXPECT_EQ(B[1][0], A[1][0]);
+//   EXPECT_EQ(B[1][1], A[1][1]);
+// }
 
 TEST(Tensor, CopyFromConst) {
   const ttl::Tensor<2, 2, int> A = {0, 1, 2, 3};
@@ -375,15 +375,15 @@ TEST(Tensor, CopyFromConst) {
   EXPECT_EQ(B[1][1], A[1][1]);
 }
 
-TEST(Tensor, CopyFromConstData) {
-  ttl::Tensor<2, 2, const int> A = {0, 1, 2, 3};
-  ttl::Tensor<2, 2, int> B;
-  B = A;
-  EXPECT_EQ(B[0][0], A[0][0]);
-  EXPECT_EQ(B[0][1], A[0][1]);
-  EXPECT_EQ(B[1][0], A[1][0]);
-  EXPECT_EQ(B[1][1], A[1][1]);
-}
+// TEST(Tensor, CopyFromConstData) {
+//   ttl::Tensor<2, 2, const int> A = {0, 1, 2, 3};
+//   ttl::Tensor<2, 2, int> B;
+//   B = A;
+//   EXPECT_EQ(B[0][0], A[0][0]);
+//   EXPECT_EQ(B[0][1], A[0][1]);
+//   EXPECT_EQ(B[1][0], A[1][0]);
+//   EXPECT_EQ(B[1][1], A[1][1]);
+// }
 
 TEST(Tensor, Move) {
   ttl::Tensor<2, 2, int> A;
@@ -394,23 +394,23 @@ TEST(Tensor, Move) {
   EXPECT_EQ(A[1][1], 3);
 }
 
-TEST(Tensor, MoveWiden) {
-  ttl::Tensor<2, 2, double> A;
-  A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
-  EXPECT_EQ(A[0][0], 0.0);
-  EXPECT_EQ(A[0][1], 1.0);
-  EXPECT_EQ(A[1][0], 2.0);
-  EXPECT_EQ(A[1][1], 3.0);
-}
+// TEST(Tensor, MoveWiden) {
+//   ttl::Tensor<2, 2, double> A;
+//   A = ttl::Tensor<2, 2, int>{0, 1, 2, 3};
+//   EXPECT_EQ(A[0][0], 0.0);
+//   EXPECT_EQ(A[0][1], 1.0);
+//   EXPECT_EQ(A[1][0], 2.0);
+//   EXPECT_EQ(A[1][1], 3.0);
+// }
 
-TEST(Tensor, MoveFromConstData) {
-  ttl::Tensor<2, 2, int> A;
-  A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
-  EXPECT_EQ(A[0][0], 0);
-  EXPECT_EQ(A[0][1], 1);
-  EXPECT_EQ(A[1][0], 2);
-  EXPECT_EQ(A[1][1], 3);
-}
+// TEST(Tensor, MoveFromConstData) {
+//   ttl::Tensor<2, 2, int> A;
+//   A = ttl::Tensor<2, 2, const int>{0, 1, 2, 3};
+//   EXPECT_EQ(A[0][0], 0);
+//   EXPECT_EQ(A[0][1], 1);
+//   EXPECT_EQ(A[1][0], 2);
+//   EXPECT_EQ(A[1][1], 3);
+// }
 
 TEST(Tensor, Fill) {
   ttl::Tensor<2, 2, double> A;
