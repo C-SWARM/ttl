@@ -119,8 +119,8 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   template <class E>
   Tensor(const expressions::Expression<E>& rhs) noexcept {
     using expressions::make_bind;
-    using expressions::outer_type;
-    using Index = outer_type<E>;
+    using expressions::outer_t;
+    using Index = outer_t<E>;
     make_bind<Index>(*this) = rhs;
   }
 
@@ -135,8 +135,8 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   template <class E>
   Tensor(expressions::Expression<E>&& rhs) noexcept {
     using expressions::make_bind;
-    using expressions::outer_type;
-    using Index = outer_type<E>;
+    using expressions::outer_t;
+    using Index = outer_t<E>;
     make_bind<Index>(*this) = std::move(rhs);
   }
 

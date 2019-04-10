@@ -66,31 +66,35 @@ struct traits;
 
 /// This specialization is used to try and print a hopefully useful error when
 /// Tensors are used without indices.
-template <int R, int D, class S>
-struct traits<Tensor<R, D, S>>
+template <int R, int D, class T>
+struct traits<Tensor<R, D, T>>
 {
-  using outer_type = std::tuple<>;
-  using inner_type = std::tuple<>;
-  using scalar_type = std::remove_pointer_t<S>;
-  using dimension = std::integral_constant<int, D>;
-  using rank = std::integral_constant<int, R>;
+  using     outer_type = std::tuple<>;
+  using     inner_type = std::tuple<>;
+  using    scalar_type = T;
+  using dimension_type = std::integral_constant<int, D>;
+  using      rank_type = std::integral_constant<int, R>;
 };
 
+// Note available until C++17.
 template <class E>
-using rinse = std::remove_cv_t<std::remove_reference_t<E>>;
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<E>>;
 
 /// The following traits are required for all expression types.
 template <class E>
-using outer_type = typename traits<rinse<E>>::outer_type;
+using outer_t = typename traits<remove_cvref_t<E>>::outer_type;
 
 template <class E>
-using inner_type = typename traits<rinse<E>>::inner_type;
+using inner_t = typename traits<remove_cvref_t<E>>::inner_type;
 
 template <class E>
-using scalar_type = typename traits<rinse<E>>::scalar_type;
+using scalar_t = typename traits<remove_cvref_t<E>>::scalar_type;
 
 template <class E>
-using dimension_t = typename traits<rinse<E>>::dimension;
+using dimension_t = typename traits<remove_cvref_t<E>>::dimension_type;
+
+template <class E>
+using rank_t = typename traits<remove_cvref_t<E>>::rank_type;
 
 template <class E>
 constexpr auto dimension() {
@@ -98,15 +102,12 @@ constexpr auto dimension() {
 }
 
 template <class E>
-using rank_t = typename traits<rinse<E>>::rank;
-
-template <class E>
 constexpr auto rank() {
   return rank_t<E>::value;
 }
 
 template <class E>
-using tensor_type = Tensor<rank<E>(), dimension<E>(), rinse<scalar_type<E>>>;
+using tensor_type = Tensor<rank<E>(), dimension<E>(), scalar_t<E>>;
 
 } // namespace expressions
 } // namespace traits

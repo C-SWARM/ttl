@@ -53,7 +53,7 @@ struct matrix_dimension_t {
 
 template <int N, class T>
 constexpr auto as_matrix(Tensor<2,N,T>&& A) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i, int j) -> S& {
     return A[i][j];
   };
@@ -61,7 +61,7 @@ constexpr auto as_matrix(Tensor<2,N,T>&& A) {
 
 template <int N, class T>
 constexpr auto as_matrix(Tensor<2,N,T>& A) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i, int j) -> S& {
     return A[i][j];
   };
@@ -69,7 +69,7 @@ constexpr auto as_matrix(Tensor<2,N,T>& A) {
 
 template <int N, class T>
 constexpr auto as_matrix(const Tensor<2,N,T>& A) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i, int j) -> S {
     return A[i][j];
   };
@@ -77,7 +77,7 @@ constexpr auto as_matrix(const Tensor<2,N,T>& A) {
 
 template <int N, class T>
 constexpr auto as_matrix(Tensor<4,N,T>&& A) {
-  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  using S = expressions::scalar_t<Tensor<4,N,T>>;
   return [&](int i, int j) -> S& {
     int m = i / N;
     int n = i % N;
@@ -89,7 +89,7 @@ constexpr auto as_matrix(Tensor<4,N,T>&& A) {
 
 template <int N, class T>
 constexpr auto as_matrix(Tensor<4,N,T>& A) {
-  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  using S = expressions::scalar_t<Tensor<4,N,T>>;
   return [&](int i, int j) -> S& {
     int m = i / N;
     int n = i % N;
@@ -101,7 +101,7 @@ constexpr auto as_matrix(Tensor<4,N,T>& A) {
 
 template <int N, class T>
 constexpr auto as_matrix(const Tensor<4,N,T>& A) {
-  using S = expressions::scalar_type<Tensor<4,N,T>>;
+  using S = expressions::scalar_t<Tensor<4,N,T>>;
   return [&](int i, int j) -> S {
     int m = i / N;
     int n = i % N;
@@ -113,7 +113,7 @@ constexpr auto as_matrix(const Tensor<4,N,T>& A) {
 
 template <int N, class T>
 constexpr auto as_vector(Tensor<1,N,T>&& x) {
-  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  using S = expressions::scalar_t<Tensor<1,N,T>>;
   return [&](int i) -> S& {
     return x[i];
   };
@@ -121,7 +121,7 @@ constexpr auto as_vector(Tensor<1,N,T>&& x) {
 
 template <int N, class T>
 constexpr auto as_vector(Tensor<1,N,T>& x) {
-  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  using S = expressions::scalar_t<Tensor<1,N,T>>;
   return [&](int i) -> S& {
     return x[i];
   };
@@ -129,7 +129,7 @@ constexpr auto as_vector(Tensor<1,N,T>& x) {
 
 template <int N, class T>
 constexpr auto as_vector(const Tensor<1,N,T>& x) {
-  using S = expressions::scalar_type<Tensor<1,N,T>>;
+  using S = expressions::scalar_t<Tensor<1,N,T>>;
   return [&](int i) -> S {
     return x[i];
   };
@@ -137,7 +137,7 @@ constexpr auto as_vector(const Tensor<1,N,T>& x) {
 
 template <int N, class T>
 constexpr auto as_vector(Tensor<2,N,T>&& x) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i) -> S& {
     int m = i / N;
     int n = i % N;
@@ -147,7 +147,7 @@ constexpr auto as_vector(Tensor<2,N,T>&& x) {
 
 template <int N, class T>
 constexpr auto as_vector(Tensor<2,N,T>& x) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i) -> S& {
     int m = i / N;
     int n = i % N;
@@ -157,7 +157,7 @@ constexpr auto as_vector(Tensor<2,N,T>& x) {
 
 template <int N, class T>
 constexpr auto as_vector(const Tensor<2,N,T>& x) {
-  using S = expressions::scalar_type<Tensor<2,N,T>>;
+  using S = expressions::scalar_t<Tensor<2,N,T>>;
   return [&](int i) -> S {
     int m = i / N;
     int n = i % N;

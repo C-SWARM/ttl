@@ -55,10 +55,10 @@ class Zero : public Expression<Zero<D,Index>>
 template <int D, class Index>
 struct traits<Zero<D, Index>>
 {
-  using outer_type = Index;
-  using scalar_type = int;
-  using dimension = std::integral_constant<int, D>;
-  using rank = typename std::tuple_size<Index>::type;
+  using     outer_type = Index;
+  using    scalar_type = int;
+  using dimension_type = std::integral_constant<int, D>;
+  using      rank_type = typename std::tuple_size<Index>::type;
 };
 } // namespace expressions
 

@@ -38,48 +38,36 @@
 #include <ttl/Expressions/Expression.h>
 #include <ttl/Expressions/traits.h>
 #include <ttl/Library/binder.h>
+#include <ttl/mp/cat.hpp>
+#include <tuple>
 
 namespace ttl {
 namespace lib {
-template <class T, class Pack> struct
-push_back_impl;
-
-template <template <class...> class Pack, class T, class... U>
-struct push_back_impl<T, Pack<U...>> {
-  using type = Pack<U..., T>;
+template <class T>
+struct reverse {
+  using type = std::tuple<>;
 };
 
-template <class T, class Pack>
-using push_back = typename push_back_impl<T, Pack>::type;
-
-template <class Pack>
-struct reverse_impl;
-
-template <template <class...> class Pack>
-struct reverse_impl<Pack<>>
+template <class T0, class... T>
+struct reverse<std::tuple<T0, T...>>
 {
-  using type = Pack<>;
+  using next = typename reverse<std::tuple<T...>>::type;
+  using type = mp::cat_t<next, T0>;
 };
 
-template <template <class...> class Pack, class T0, class... T>
-struct reverse_impl<Pack<T0, T...>>
-{
-  using type = push_back<T0, typename reverse_impl<Pack<T...>>::type>;
-};
-
-template <class Pack>
-using reverse = typename reverse_impl<Pack>::type;
+template <class T>
+using reverse_t = typename reverse<T>::type;
 } // namespace lib
 
 template <class E>
 constexpr auto transpose(E t) {
-  using Outer = expressions::outer_type<E>;
-  using Type = lib::reverse<Outer>;
+  using Outer = expressions::outer_t<E>;
+  using Type = lib::reverse_t<Outer>;
   return expressions::Bind<E,Type>(t);
 }
 
-template <int R, int D, class S>
-constexpr auto transpose(const Tensor<R,D,S>& t) {
+template <int R, int D, class T>
+constexpr auto transpose(const Tensor<R,D,T>& t) {
   return transpose(lib::bind(t));
 }
 

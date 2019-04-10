@@ -57,13 +57,13 @@ class ScalarOp;
 template <class Op, class L, class R>
 struct traits<ScalarOp<Op, L, R, true>> : public traits<R>
 {
-  using scalar_type = promote<L, R>;
+  using scalar_type = promote_t<L, R>;
 };
 
 template <class Op, class L, class R>
 struct traits<ScalarOp<Op, L, R, false>> : public traits<L>
 {
-  using scalar_type = promote<L, R>;
+  using scalar_type = promote_t<L, R>;
 };
 
 /// The ScalarOp expression implementation.
@@ -114,13 +114,13 @@ class ScalarOp<Op, L, R, false> : public Expression<ScalarOp<Op, L, R, false>>
 };
 
 template <class L, class R>
-using DivideOp = ScalarOp<std::divides<promote<L, R>>, L, R>;
+using DivideOp = ScalarOp<std::divides<promote_t<L, R>>, L, R>;
 
 template <class L, class R>
-using ModulusOp = ScalarOp<std::modulus<promote<L, R>>, L, R>;
+using ModulusOp = ScalarOp<std::modulus<promote_t<L, R>>, L, R>;
 
 template <class L, class R>
-using MultiplyOp = ScalarOp<std::multiplies<promote<L, R>>, L, R>;
+using MultiplyOp = ScalarOp<std::multiplies<promote_t<L, R>>, L, R>;
 
 } // namespace expressions
 } // namespace ttl

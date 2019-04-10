@@ -67,8 +67,8 @@ struct det_impl<E, 2, 3>
 } // namespace lib
 
 template <class E>
-constexpr expressions::scalar_type<E> det(E e) {
-  return lib::det_impl<E>::op(e);
+constexpr expressions::scalar_t<E> det(E expression) {
+  return lib::det_impl<E>::op(expression);
 }
 
 template <int D, class S>

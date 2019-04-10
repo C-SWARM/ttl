@@ -371,10 +371,10 @@ struct contract_impl<int_constant<n>, int_constant<n + 6>, D, T>
 template <class E, class Index, class Op>
 constexpr auto contractExtended(Index i, Op&& op) noexcept {
   using std::tuple_size;
-  constexpr int n = tuple_size<outer_type<E>>::value;
+  constexpr int n = tuple_size<outer_t<E>>::value;
   constexpr int M = tuple_size<Index>::value;
   constexpr int D = dimension<E>();
-  using T = scalar_type<E>;
+  using T = scalar_t<E>;
   using impl = contract_impl<int_constant<n>, int_constant<M>, D, T>;
   return impl::op(i, std::forward<Op>(op));
 }
@@ -385,8 +385,8 @@ constexpr auto contractExtended(Index i, Op&& op) noexcept {
 template <class E, class Index>
 constexpr auto extend(Index i) {
   using std::tuple_cat;
-  using Outer = outer_type<E>;
-  using Inner = inner_type<E>;
+  using Outer = outer_t<E>;
+  using Inner = inner_t<E>;
   return tuple_cat(transform(Outer{}, i), Inner{});
 }
 
@@ -421,7 +421,7 @@ constexpr auto contract(Index i, Op&& op) noexcept {
 template <class E, class Op>
 constexpr void forall(Op&& op) noexcept {
   using std::tuple_size;
-  using Index = outer_type<E>;
+  using Index = outer_t<E>;
   constexpr int n = 0;
   constexpr int M = tuple_size<Index>::value;
   constexpr int D = dimension<E>();

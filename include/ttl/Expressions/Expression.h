@@ -76,10 +76,10 @@ class Expression {
 
   template <class... I>
   constexpr const auto operator()(I... index) const {
-    return eval(outer_type<E>(index...));
+    return eval(outer_t<E>(index...));
   }
 
-  constexpr operator const scalar_type<E>() const {
+  constexpr operator const scalar_t<E>() const {
     return eval(std::tuple<>{});
   }
 

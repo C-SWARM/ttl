@@ -66,12 +66,10 @@ class Bind;
 
 /// The expression traits for Bind expressions.
 ///
-/// Bind currently strips the cvref keywords from the bound type.
-///
 /// @tparam           E The subtree expression type.
 /// @tparam       Index The indices bound to this expression.
 template <class E, class Index>
-struct traits<Bind<E, Index>> : public traits<rinse<E>>
+struct traits<Bind<E, Index>> : public traits<remove_cvref_t<E>>
 {
  private:
   using index_t = mp::non_integer_t<Index>;
@@ -79,17 +77,23 @@ struct traits<Bind<E, Index>> : public traits<rinse<E>>
  public:
   using outer_type = mp::unique_t<index_t>;
   using inner_type = mp::duplicate_t<index_t>;
-  using rank = typename std::tuple_size<outer_type>::type;
+  using rank_type = typename std::tuple_size<outer_type>::type;
 };
 
-template <class Exp, class Index>
-class Bind : public Expression<Bind<Exp, Index>>
+/// The Bind expression.
+///
+/// The bind expression is the expression that adapts a Tensor for use in a
+/// Tensor Expression. It merges the underlying Tensor storage with an index
+/// type, allowing the core syntax that differentiates a ttl Tensor from a basic
+/// multidimensional array (or higher order matrix).
+///
+/// @tparam       Child The type of the child node in the syntax tree.
+/// @tparam       Index The index type.
+template <class Child, class Index>
+class Bind : public Expression<Bind<Child, Index>>
 {
-  /// The Bind storage type is an expression, or a reference to a Tensor.
-  using Child = mp::iif_t<is_expression_t<Exp>::value, Exp, Exp&>;
-
  public:
-  /// A Bind expression keeps a reference to the E it wraps, and a
+  /// A Bind expression keeps a reference to the E it wraps, and an index.
   ///
   /// @tparam         t The underlying tensor.
   constexpr Bind(Child t, Index i = Index{}) noexcept : t_(t), i_(i) {
@@ -98,8 +102,8 @@ class Bind : public Expression<Bind<Exp, Index>>
   static constexpr int Rank = rank_t<Bind>::value;
   static constexpr int N = dimension_t<Bind>::value;
 
-  template <class OuterIndex>
-  constexpr auto eval(OuterIndex index) const {
+  template <class Outer>
+  constexpr auto eval(Outer index) const {
     return contract<Bind>(index, [this](auto index) {
         return t_.eval(transform(index));
     });
@@ -116,7 +120,7 @@ class Bind : public Expression<Bind<Exp, Index>>
     static_assert(dimension_t<E>::value ==  N or
                   dimension_t<E>::value == -1,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<E>>::value,
+    static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<E>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) = rhs.eval(i);
@@ -125,7 +129,7 @@ class Bind : public Expression<Bind<Exp, Index>>
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  Bind& operator=(scalar_type<Bind> rhs) {
+  Bind& operator=(scalar_t<Bind> rhs) {
     static_assert(Rank == 0, "Cannot assign scalar to tensor");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) = rhs;
@@ -143,7 +147,7 @@ class Bind : public Expression<Bind<Exp, Index>>
   Bind& operator+=(RHS&& rhs) {
     static_assert(dimension_t<RHS>::value == N,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<RHS>>::value,
+    static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) += rhs.eval(i);

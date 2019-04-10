@@ -71,7 +71,7 @@ class UnaryOp : public Expression<UnaryOp<Op, E>>
 };
 
 template <class E>
-using NegateOp = UnaryOp<std::negate<scalar_type<E>>, E>;
+using NegateOp = UnaryOp<std::negate<scalar_t<E>>, E>;
 
 } // namespace expressions
 } // namespace ttl

@@ -86,11 +86,10 @@ struct is_diagonal<N, N>
 template <int D, class Index>
 class DeltaOp : public Expression<DeltaOp<D, Index>>
 {
-  static constexpr int N = std::tuple_size<Index>::value;
-
  public:
   constexpr int eval(Index index) const noexcept {
-    return detail::is_diagonal<0,N>::op(std::get<0>(index), index);
+    constexpr int Rank = std::tuple_size<Index>::value;
+    return detail::is_diagonal<0, Rank>::op(std::get<0>(index), index);
   }
 
   template <class Other>
@@ -112,10 +111,10 @@ class DeltaOp<D, std::tuple<>> : public Expression<DeltaOp<D, std::tuple<>>>
 template <int D, class Index>
 struct traits<DeltaOp<D, Index>>
 {
-  using outer_type = Index;
-  using scalar_type = int;
-  using dimension = std::integral_constant<int, D>;
-  using rank = typename std::tuple_size<Index>::type;
+  using     outer_type = Index;
+  using    scalar_type = int;
+  using dimension_type = std::integral_constant<int, D>;
+  using      rank_type = typename std::tuple_size<Index>::type;
 };
 } // namespace expressions
 

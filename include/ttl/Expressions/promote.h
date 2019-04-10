@@ -48,38 +48,31 @@ namespace detail {
 template <class L, class R,
           bool = std::is_arithmetic<L>::value,
           bool = std::is_arithmetic<R>::value>
-struct promote_impl;
-}
-
-template <class L, class R>
-using promote = typename detail::promote_impl<L, R>::type;
-
-namespace detail {
-template <class L, class R>
-struct promote_impl<L, R, true, true>
-{
+struct promote {
   using type = decltype(L() * R());             // both scalars
 };
 
 template <class L, class R>
-struct promote_impl<L, R, true, false>
+struct promote<L, R, true, false>
 {
-  using type = promote<L, scalar_type<R>>;
+  using type = typename promote<L, scalar_t<R>>::type;
 };
 
 template <class L, class R>
-struct promote_impl<L, R, false, true>
+struct promote<L, R, false, true>
 {
-  using type = promote<scalar_type<L>, R>;
+  using type = typename promote<scalar_t<L>, R>::type;
 };
 
 template <class L, class R>
-struct promote_impl<L, R, false, false>
+struct promote<L, R, false, false>
 {
-  using type = promote<scalar_type<L>, scalar_type<R>>;
+  using type = typename promote<scalar_t<L>, scalar_t<R>>::type;
 };
 } // namespace detail
 
+template <class L, class R>
+using promote_t = typename detail::promote<L, R>::type;
 } // namespace expressions
 } // namespace ttl
 

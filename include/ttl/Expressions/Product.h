@@ -61,11 +61,11 @@ struct traits<Product<L, R>>
   static_assert(is_expression_t<L>::value, "Operand is not Expression");
   static_assert(is_expression_t<R>::value, "Operand is not Expression");
 
-  using l_outer_type = expressions::outer_type<L>;
-  using r_outer_type = expressions::outer_type<R>;
+  using l_outer_type = outer_t<L>;
+  using r_outer_type = outer_t<R>;
 
-  static constexpr int l_dim = expressions::dimension<L>();
-  static constexpr int r_dim = expressions::dimension<R>();
+  static constexpr int l_dim = dimension<L>();
+  static constexpr int r_dim = dimension<R>();
   static_assert(l_dim == r_dim or
                 l_dim == -1 or
                 r_dim == -1,
@@ -73,11 +73,11 @@ struct traits<Product<L, R>>
   static constexpr int dim = ((l_dim < r_dim) ? r_dim : l_dim);
 
  public:
-  using outer_type = mp::xor_t<l_outer_type, r_outer_type>;
-  using inner_type = mp::and_t<l_outer_type, r_outer_type>;
-  using scalar_type = promote<L, R>;
-  using dimension = std::integral_constant<int, dim>;
-  using rank = typename std::tuple_size<outer_type>::type;
+  using     outer_type = mp::xor_t<l_outer_type, r_outer_type>;
+  using     inner_type = mp::and_t<l_outer_type, r_outer_type>;
+  using    scalar_type = promote_t<L, R>;
+  using dimension_type = std::integral_constant<int, dim>;
+  using      rank_type = typename std::tuple_size<outer_type>::type;
 };
 
 /// The Product expression implementation.

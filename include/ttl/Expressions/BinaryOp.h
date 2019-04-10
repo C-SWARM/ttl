@@ -67,7 +67,7 @@ class BinaryOp;
 template <class Op, class L, class R>
 struct traits<BinaryOp<Op, L, R>> : public traits<L>
 {
-  using scalar_type = promote<L, R>;
+  using scalar_type = promote_t<L, R>;
 };
 
 /// The BinaryOp expression implementation.
@@ -84,7 +84,7 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
 {
   static_assert(is_expression_t<L>::value, "Operand is not Expression");
   static_assert(is_expression_t<R>::value, "Operand is not Expression");
-  static_assert(mp::equivalent_t<outer_type<L>, outer_type<R>>::value,
+  static_assert(mp::equivalent_t<outer_t<L>, outer_t<R>>::value,
                 "BinaryOp expressions do not have equivalent index types.");
   static_assert(dimension<L>() == dimension<R>(),
                 "Cannot operate on expressions of differing dimension");
@@ -104,10 +104,10 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
 };
 
 template <class L, class R>
-using AddOp = BinaryOp<std::plus<promote<L, R>>, L, R>;
+using AddOp = BinaryOp<std::plus<promote_t<L, R>>, L, R>;
 
 template <class L, class R>
-using SubtractOp = BinaryOp<std::minus<promote<L, R>>, L, R>;
+using SubtractOp = BinaryOp<std::minus<promote_t<L, R>>, L, R>;
 
 } // namespace expressions
 } // namespace ttl
