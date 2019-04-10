@@ -111,19 +111,19 @@ using shuffle_t = typename shuffle<T>::type;
 
 namespace expressions {
 template <int D>
-constexpr auto identity(std::tuple<>) {
+constexpr auto identity(std::tuple<>) noexcept {
   return DeltaOp<D, std::tuple<>>();
 }
 
 template <int D, class T0, class T1, class... T>
-constexpr auto identity(std::tuple<T0, T1, T...>) {
+constexpr auto identity(std::tuple<T0, T1, T...>) noexcept {
   using delta = DeltaOp<D,std::tuple<T0,T1>>;
   return delta() * identity<D>(std::tuple<T...>{});
 }
 } // namespace expressions
 
 template <int D = -1, class... Index>
-constexpr auto identity(Index...) {
+constexpr auto identity(Index...) noexcept {
   static_assert(sizeof...(Index) % 2 == 0, "The identity must have even rank.");
   using type = mp::shuffle_t<std::tuple<Index...>>;
   return expressions::identity<D>(type{}).to(std::tuple<Index...>{});

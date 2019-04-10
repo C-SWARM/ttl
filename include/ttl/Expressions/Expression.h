@@ -92,20 +92,20 @@ template <class E>
 struct traits<Expression<E>> : public traits<E> {
 };
 
-namespace detail {
 template <class E>
-struct is_expression_impl {
+struct is_expression {
   using type = typename std::is_base_of<Expression<E>, E>::type;
+  static constexpr bool value = std::is_base_of<Expression<E>, E>::value;
 };
 
 template <class E>
-struct is_expression_impl<Expression<E>> {
+struct is_expression<Expression<E>> {
   using type = std::true_type;
+  static constexpr bool value = true;
 };
-} // namespace detail
 
 template <class E>
-using is_expression_t = typename detail::is_expression_impl<std::remove_cv_t<E>>::type;
+using is_expression_t = typename is_expression<std::remove_cv_t<E>>::type;
 
 } // namespace expressions
 } // namespace ttl

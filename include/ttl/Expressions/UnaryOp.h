@@ -42,27 +42,27 @@ namespace expressions {
 /// UnaryOp represents a unary operation on an expression.
 ///
 /// @tparam           E The Expression.
-template <class Op, class E>
+template <class E, class Op>
 class UnaryOp;
 
 /// The expression Traits for UnaryOp expressions.
 ///
 /// This just exports the traits of the underlying expression.
-template <class Op, class E>
-struct traits<UnaryOp<Op, E>> : public traits<E>
-{
+template <class E, class Op>
+struct traits<UnaryOp<E, Op>> : public traits<E> {
 };
 
-template <class Op, class E>
-class UnaryOp : public Expression<UnaryOp<Op, E>>
+template <class E, class Op>
+class UnaryOp : public Expression<UnaryOp<E, Op>>
 {
  public:
-  constexpr UnaryOp(E e) noexcept : e_(e), op_() {
+  constexpr UnaryOp(E e, Op op) noexcept : e_(std::move(e)), op_(std::move(op))
+  {
   }
 
   template <class Index>
   constexpr auto eval(Index index) const noexcept {
-    return op_(e_.eval(index));
+    return op_(e_.eval(std::move(index)));
   }
 
  private:
@@ -70,8 +70,10 @@ class UnaryOp : public Expression<UnaryOp<Op, E>>
   Op op_;
 };
 
-template <class E>
-using NegateOp = UnaryOp<std::negate<scalar_t<E>>, E>;
+template <class E, class Op>
+constexpr UnaryOp<E, Op> make_unary_op(E e, Op op) noexcept {
+  return { std::move(e), std::move(op) };
+}
 
 } // namespace expressions
 } // namespace ttl
