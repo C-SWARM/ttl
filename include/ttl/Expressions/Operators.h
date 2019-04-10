@@ -43,13 +43,17 @@ namespace ttl {
 namespace expressions {
 
 template <class L, class R>
-constexpr const auto operator+(L lhs, R rhs) {
-  return AddOp<L, R>(lhs, rhs);
+constexpr auto operator+(L lhs, R rhs) noexcept {
+  return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
+                                                          return l + r;
+                                                        });
 }
 
 template <class L, class R>
-constexpr const auto operator-(L lhs, R rhs) {
-  return SubtractOp<L, R>(lhs, rhs);
+constexpr auto operator-(L lhs, R rhs) noexcept {
+  return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
+                                                          return l - r;
+                                                        });
 }
 
 template <class L, class R>

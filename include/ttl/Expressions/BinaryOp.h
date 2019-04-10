@@ -64,9 +64,8 @@ class BinaryOp;
 /// @tparam          Op The type of the operation.
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
-template <class Op, class L, class R>
-struct traits<BinaryOp<Op, L, R>> : public traits<L>
-{
+template <class L, class R, class Op>
+struct traits<BinaryOp<L, R, Op>> : public traits<L> {
   using scalar_type = promote_t<L, R>;
 };
 
@@ -74,13 +73,13 @@ struct traits<BinaryOp<Op, L, R>> : public traits<L>
 ///
 /// The BinaryOp captures its left hand side and right hand side expressions,
 /// and a function object or lambda for the operation, and implements the
-/// get operation to evaluate an index.
+/// eval operation to evaluate an index.
 ///
-/// @tparam          Op The element-wise binary operation.
 /// @tparam           L The type of the left hand expression.
 /// @tparam           R The type of the right hand expression.
-template <class Op, class L, class R>
-class BinaryOp : public Expression<BinaryOp<Op, L, R>>
+/// @tparam          Op The element-wise binary operation.
+template <class L, class R, class Op>
+class BinaryOp : public Expression<BinaryOp<L, R, Op>>
 {
   static_assert(is_expression_t<L>::value, "Operand is not Expression");
   static_assert(is_expression_t<R>::value, "Operand is not Expression");
@@ -89,7 +88,11 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
   static_assert(dimension<L>() == dimension<R>(),
                 "Cannot operate on expressions of differing dimension");
  public:
-  constexpr BinaryOp(L lhs, R rhs) noexcept : lhs_(lhs), rhs_(rhs), op_() {
+  constexpr BinaryOp(L lhs, R rhs, Op op) noexcept
+      : lhs_(std::move(lhs)),
+        rhs_(std::move(rhs)),
+        op_(std::move(op))
+  {
   }
 
   template <class Index>
@@ -103,12 +106,10 @@ class BinaryOp : public Expression<BinaryOp<Op, L, R>>
   Op op_;
 };
 
-template <class L, class R>
-using AddOp = BinaryOp<std::plus<promote_t<L, R>>, L, R>;
-
-template <class L, class R>
-using SubtractOp = BinaryOp<std::minus<promote_t<L, R>>, L, R>;
-
+template <class Lhs, class Rhs, class Op>
+BinaryOp<Lhs, Rhs, Op> make_binary_op(Lhs lhs, Rhs rhs, Op op) {
+  return { std::move(lhs), std::move(rhs), std::move(op) };
+}
 } // namespace expressions
 } // namespace ttl
 

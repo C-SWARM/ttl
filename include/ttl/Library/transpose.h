@@ -63,7 +63,7 @@ template <class E>
 constexpr auto transpose(E t) {
   using Outer = expressions::outer_t<E>;
   using Type = lib::reverse_t<Outer>;
-  return expressions::Bind<E,Type>(t);
+  return expressions::make_bind<Type>(std::move(t));
 }
 
 template <int R, int D, class T>

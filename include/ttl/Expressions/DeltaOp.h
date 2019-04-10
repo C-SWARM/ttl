@@ -94,7 +94,7 @@ class DeltaOp : public Expression<DeltaOp<D, Index>>
 
   template <class Other>
   constexpr int eval(Other index) const noexcept {
-    return eval(ttl::expressions::transform<Index>(index));
+    return eval(transform<Index>(index));
   }
 };
 
