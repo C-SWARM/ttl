@@ -61,9 +61,9 @@ template <int M, class Matrix, class Permutation>
 static inline int
 pivot(Matrix&& A, Permutation&& perm, const int j)
 {
-  // Find the maximum magnitude in column j
   using std::abs;
   using std::swap;
+  // Find the maximum magnitude in column j
   auto i = j;
   auto max = abs(A(j,j));
   for (auto ii = j + 1; ii < M; ++ii) {
