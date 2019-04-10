@@ -82,17 +82,17 @@ struct traits<Bind<E, Index>> : public traits<rinse<E>>
   using rank = typename std::tuple_size<outer_type>::type;
 };
 
-template <class E, class Index>
-class Bind : public Expression<Bind<E, Index>>
+template <class Exp, class Index>
+class Bind : public Expression<Bind<Exp, Index>>
 {
   /// The Bind storage type is an expression, or a reference to a Tensor.
-  using Child = mp::iif_t<is_expression_t<E>::value, E, E&>;
+  using Child = mp::iif_t<is_expression_t<Exp>::value, Exp, Exp&>;
 
  public:
   /// A Bind expression keeps a reference to the E it wraps, and a
   ///
   /// @tparam         t The underlying tensor.
-  constexpr Bind(Child t, const Index i = Index{}) noexcept : t_(t), i_(i) {
+  constexpr Bind(Child t, Index i = Index{}) noexcept : t_(t), i_(i) {
   }
 
   static constexpr int Rank = rank_t<Bind>::value;
@@ -108,15 +108,15 @@ class Bind : public Expression<Bind<E, Index>>
   /// Assignment from any right hand side expression that has an equivalent
   /// index pack.
   ///
-  /// @tparam       RHS Type of the Right-hand-side expression.
+  /// @tparam         E Type of the Right-hand-side expression.
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
-  template <class RHS>
-  Bind& operator=(RHS&& rhs) {
-    static_assert(dimension_t<RHS>::value ==  N or
-                  dimension_t<RHS>::value == -1,
+  template <class E>
+  Bind& operator=(E&& rhs) {
+    static_assert(dimension_t<E>::value ==  N or
+                  dimension_t<E>::value == -1,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<RHS>>::value,
+    static_assert(mp::equivalent_t<outer_type<Bind>, outer_type<E>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
       t_.eval(transform(i)) = rhs.eval(i);
@@ -172,9 +172,14 @@ class Bind : public Expression<Bind<E, Index>>
   const Index i_;                               ///<! The bound index.
 };
 
-template <class Child, class Index>
-constexpr Bind<Child, Index> make_bind(Child&& child, Index index) {
+template <class Index, class Child>
+constexpr Bind<Child, Index> make_bind(Index index, Child&& child) {
   return { std::forward<Child>(child), index };
+}
+
+template <class Index, class Child>
+constexpr Bind<Child, Index> make_bind(Child&& child) {
+  return { std::forward<Child>(child) };
 }
 } // namespace expressions
 } // namespace ttl
