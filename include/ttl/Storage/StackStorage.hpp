@@ -77,7 +77,7 @@ class StackStorage {
  private:
   template <class S>
   static constexpr std::array<T, N> copy(std::initializer_list<S> list) noexcept {
-    std::array<T, N> i;
+    std::array<T, N> i = {};
     auto min = std::min(N, list.size());
     auto p = std::copy_n(list.begin(), min, i.begin());
     std::fill_n(p, N - min, 0);
