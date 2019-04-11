@@ -93,14 +93,14 @@ template <class Child, class Index>
 class Bind : public Expression<Bind<Child, Index>>
 {
  public:
+  static constexpr int Rank = rank_t<Bind>::value;
+  static constexpr int N = dimension_t<Bind>::value;
+
   /// A Bind expression keeps a reference to the E it wraps, and an index.
   ///
   /// @tparam         t The underlying tensor.
   constexpr Bind(Child t, Index i = Index{}) noexcept : t_(t), i_(i) {
   }
-
-  static constexpr int Rank = rank_t<Bind>::value;
-  static constexpr int N = dimension_t<Bind>::value;
 
   template <class Outer>
   constexpr auto eval(Outer index) const {
@@ -116,23 +116,28 @@ class Bind : public Expression<Bind<Child, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  Bind& operator=(E&& rhs) {
+  std::enable_if_t<is_expression<remove_cvref_t<E>>::value, Bind&>
+  operator=(E&& rhs)
+  {
     static_assert(dimension_t<E>::value ==  N or
                   dimension_t<E>::value == -1,
                   "Cannot operate on expressions of differing dimension");
     static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<E>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
-      t_.eval(transform(i)) = rhs.eval(i);
+        t_.eval(transform(i)) = std::forward<E>(rhs).eval(i);
     });
     return *this;
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  Bind& operator=(scalar_t<Bind> rhs) {
+  template <class T>
+  std::enable_if_t<std::is_arithmetic<remove_cvref_t<T>>::value, Bind&>
+  operator=(T rhs)
+  {
     static_assert(Rank == 0, "Cannot assign scalar to tensor");
-    forall<Bind>([&](auto i) {
-      t_.eval(transform(i)) = rhs;
+    forall<Bind>([this,r=std::move(rhs)](auto i) {
+      t_.eval(transform(i)) = r;
     });
     return *this;
   }

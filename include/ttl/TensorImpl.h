@@ -66,8 +66,8 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
 
   static constexpr int R = Rank;
   static constexpr int D = Dimension;
-  using T = Scalar;
-  using Storage = StackStorage<std::remove_const_t<T>, size()>;
+  using T = std::remove_const_t<Scalar>;
+  using Storage = StackStorage<T, size()>;
 
   /// Standard default constructor.
   ///

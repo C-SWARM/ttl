@@ -224,17 +224,16 @@ struct forall_impl<int_constant<n>, int_constant<n + 6>, D>
 /// @tparam           n The starting index.
 /// @tparam           M The final index.
 /// @tparam           D The dimensionality.
-/// @tparam           T The contracted type.
-template <class n, class M, int D, class T>
+template <class n, class M, int D>
 struct contract_impl;
 
-template <int n, int M, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<M>, D, T>
+template <int n, int M, int D>
+struct contract_impl<int_constant<n>, int_constant<M>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    using next = contract_impl<int_constant<n + 1>, int_constant<M>, D, T>;
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    using next = contract_impl<int_constant<n + 1>, int_constant<M>, D>;
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       s += next::op(index, std::forward<Op>(op));
@@ -244,21 +243,21 @@ struct contract_impl<int_constant<n>, int_constant<M>, D, T>
 };
 
 /// The contraction base case evaluates the lambda on the current index.
-template <int M, int D, class T>
-struct contract_impl<int_constant<M>, int_constant<M>, D, T>
+template <int M, int D>
+struct contract_impl<int_constant<M>, int_constant<M>, D>
 {
   template <class Index, class Op>
-  static constexpr T op(Index index, Op&& op) noexcept {
+  static constexpr auto op(Index index, Op&& op) noexcept {
     return op(index);
   }
 };
 
-template <int n, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<n + 2>, D, T>
+template <int n, int D>
+struct contract_impl<int_constant<n>, int_constant<n + 2>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -270,12 +269,12 @@ struct contract_impl<int_constant<n>, int_constant<n + 2>, D, T>
   }
 };
 
-template <int n, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<n + 3>, D, T>
+template <int n, int D>
+struct contract_impl<int_constant<n>, int_constant<n + 3>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -290,12 +289,12 @@ struct contract_impl<int_constant<n>, int_constant<n + 3>, D, T>
   }
 };
 
-template <int n, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<n + 4>, D, T>
+template <int n, int D>
+struct contract_impl<int_constant<n>, int_constant<n + 4>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -313,12 +312,12 @@ struct contract_impl<int_constant<n>, int_constant<n + 4>, D, T>
   }
 };
 
-template <int n, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<n + 5>, D, T>
+template <int n, int D>
+struct contract_impl<int_constant<n>, int_constant<n + 5>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -339,12 +338,12 @@ struct contract_impl<int_constant<n>, int_constant<n + 5>, D, T>
   }
 };
 
-template <int n, int D, class T>
-struct contract_impl<int_constant<n>, int_constant<n + 6>, D, T>
+template <int n, int D>
+struct contract_impl<int_constant<n>, int_constant<n + 6>, D>
 {
   template <class Index, class Op>
-  static T op(Index index, Op&& op) noexcept {
-    T s{};
+  static auto op(Index index, Op&& op) noexcept {
+    decltype(op(index)) s{};
     for (int i = 0; i < D; ++i) {
       std::get<n>(index).set(i);
       for (int j = 0; j < D; ++j) {
@@ -374,8 +373,7 @@ constexpr auto contractExtended(Index i, Op&& op) noexcept {
   constexpr int n = tuple_size<outer_t<E>>::value;
   constexpr int M = tuple_size<Index>::value;
   constexpr int D = dimension<E>();
-  using T = scalar_t<E>;
-  using impl = contract_impl<int_constant<n>, int_constant<M>, D, T>;
+  using impl = contract_impl<int_constant<n>, int_constant<M>, D>;
   return impl::op(i, std::forward<Op>(op));
 }
 

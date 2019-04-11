@@ -60,30 +60,30 @@ template <class E>
 class Expression {
  public:
   template <class I>
-  constexpr auto eval(I index) const {
-    return static_cast<const E*>(this)->eval(index);
-  }
-
-  template <template <class...> class Pack, class... I>
-  constexpr const auto to(Pack<I...> index) const {
-    return Bind<E,Pack<I...>>(*static_cast<const E*>(this), index);
+  constexpr auto eval(I index) const noexcept {
+    return static_cast<const E*>(this)->eval(std::move(index));
   }
 
   template <class... I>
-  constexpr const auto to(I... index) const {
-    return to(std::make_tuple(index...));
+  constexpr const auto to(std::tuple<I...> index) const noexcept {
+    return make_bind(std::move(index), std::move(*static_cast<const E*>(this)));
   }
 
-  template <class... I>
-  constexpr const auto operator()(I... index) const {
-    return eval(outer_t<E>(index...));
+  template <class... Index>
+  constexpr const auto to(Index&&... index) const noexcept {
+    return to(std::make_tuple(std::forward<Index>(index)...));
   }
 
-  constexpr operator const scalar_t<E>() const {
+  template <class... Index>
+  constexpr const auto operator()(Index&&... index) const noexcept {
+    return eval(outer_t<E>(std::forward<Index>(index)...));
+  }
+
+  constexpr operator scalar_t<E>() const noexcept {
     return eval(std::tuple<>{});
   }
 
-  constexpr std::ostream& print(std::ostream& os) const {
+  constexpr std::ostream& print(std::ostream& os) const noexcept {
     return static_cast<const E*>(this)->print(os);
   }
 };
