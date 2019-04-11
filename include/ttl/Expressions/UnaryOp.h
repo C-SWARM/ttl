@@ -35,7 +35,6 @@
 #define TTL_EXPRESSIONS_UNARY_OP_H
 
 #include <ttl/Expressions/Expression.h>
-#include <functional>
 
 namespace ttl {
 namespace expressions {

@@ -36,7 +36,6 @@
 
 #include <ttl/Expressions/execution.hpp>
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/promote.h>
 #include <ttl/mp/duplicate.hpp>
 #include <ttl/mp/unique.hpp>
 
@@ -75,7 +74,7 @@ struct traits<Product<L, R>>
  public:
   using     outer_type = mp::xor_t<l_outer_type, r_outer_type>;
   using     inner_type = mp::and_t<l_outer_type, r_outer_type>;
-  using    scalar_type = promote_t<L, R>;
+  using    scalar_type = decltype(scalar_t<L>{} * scalar_t<R>{});
   using dimension_type = std::integral_constant<int, dim>;
   using      rank_type = typename std::tuple_size<outer_type>::type;
 };

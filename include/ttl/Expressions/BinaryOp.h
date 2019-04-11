@@ -35,8 +35,6 @@
 #define TTL_EXPRESSIONS_BINARY_OP_H
 
 #include <ttl/Expressions/Expression.h>
-#include <ttl/Expressions/promote.h>
-#include <functional>
 
 namespace ttl {
 namespace expressions {
