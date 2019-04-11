@@ -34,10 +34,10 @@
 #ifndef TTL_EXPRESSIONS_EXPRESSION_H
 #define TTL_EXPRESSIONS_EXPRESSION_H
 
-#include <ttl/Expressions/force.h>
 #include <ttl/Expressions/traits.h>
+#include <ttl/mp/non_integer.hpp>
 #include <ostream>
-#include <type_traits>
+#include <tuple>
 
 namespace ttl {
 namespace expressions {
@@ -59,13 +59,13 @@ class Bind;
 template <class E>
 class Expression {
  public:
-  template <class I>
-  constexpr auto eval(I index) const noexcept {
+  template <class Index>
+  constexpr auto eval(Index index) const noexcept {
     return static_cast<const E*>(this)->eval(std::move(index));
   }
 
-  template <class... I>
-  constexpr const auto to(std::tuple<I...> index) const noexcept {
+  template <class... Index>
+  constexpr const auto to(std::tuple<Index...> index) const noexcept {
     return make_bind(std::move(index), std::move(*static_cast<const E*>(this)));
   }
 
@@ -74,12 +74,17 @@ class Expression {
     return to(std::make_tuple(std::forward<Index>(index)...));
   }
 
+  /// This operator is used to index an expression with integers.
   template <class... Index>
   constexpr const auto operator()(Index&&... index) const noexcept {
+    using t = std::tuple<remove_cvref_t<Index>...>;
+    constexpr auto N = std::tuple_size<mp::non_integer_t<t>>::value;
+    static_assert(N == 0, "Tensor expression must be fully quantified by ()");
     return eval(outer_t<E>(std::forward<Index>(index)...));
   }
 
   constexpr operator scalar_t<E>() const noexcept {
+    static_assert(rank<E>() == 0, "Tensor expression used in scalar context");
     return eval(std::tuple<>{});
   }
 
@@ -105,7 +110,7 @@ struct is_expression<Expression<E>> {
 };
 
 template <class E>
-using is_expression_t = typename is_expression<std::remove_cv_t<E>>::type;
+using is_expression_t = typename is_expression<remove_cvref_t<E>>::type;
 
 } // namespace expressions
 } // namespace ttl
