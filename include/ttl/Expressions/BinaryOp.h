@@ -66,7 +66,7 @@ class BinaryOp;
 /// @tparam           R The type of the right hand expression.
 template <class L, class R, class Op>
 struct traits<BinaryOp<L, R, Op>> : public traits<L> {
-  using scalar_type = promote_t<L, R>;
+  using scalar_type = std::result_of_t<Op(scalar_t<L>, scalar_t<R>)>;
 };
 
 /// The BinaryOp expression implementation.

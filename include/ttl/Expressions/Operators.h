@@ -36,20 +36,21 @@
 
 /// This file binds operators to expressions.
 #include <ttl/Expressions/BinaryOp.h>
-#include <ttl/Expressions/ScalarOp.h>
 #include <ttl/Expressions/UnaryOp.h>
 
 namespace ttl {
 namespace expressions {
 template <class L, class R>
-constexpr auto operator+(L lhs, R rhs) noexcept {
+constexpr auto
+operator+(L lhs, R rhs) noexcept {
   return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
     return l + r;
   });
 }
 
 template <class L, class R>
-constexpr auto operator-(L lhs, R rhs) noexcept {
+constexpr auto
+operator-(L lhs, R rhs) noexcept {
   return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
     return l - r;
   });
@@ -57,7 +58,8 @@ constexpr auto operator-(L lhs, R rhs) noexcept {
 
 template <class L, class R,
           class = std::enable_if_t<std::is_arithmetic<R>::value>>
-constexpr auto operator/(L lhs, R rhs) noexcept {
+constexpr auto
+operator/(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [r=std::move(rhs)](auto l) {
     return l / r;
   });
@@ -65,51 +67,49 @@ constexpr auto operator/(L lhs, R rhs) noexcept {
 
 template <class L, class R,
           class = std::enable_if_t<std::is_arithmetic<R>::value>>
-constexpr auto operator%(L lhs, R rhs) noexcept {
+constexpr auto
+operator%(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [r=std::move(rhs)](auto l) {
     return l % r;
   });
 }
 
 template <class R>
-constexpr auto operator-(R rhs) noexcept {
+constexpr auto
+operator-(R rhs) noexcept {
   return make_unary_op(std::move(rhs), [](auto r) {
     return -r;
   });
 }
 
-#include <cassert>
-
 template <class L, class R>
-constexpr const auto make_product(L lhs,
-                                  std::enable_if_t<std::is_arithmetic<R>::value, R> rhs) noexcept {
-  assert(false);
-  return MultiplyOp<L, R>(lhs, rhs);
+constexpr auto
+make_product(L lhs, R rhs, std::false_type, std::false_type) noexcept {
+  return Product<L, R>(lhs, rhs);
 }
 
 template <class L, class R>
-constexpr const auto make_product(std::enable_if_t<std::is_arithmetic<L>::value, L> lhs,
-                                  R rhs) noexcept {
-  assert(false);
-  return MultiplyOp<L, R>(lhs, rhs);
+constexpr auto
+make_product(L lhs, R rhs, std::true_type, std::false_type) noexcept {
+  return make_unary_op(std::move(rhs), [lhs](auto r) {
+    return lhs * r;
+  });
 }
 
-/// Product needs to select between the scalar multiply and the tensor product,
-/// based on the left and right types.
-template <class L, class R,
-          bool = std::is_arithmetic<L>::value or std::is_arithmetic<R>::value>
-struct ProductOp {
-  using type = MultiplyOp<L, R>;
-};
+template <class L, class R>
+constexpr const auto
+make_product(L lhs, R rhs, std::false_type, std::true_type) noexcept {
+  return make_unary_op(std::move(lhs), [rhs](auto l) {
+    return l * rhs;
+  });
+}
 
 template <class L, class R>
-struct ProductOp<L, R, false> {
-  using type = Product<L, R>;
-};
-
-template <class L, class R>
-constexpr const auto operator*(L lhs, R rhs) noexcept {
-  return typename ProductOp<L, R>::type(lhs, rhs);
+constexpr const auto
+operator*(L lhs, R rhs) noexcept {
+  return make_product(std::move(lhs), std::move(rhs),
+                      typename std::is_arithmetic<L>::type{},
+                      typename std::is_arithmetic<R>::type{});
 }
 } // namespace expressions
 } // namespace ttl

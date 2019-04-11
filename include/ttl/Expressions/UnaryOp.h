@@ -50,6 +50,7 @@ class UnaryOp;
 /// This just exports the traits of the underlying expression.
 template <class E, class Op>
 struct traits<UnaryOp<E, Op>> : public traits<E> {
+  using scalar_type = std::result_of_t<Op(scalar_t<E>)>;
 };
 
 template <class E, class Op>
