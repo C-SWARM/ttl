@@ -66,7 +66,10 @@ class Expression {
 
   template <class... Index>
   constexpr const auto to(std::tuple<Index...> index) const noexcept {
-    return make_bind(std::move(index), std::move(*static_cast<const E*>(this)));
+    return Bind<E, decltype(index)> {
+      std::move(*static_cast<const E*>(this)),
+      std::move(index)
+      };
   }
 
   template <class... Index>
@@ -77,7 +80,7 @@ class Expression {
   /// This operator is used to index an expression with integers.
   template <class... Index>
   constexpr const auto operator()(Index&&... index) const noexcept {
-    using t = std::tuple<remove_cvref_t<Index>...>;
+    using t = std::tuple<std::decay_t<Index>...>;
     constexpr auto N = std::tuple_size<mp::non_integer_t<t>>::value;
     static_assert(N == 0, "Tensor expression must be fully quantified by ()");
     return eval(outer_t<E>(std::forward<Index>(index)...));
@@ -110,7 +113,7 @@ struct is_expression<Expression<E>> {
 };
 
 template <class E>
-using is_expression_t = typename is_expression<remove_cvref_t<E>>::type;
+using is_expression_t = typename is_expression<std::decay_t<E>>::type;
 
 } // namespace expressions
 } // namespace ttl

@@ -120,7 +120,7 @@ int inverse(Matrix&& A, Inverse& inv, bool zero = true) noexcept {
 
 template <class Matrix>
 auto inverse(Matrix&& A) {
-  expressions::tensor_type<Matrix> inv = {};
+  expressions::tensor_t<Matrix> inv = {};
   if (int i = lib::inverse(std::forward<Matrix>(A), inv)) {
     throw i;
   }

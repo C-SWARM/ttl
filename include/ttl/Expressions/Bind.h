@@ -69,7 +69,7 @@ class Bind;
 /// @tparam           E The subtree expression type.
 /// @tparam       Index The indices bound to this expression.
 template <class E, class Index>
-struct traits<Bind<E, Index>> : public traits<remove_cvref_t<E>>
+struct traits<Bind<E, Index>> : public traits<std::decay_t<E>>
 {
  private:
   using index_t = mp::non_integer_t<Index>;
@@ -116,7 +116,7 @@ class Bind : public Expression<Bind<Child, Index>>
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
   template <class E>
-  std::enable_if_t<is_expression<remove_cvref_t<E>>::value, Bind&>
+  std::enable_if_t<is_expression<std::decay_t<E>>::value, Bind&>
   operator=(E&& rhs)
   {
     static_assert(dimension_t<E>::value ==  N or
@@ -132,12 +132,12 @@ class Bind : public Expression<Bind<Child, Index>>
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
   template <class T>
-  std::enable_if_t<std::is_arithmetic<remove_cvref_t<T>>::value, Bind&>
+  std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value, Bind&>
   operator=(T rhs)
   {
     static_assert(Rank == 0, "Cannot assign scalar to tensor");
     forall<Bind>([this,r=std::move(rhs)](auto i) {
-      t_.eval(transform(i)) = r;
+      t_.eval(transform(std::move(i))) = r;
     });
     return *this;
   }
@@ -155,7 +155,7 @@ class Bind : public Expression<Bind<Child, Index>>
     static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<RHS>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
-      t_.eval(transform(i)) += rhs.eval(i);
+      t_.eval(transform(std::move(i))) += rhs.eval(i);
     });
     return *this;
   }
@@ -174,7 +174,7 @@ class Bind : public Expression<Bind<Child, Index>>
  private:
   template <class Other>
   Index transform(Other index) const {
-    return expressions::transform(i_, index);
+    return expressions::transform(i_, std::move(index));
   }
 
   Child t_;                                     ///<! The underlying tree.
@@ -183,7 +183,7 @@ class Bind : public Expression<Bind<Child, Index>>
 
 template <class Index, class Child>
 constexpr Bind<Child, Index> make_bind(Index index, Child&& child) {
-  return { std::forward<Child>(child), index };
+  return { std::forward<Child>(child), std::move(index) };
 }
 
 template <class Index, class Child>

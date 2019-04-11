@@ -36,11 +36,22 @@
 
 /// This file binds operators to expressions.
 #include <ttl/Expressions/BinaryOp.h>
+#include <ttl/Expressions/Product.h>
+#include <ttl/Expressions/traits.h>
 #include <ttl/Expressions/UnaryOp.h>
 
 namespace ttl {
 namespace expressions {
-template <class L, class R>
+
+template <class T>
+using for_scalar_t = std::enable_if_t<is_scalar<T>::value, void**>;
+
+template <class T>
+using for_expression_t = std::enable_if_t<is_expression<T>::value, void**>;
+
+template <class L, class R,
+          for_expression_t<L> = nullptr,
+          for_expression_t<R> = nullptr>
 constexpr auto
 operator+(L lhs, R rhs) noexcept {
   return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
@@ -48,7 +59,9 @@ operator+(L lhs, R rhs) noexcept {
   });
 }
 
-template <class L, class R>
+template <class L, class R,
+          for_expression_t<L> = nullptr,
+          for_expression_t<R> = nullptr>
 constexpr auto
 operator-(L lhs, R rhs) noexcept {
   return make_binary_op(std::move(lhs), std::move(rhs), [](auto l, auto r) {
@@ -57,7 +70,8 @@ operator-(L lhs, R rhs) noexcept {
 }
 
 template <class L, class R,
-          class = std::enable_if_t<std::is_arithmetic<R>::value>>
+          for_expression_t<L> = nullptr,
+          for_scalar_t<R> = nullptr>
 constexpr auto
 operator/(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [r=std::move(rhs)](auto l) {
@@ -66,7 +80,8 @@ operator/(L lhs, R rhs) noexcept {
 }
 
 template <class L, class R,
-          class = std::enable_if_t<std::is_arithmetic<R>::value>>
+          for_expression_t<L> = nullptr,
+          for_scalar_t<R> = nullptr>
 constexpr auto
 operator%(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [r=std::move(rhs)](auto l) {
@@ -74,7 +89,7 @@ operator%(L lhs, R rhs) noexcept {
   });
 }
 
-template <class R>
+template <class R, for_expression_t<R> = nullptr>
 constexpr auto
 operator-(R rhs) noexcept {
   return make_unary_op(std::move(rhs), [](auto r) {
@@ -82,34 +97,32 @@ operator-(R rhs) noexcept {
   });
 }
 
-template <class L, class R>
-constexpr auto
-make_product(L lhs, R rhs, std::false_type, std::false_type) noexcept {
+template <class L, class R,
+          for_expression_t<L> = nullptr,
+          for_expression_t<R> = nullptr>
+constexpr const auto
+operator*(L lhs, R rhs) noexcept {
   return Product<L, R>(lhs, rhs);
 }
 
-template <class L, class R>
-constexpr auto
-make_product(L lhs, R rhs, std::true_type, std::false_type) noexcept {
-  return make_unary_op(std::move(rhs), [lhs](auto r) {
-    return lhs * r;
-  });
-}
-
-template <class L, class R>
+template <class L, class R,
+          for_expression_t<L> = nullptr,
+          for_scalar_t<R> = nullptr>
 constexpr const auto
-make_product(L lhs, R rhs, std::false_type, std::true_type) noexcept {
+operator*(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [rhs](auto l) {
     return l * rhs;
   });
 }
 
-template <class L, class R>
+template <class L, class R,
+          for_scalar_t<L> = nullptr,
+          for_expression_t<R> = nullptr>
 constexpr const auto
 operator*(L lhs, R rhs) noexcept {
-  return make_product(std::move(lhs), std::move(rhs),
-                      typename std::is_arithmetic<L>::type{},
-                      typename std::is_arithmetic<R>::type{});
+  return make_unary_op(std::move(rhs), [lhs](auto r) {
+    return lhs * r;
+  });
 }
 } // namespace expressions
 } // namespace ttl

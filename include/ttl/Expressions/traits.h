@@ -76,25 +76,24 @@ struct traits<Tensor<R, D, T>>
   using      rank_type = std::integral_constant<int, R>;
 };
 
-// Note available until C++17.
-template <class E>
-using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<E>>;
+template <class T>
+using is_scalar = std::is_arithmetic<std::decay_t<T>>;
 
 /// The following traits are required for all expression types.
 template <class E>
-using outer_t = typename traits<remove_cvref_t<E>>::outer_type;
+using outer_t = typename traits<std::decay_t<E>>::outer_type;
 
 template <class E>
-using inner_t = typename traits<remove_cvref_t<E>>::inner_type;
+using inner_t = typename traits<std::decay_t<E>>::inner_type;
 
 template <class E>
-using scalar_t = typename traits<remove_cvref_t<E>>::scalar_type;
+using scalar_t = typename traits<std::decay_t<E>>::scalar_type;
 
 template <class E>
-using dimension_t = typename traits<remove_cvref_t<E>>::dimension_type;
+using dimension_t = typename traits<std::decay_t<E>>::dimension_type;
 
 template <class E>
-using rank_t = typename traits<remove_cvref_t<E>>::rank_type;
+using rank_t = typename traits<std::decay_t<E>>::rank_type;
 
 template <class E>
 constexpr auto dimension() {
@@ -107,7 +106,7 @@ constexpr auto rank() {
 }
 
 template <class E>
-using tensor_type = Tensor<rank<E>(), dimension<E>(), scalar_t<E>>;
+using tensor_t = Tensor<rank<E>(), dimension<E>(), scalar_t<E>>;
 
 } // namespace expressions
 } // namespace traits

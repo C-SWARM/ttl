@@ -54,7 +54,7 @@ namespace expressions {
 ///                     the expression is an r-value reference to a tensor then
 ///                     it returns the tensor through the move operation.
 template <class Expression>
-tensor_type<Expression> force(Expression&& e) {
+tensor_t<Expression> force(Expression&& e) {
   static constexpr int N = dimension_t<Expression>::value;
   static_assert(N >= 0, "forced expression needs dimension");
   return std::forward<Expression>(e);
