@@ -169,7 +169,7 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   /// @param      index The multidimension index to access.
   /// @returns          The scalar value at the linearized @p index.
   template <class Index>
-  constexpr const auto eval(Index index) const noexcept {
+  constexpr auto eval(Index index) const noexcept {
     constexpr int N = std::tuple_size<Index>::value;
     static_assert(R == N, "Index size does not match tensor rank");
     return Storage::get(util::linearize<D>(index));
@@ -216,11 +216,11 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
   /// @returns          A Bind expression that can serves as the leaf
   ///                   expression in TTL expressions.
   template <class... Index>
-  constexpr const auto operator()(Index&&... indices) const noexcept {
+  constexpr auto operator()(Index&&... indices) const noexcept {
     constexpr int N = sizeof...(Index);
     static_assert(R == N, "Index size does not match tensor rank");
     auto i = std::make_tuple(std::forward<Index>(indices)...);
-    return expressions::make_bind(i, *this);
+    return expressions::make_bind(std::move(i), *this);
   }
 
   /// Bind a Bind expression to a tensor.
@@ -250,6 +250,24 @@ class Tensor : public StackStorage<std::remove_const_t<Scalar>, util::pow(Dimens
     static_assert(R == N, "Index size does not match tensor rank");
     auto i = std::make_tuple(std::forward<Index>(indices)...);
     return expressions::make_bind(i, *this);
+  }
+
+  /// If the index is fully specified as integers and not Index types, just
+  // evaluate it.
+  template <class... Index,
+            class = std::enable_if_t<mp::is_all_integer<Index...>::value>>
+  constexpr auto operator()(Index&&... indices) const noexcept {
+    static_assert(sizeof...(Index) == Rank, "Under-specified Tensor index");
+    return eval(std::make_tuple(std::forward<Index>(indices)...));
+  }
+
+  /// If the index is fully specified as integers and not Index types, just
+  // evaluate it.
+  template <class... Index,
+            class = std::enable_if_t<mp::is_all_integer<Index...>::value>>
+  constexpr auto& operator()(Index&&... indices) noexcept {
+    static_assert(sizeof...(Index) == Rank, "Under-specified Tensor index");
+    return eval(std::make_tuple(std::forward<Index>(indices)...));
   }
 
   /// Provide multidimensional array notation for direct element access.
