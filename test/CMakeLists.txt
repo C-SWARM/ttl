@@ -32,6 +32,8 @@
 
 include(GTest)
 
+add_executable(t2 test.cpp)
+
 add_executable(identity Identity.cpp)
 add_executable(index Index.cpp)
 add_executable(tensor Tensor.cpp)

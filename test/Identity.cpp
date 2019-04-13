@@ -29,10 +29,14 @@ TEST(Identity, DimensionalityInference) {
 TEST(Identity, Scalar) {
   double scalar = 3.14;
   auto d = identity();
-  EXPECT_EQ(d*scalar, scalar);
-  EXPECT_EQ(scalar*d, scalar);
-  EXPECT_EQ(d*identity(), d);
-  EXPECT_EQ(identity()*d, d);
+  double s = d * scalar;
+  EXPECT_EQ(s, scalar);
+  s = scalar * d;
+  EXPECT_EQ(s, scalar);
+  s = d * identity();
+  EXPECT_EQ(s, d);
+  s = identity() * d;
+  EXPECT_EQ(s, d);
 }
 
 TEST(Identity, Vector) {
