@@ -135,23 +135,23 @@ TEST(Bind, AssignFromConst) {
 //   EXPECT_EQ(a[3], e[3]);
 // }
 
-// TEST(Bind, AssignPermute) {
-//   ttl::Tensor<2,2,int> A;
-//   A(i,j) = B(j,i);
-//   EXPECT_EQ(B[0], A[0]);
-//   EXPECT_EQ(B[1], A[2]);
-//   EXPECT_EQ(B[2], A[1]);
-//   EXPECT_EQ(B[3], A[3]);
-// }
+TEST(Bind, AssignPermute) {
+  ttl::Tensor<2,2,int> A;
+  A(i,j) = B(j,i);
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[2]);
+  EXPECT_EQ(B[2], A[1]);
+  EXPECT_EQ(B[3], A[3]);
+}
 
-// TEST(Bind, AssignPermuteFromConst) {
-//   ttl::Tensor<2,2,int> A;
-//   A(i,j) = C(j,i);
-//   EXPECT_EQ(C[0], A[0]);
-//   EXPECT_EQ(C[1], A[2]);
-//   EXPECT_EQ(C[2], A[1]);
-//   EXPECT_EQ(C[3], A[3]);
-// }
+TEST(Bind, AssignPermuteFromConst) {
+  ttl::Tensor<2,2,int> A;
+  A(i,j) = C(j,i);
+  EXPECT_EQ(C[0], A[0]);
+  EXPECT_EQ(C[1], A[2]);
+  EXPECT_EQ(C[2], A[1]);
+  EXPECT_EQ(C[3], A[3]);
+}
 
 // TEST(Bind, AssignPermuteFromExternal) {
 //   ttl::Tensor<2,2,int> A;
@@ -352,12 +352,12 @@ TEST(Bind, Curry) {
   EXPECT_EQ(f(1), 2);
 }
 
-// TEST(Bind, PermuteSubtree) {
-//   ttl::Tensor<2,2,int> A = {1,2,3,4},
-//                        B = {1,3,2,4};
-//   auto f = A(i,j).to(j,i);
-//   EXPECT_EQ(f(0,0), B(0,0));
-//   EXPECT_EQ(f(0,1), B(0,1));
-//   EXPECT_EQ(f(1,0), B(1,0));
-//   EXPECT_EQ(f(1,1), B(1,1));
-// }
+TEST(Bind, PermuteSubtree) {
+  ttl::Tensor<2,2,int> A = {1,2,3,4},
+                       B = {1,3,2,4};
+  auto f = A(i,j).to(j,i);
+  EXPECT_EQ(f(0,0), B(0,0));
+  EXPECT_EQ(f(0,1), B(0,1));
+  EXPECT_EQ(f(1,0), B(1,0));
+  EXPECT_EQ(f(1,1), B(1,1));
+}

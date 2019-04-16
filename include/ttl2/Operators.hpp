@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ttl/mp/duplicate.hpp"
+#include "ttl/mp/non_integer.hpp"
 #include "ttl/mp/unique.hpp"
 #include "ttl2/mp.hpp"
 
@@ -23,6 +24,18 @@ class Expr {
 
   constexpr auto operator()(Index index) && noexcept {
     return op_(index);
+  }
+
+  template <class... U,
+            class = std::enable_if_t<all_integer<U...>::value>>
+  constexpr auto operator()(U... index) const & noexcept {
+    return this->operator()(std::make_tuple(index...));
+  }
+
+  template <class... U,
+            class = std::enable_if_t<all_integer<U...>::value>>
+  constexpr auto operator()(U... index) && noexcept {
+    return this->operator()(std::make_tuple(index...));
   }
 
   constexpr operator iif_t<R == 0, T, void>() const & noexcept {
@@ -136,5 +149,23 @@ constexpr auto operator*(Lhs lhs, Rhs rhs) noexcept {
 template <int D = -1, class... Index>
 constexpr auto zero(Index... index) noexcept {
   return make_expression<D, std::tuple<Index...>>([](auto) { return 0; });
+}
+
+template <class Index, class Op>
+constexpr auto permutation(Op op) noexcept {
+  constexpr auto D = Op::D;
+  using ChildIndex = typename Op::Index;
+  return make_expression<D, Index>([op=std::move(op)](Index index) {
+    return op(select<ChildIndex>(index));
+  });
+}
+
+template <class ChildIndex, class Op>
+constexpr auto slice(ChildIndex index, Op op) noexcept {
+  constexpr auto D = Op::D;
+  using Index = mp::non_integer_t<ChildIndex>;
+  return make_expression<D, Index>([i=index,op=std::move(op)](Index index) {
+    return op(select(i, index));
+  });
 }
 }

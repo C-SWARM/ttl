@@ -4,9 +4,10 @@
 #include "ttl2/Evaluate.hpp"
 #include "ttl2/Operators.hpp"
 #include "ttl2/mp.hpp"
+#include "ttl/mp/duplicate.hpp"
 #include "ttl/mp/non_integer.hpp"
 #include "ttl/mp/unique.hpp"
-#include "ttl/mp/duplicate.hpp"
+#include "ttl/mp/subset.hpp"
 #include <type_traits>
 #include <utility>
 
@@ -61,15 +62,6 @@ class Bind {
   }
   /// @}
 
-  /// Enable access to bound tensors through integers.
-  /// @{
-  template <class... U,
-            class = std::enable_if_t<all_integer<U...>::value>>
-  constexpr const T& operator()(U... index) const& noexcept {
-    Index i = {std::move(index)...};
-    return evaluate(i);
-  }
-
   template <class... U,
             class = std::enable_if_t<all_integer<U...>::value>>
   constexpr T& operator()(U... index) && noexcept {
@@ -97,11 +89,12 @@ class Bind {
   template <class Rhs,
             typename Rhs::is_expression** = nullptr>
   constexpr Bind& operator=(Rhs rhs) && noexcept {
+    using RIndex = typename Rhs::Index;
     constexpr auto D = dimension<Bind, Rhs>::value;
-    constexpr auto compatible = std::is_same<Index, typename Rhs::Index>();
+    constexpr auto compatible = mp::subset<Index, RIndex>::equiv;
     static_assert(compatible, "Index must match for tensor assignment");
     forall<D, Index>([this, r=std::move(rhs)](Index index) {
-      evaluate(index) = r(index);
+      evaluate(index) = r(select<RIndex>(index));
     });
     return *this;
   }
@@ -109,11 +102,12 @@ class Bind {
   template <class Rhs,
             typename Rhs::is_expression** = nullptr>
   constexpr Bind& operator=(Rhs rhs) & noexcept {
+    using RIndex = typename Rhs::Index;
     constexpr auto D = dimension<Bind, Rhs>::value;
-    constexpr auto compatible = std::is_same<Index, typename Rhs::Index>();
+    constexpr auto compatible = mp::subset<Index, RIndex>::equiv;
     static_assert(compatible, "Index must match for tensor assignment");
     forall<D, Index>([this, r=std::move(rhs)](Index index) {
-      evaluate(index) = r(index);
+      evaluate(index) = r(select<RIndex>(index));
     });
     return *this;
   }
@@ -123,7 +117,7 @@ class Bind {
             typename Rhs::is_expression** = nullptr>
   constexpr Bind& operator+=(Rhs rhs) && noexcept {
     constexpr auto D = dimension<Bind, Rhs>::value;
-    constexpr auto compatible = std::is_same<Index, typename Rhs::Index>();
+    constexpr auto compatible = mp::subset<Index, typename Rhs::Index>::equiv;
     static_assert(compatible, "Index must match for tensor assignment");
     forall<D, Index>([this, r=std::move(rhs)](Index index) {
       evaluate(index) += r(index);
@@ -167,23 +161,23 @@ class Bind {
     return *this;
   }
 
-  // template <class... U,
-  //           class = std::enable_if_t<!all_integer<U...>::value>>
-  // constexpr Bind<Index, Bind, std::tuple<U...>> to(U... index) const & noexcept {
-  //   return { std::make_tuple(index...), *this };
-  // }
+  template <class... U,
+            class = std::enable_if_t<!all_integer<U...>::value>>
+  constexpr auto to(U... index) const & noexcept {
+    return permutation<std::tuple<U...>>(*this);
+  }
 
-  // template <class... U,
-  //           class = std::enable_if_t<!all_integer<U...>::value>>
-  // constexpr Bind<Index, Bind, std::tuple<U...>> to(U... index) && noexcept {
-  //   return { std::make_tuple(index...), *this };
-  // }
+  template <class... U,
+            class = std::enable_if_t<!all_integer<U...>::value>>
+  constexpr auto to(U... index) && noexcept {
+    return permutation<std::tuple<U...>>(*this);
+  }
 
-  // template <class... U,
-  //           class = std::enable_if_t<!all_integer<U...>::value>>
-  // constexpr Bind<Index, Bind, std::tuple<U...>> to(U... index) & noexcept {
-  //   return { std::make_tuple(index...), *this };
-  // }
+  template <class... U,
+            class = std::enable_if_t<!all_integer<U...>::value>>
+  constexpr auto to(U... index) & noexcept {
+    return permutation<std::tuple<U...>>(*this);
+  }
 
  private:
   /// Evaluate a fully specialized index.
