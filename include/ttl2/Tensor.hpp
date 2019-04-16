@@ -42,18 +42,23 @@ class Tensor {
   constexpr Tensor(U... args) noexcept : data{static_cast<T>(args)...} {
   }
 
+  /// Assign to a tensor using an initializer list.
   constexpr Tensor& operator=(std::initializer_list<T> rhs) {
     std::copy_n(rhs.begin(), std::min(size(), rhs.size()), data.begin());
     return *this;
   }
 
+  /// Copy or move a tensor.
   constexpr Tensor& operator=(Tensor rhs) & noexcept {
     std::swap(data, rhs.data);
     return *this;
   }
 
-  template <class Rhs>
+  /// Assignment from an expression on the right hand side.
+  template <class Rhs,
+            typename Rhs::is_expression** = nullptr>
   constexpr Tensor& operator=(Rhs rhs) & noexcept {
+    bind<typename Rhs::Index>(*this) = std::move(rhs);
     return *this;
   }
 

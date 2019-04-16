@@ -5,6 +5,13 @@
 namespace ttl {
 template <char Id>
 struct Index {
+  constexpr Index() noexcept = default;
+  constexpr Index(const Index&) noexcept = default;
+  constexpr Index(Index&&) noexcept = default;
+
+  constexpr Index(int i) noexcept : i{i} {
+  }
+
   constexpr Index& operator=(Index rhs) && noexcept {
     std::swap(i, rhs.i);
     return *this;

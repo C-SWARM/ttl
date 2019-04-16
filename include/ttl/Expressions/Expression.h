@@ -61,13 +61,13 @@ class Expression {
  public:
   template <class Index>
   constexpr auto eval(Index index) const noexcept {
-    return static_cast<const E*>(this)->eval(std::move(index));
+    return child().eval(std::move(index));
   }
 
   template <class... Index>
   constexpr const auto to(std::tuple<Index...> index) const noexcept {
     return Bind<E, decltype(index)> {
-      std::move(*static_cast<const E*>(this)),
+      std::move(child()),
       std::move(index)
       };
   }
@@ -78,21 +78,26 @@ class Expression {
   }
 
   /// This operator is used to index an expression with integers.
-  template <class... Index>
+  template <class... Index,
+            class = std::enable_if_t<mp::is_all_integer<Index...>::value>>
   constexpr const auto operator()(Index&&... index) const noexcept {
-    using t = std::tuple<std::decay_t<Index>...>;
-    constexpr auto N = std::tuple_size<mp::non_integer_t<t>>::value;
-    static_assert(N == 0, "Tensor expression must be fully quantified by ()");
-    return eval(outer_t<E>(std::forward<Index>(index)...));
+    static_assert(sizeof...(Index) == rank_t<E>::value,
+                  "Under-specified Expression index");
+    return child().eval(outer_t<E>(std::forward<Index>(index)...));
   }
 
   constexpr operator scalar_t<E>() const noexcept {
     static_assert(rank<E>() == 0, "Tensor expression used in scalar context");
-    return eval(std::tuple<>{});
+    return child().eval(std::tuple<>{});
   }
 
   constexpr std::ostream& print(std::ostream& os) const noexcept {
-    return static_cast<const E*>(this)->print(os);
+    return child().print(os);
+  }
+
+ private:
+  const E& child() const {
+    return *static_cast<const E*>(this);
   }
 };
 

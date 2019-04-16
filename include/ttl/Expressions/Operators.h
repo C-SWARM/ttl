@@ -100,16 +100,14 @@ operator-(R rhs) noexcept {
 template <class L, class R,
           for_expression_t<L> = nullptr,
           for_expression_t<R> = nullptr>
-constexpr const auto
-operator*(L lhs, R rhs) noexcept {
+constexpr const auto operator*(L lhs, R rhs) noexcept {
   return Product<L, R>(lhs, rhs);
 }
 
 template <class L, class R,
           for_expression_t<L> = nullptr,
           for_scalar_t<R> = nullptr>
-constexpr const auto
-operator*(L lhs, R rhs) noexcept {
+constexpr const auto operator*(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(lhs), [rhs](auto l) {
     return l * rhs;
   });
@@ -118,8 +116,7 @@ operator*(L lhs, R rhs) noexcept {
 template <class L, class R,
           for_scalar_t<L> = nullptr,
           for_expression_t<R> = nullptr>
-constexpr const auto
-operator*(L lhs, R rhs) noexcept {
+constexpr const auto operator*(L lhs, R rhs) noexcept {
   return make_unary_op(std::move(rhs), [lhs](auto r) {
     return lhs * r;
   });

@@ -31,7 +31,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#include <ttl/ttl.h>
+#include <ttl2/ttl.hpp>
+#include <ttl/mp/subset.hpp>
 
 using namespace ttl;
 using namespace ttl::mp;

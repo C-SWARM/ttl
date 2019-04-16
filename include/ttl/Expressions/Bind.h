@@ -125,16 +125,14 @@ class Bind : public Expression<Bind<Child, Index>>
     static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<E>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
-        t_.eval(transform(i)) = std::forward<E>(rhs).eval(i);
+        t_.eval(transform(i)) = rhs.eval(i);
     });
     return *this;
   }
 
   /// Assignment of a scalar to a fully specified scalar right hand side.
-  template <class T>
-  std::enable_if_t<std::is_arithmetic<std::decay_t<T>>::value, Bind&>
-  operator=(T rhs)
-  {
+  template <class T, class = std::enable_if_t<is_scalar<T>::value>>
+  Bind& operator=(T rhs) {
     static_assert(Rank == 0, "Cannot assign scalar to tensor");
     forall<Bind>([this,r=std::move(rhs)](auto i) {
       t_.eval(transform(std::move(i))) = r;
@@ -148,14 +146,14 @@ class Bind : public Expression<Bind<Child, Index>>
   /// @tparam       RHS Type of the Right-hand-side expression.
   /// @param        rhs The right-hand-side expression.
   /// @returns          A reference to *this for chaining.
-  template <class RHS>
-  Bind& operator+=(RHS&& rhs) {
-    static_assert(dimension_t<RHS>::value == N,
+  template <class E>
+  Bind& operator+=(E&& rhs) {
+    static_assert(dimension_t<E>::value == N,
                   "Cannot operate on expressions of differing dimension");
-    static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<RHS>>::value,
+    static_assert(mp::equivalent_t<outer_t<Bind>, outer_t<E>>::value,
                   "Attempted assignment of incompatible Expressions");
     forall<Bind>([&](auto i) {
-      t_.eval(transform(std::move(i))) += rhs.eval(i);
+      t_.eval(transform(i)) += rhs.eval(i);
     });
     return *this;
   }

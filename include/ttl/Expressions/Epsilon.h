@@ -84,7 +84,7 @@ template <int n, int N>
 struct insert<0,n,N>
 {
   template <class Index>
-  static constexpr int op(const Index index, int parity) {
+  static constexpr int op(Index index, int parity) {
     return sort<n+1,N>::op(index, parity);
   }
 };
@@ -94,7 +94,7 @@ template <int n, int N>
 struct sort
 {
   template <class Index>
-  static constexpr int op(const Index index, int parity) {
+  static constexpr int op(Index index, int parity) {
     return insert<n,n,N>::op(index, parity);
   }
 };
@@ -104,7 +104,7 @@ template <int N>
 struct sort<N,N>
 {
   template <class Index>
-  static constexpr int op(const Index, int parity) {
+  static constexpr int op(Index, int parity) {
     return parity;
   }
 };
@@ -113,24 +113,24 @@ struct sort<N,N>
 template <int D, class Index>
 class Epsilon : public Expression<Epsilon<D,Index>>
 {
-  static constexpr int sort(const Index index) noexcept {
+  static constexpr int sort(Index index) noexcept {
     return detail::sort<0, std::tuple_size<Index>::value>::op(index, 1);
   }
 
  public:
-  template <class I>
-  static constexpr int eval(const I index) noexcept {
-    return sort(ttl::expressions::transform<Index>(index));
+  template <class Other>
+  static constexpr int eval(Other index) noexcept {
+    return sort(transform<Index>(index));
   }
 };
 
 template <int D, class Index>
 struct traits<Epsilon<D, Index>>
 {
-  using outer_type = Index;
-  using scalar_type = int;
-  using dimension = std::integral_constant<int, D>;
-  using rank = typename std::tuple_size<Index>::type;
+  using     outer_type = Index;
+  using    scalar_type = int;
+  using dimension_type = std::integral_constant<int, D>;
+  using      rank_type = typename std::tuple_size<Index>::type;
 };
 } // namespace expressions
 

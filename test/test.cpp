@@ -11,7 +11,6 @@ int main() {
 
   ttl::Tensor<2, 2, double> B = { 1, 2, 3, 4 };
   B = A;
-  B = A(i,i);
 
   return 0;
 }

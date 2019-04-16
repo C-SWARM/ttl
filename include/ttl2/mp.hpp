@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ttl/mp/subset_sequence.hpp"
 #include <limits>
 #include <tuple>
 #include <type_traits>
@@ -51,25 +50,20 @@ struct all_convertible<To, From, U...> {
                         all_convertible<To, U...>::value };
 };
 
-template <class T, class Op, size_t... Is>
-constexpr auto apply(T tuple, Op&& op, std::index_sequence<Is...>) {
-  return op(std::get<Is>(tuple)...);
-}
+template <class... U>
+struct has_integer {
+  enum : bool { value = false };
+};
 
-template <class... T, class Op>
-constexpr auto apply(std::tuple<T...> tuple, Op&& op) {
-  return apply(tuple, std::forward<Op>(op), std::make_index_sequence<sizeof...(T)>());
-}
+template <class T, class... U>
+struct has_integer<T, U...> {
+  enum : bool { value = is_integer<T>::value or has_integer<U...>::value };
+};
 
-template <class T, class U, size_t... Is>
-constexpr T select(U u, std::index_sequence<Is...>) noexcept {
-  return std::make_tuple(std::get<Is>(u)...);
-}
-
-template <class T, class U>
-constexpr T select(U u) noexcept {
-  return select<T>(std::move(u), mp::subset_sequence_t<T, U>{});
-}
+template <class... T>
+struct has_integer<std::tuple<T...>> {
+  enum : bool { value = has_integer<T...>::value };
+};
 
 template <class Lhs, class Rhs>
 struct dimension {

@@ -31,7 +31,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#include <ttl/ttl.h>
+#include <ttl2/ttl.hpp>
 #include <gtest/gtest.h>
 
 // const int e[] = {0,1,2,3,4,5,6,7};
@@ -45,84 +45,84 @@ static const ttl::Tensor<2,2,const int> C = {0,1,2,3};
 
 TEST(Bind, InitializeRValue) {
   ttl::Tensor<2,2,int> A = 2 * B(i,j);
-  EXPECT_EQ(2 * B.get(0), A.get(0));
-  EXPECT_EQ(2 * B.get(1), A.get(1));
-  EXPECT_EQ(2 * B.get(2), A.get(2));
-  EXPECT_EQ(2 * B.get(3), A.get(3));
+  EXPECT_EQ(2 * B[0], A[0]);
+  EXPECT_EQ(2 * B[1], A[1]);
+  EXPECT_EQ(2 * B[2], A[2]);
+  EXPECT_EQ(2 * B[3], A[3]);
 }
 
 TEST(Bind, InitializeLValue) {
   auto e = 2 * B(i,j);
   ttl::Tensor<2,2,int> A = e;
-  EXPECT_EQ(2 * B.get(0), A.get(0));
-  EXPECT_EQ(2 * B.get(1), A.get(1));
-  EXPECT_EQ(2 * B.get(2), A.get(2));
-  EXPECT_EQ(2 * B.get(3), A.get(3));
+  EXPECT_EQ(2 * B[0], A[0]);
+  EXPECT_EQ(2 * B[1], A[1]);
+  EXPECT_EQ(2 * B[2], A[2]);
+  EXPECT_EQ(2 * B[3], A[3]);
 }
 
 TEST(Bind, Assign) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = B(i,j);
-  EXPECT_EQ(B.get(0), A.get(0));
-  EXPECT_EQ(B.get(1), A.get(1));
-  EXPECT_EQ(B.get(2), A.get(2));
-  EXPECT_EQ(B.get(3), A.get(3));
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[1]);
+  EXPECT_EQ(B[2], A[2]);
+  EXPECT_EQ(B[3], A[3]);
 }
 
 TEST(Bind, AssignRValueExpression) {
   ttl::Tensor<2,2,int> A;
   A = 2 * B(i,j);
-  EXPECT_EQ(2 * B.get(0), A.get(0));
-  EXPECT_EQ(2 * B.get(1), A.get(1));
-  EXPECT_EQ(2 * B.get(2), A.get(2));
-  EXPECT_EQ(2 * B.get(3), A.get(3));
+  EXPECT_EQ(2 * B[0], A[0]);
+  EXPECT_EQ(2 * B[1], A[1]);
+  EXPECT_EQ(2 * B[2], A[2]);
+  EXPECT_EQ(2 * B[3], A[3]);
 }
 
 TEST(Bind, AssignLValueExpression) {
   auto b = 2 * B(i,j);
   ttl::Tensor<2,2,int> A;
   A = b;
-  EXPECT_EQ(2 * B.get(0), A.get(0));
-  EXPECT_EQ(2 * B.get(1), A.get(1));
-  EXPECT_EQ(2 * B.get(2), A.get(2));
-  EXPECT_EQ(2 * B.get(3), A.get(3));
+  EXPECT_EQ(2 * B[0], A[0]);
+  EXPECT_EQ(2 * B[1], A[1]);
+  EXPECT_EQ(2 * B[2], A[2]);
+  EXPECT_EQ(2 * B[3], A[3]);
 }
 
 TEST(Bind, Accumulate) {
   ttl::Tensor<2,2,int> A = {};
   A(i,j) += B(i,j);
-  EXPECT_EQ(B.get(0), A.get(0));
-  EXPECT_EQ(B.get(1), A.get(1));
-  EXPECT_EQ(B.get(2), A.get(2));
-  EXPECT_EQ(B.get(3), A.get(3));
+  EXPECT_EQ(B[0], A[0]);
+  EXPECT_EQ(B[1], A[1]);
+  EXPECT_EQ(B[2], A[2]);
+  EXPECT_EQ(B[3], A[3]);
 }
 
 TEST(Bind, AssignFromConst) {
   ttl::Tensor<2,2,int> A;
   A(i,j) = C(i,j);
-  EXPECT_EQ(C.get(0), A.get(0));
-  EXPECT_EQ(C.get(1), A.get(1));
-  EXPECT_EQ(C.get(2), A.get(2));
-  EXPECT_EQ(C.get(3), A.get(3));
+  EXPECT_EQ(C[0], A[0]);
+  EXPECT_EQ(C[1], A[1]);
+  EXPECT_EQ(C[2], A[2]);
+  EXPECT_EQ(C[3], A[3]);
 }
 
 // TEST(Bind, AssignFromExternal) {
 //   ttl::Tensor<2,2,int> A;
 //   A(i,j) = E(i,j);
-//   EXPECT_EQ(e[0], A.get(0));
-//   EXPECT_EQ(e[1], A.get(1));
-//   EXPECT_EQ(e[2], A.get(2));
-//   EXPECT_EQ(e[3], A.get(3));
+//   EXPECT_EQ(e[0], A[0]);
+//   EXPECT_EQ(e[1], A[1]);
+//   EXPECT_EQ(e[2], A[2]);
+//   EXPECT_EQ(e[3], A[3]);
 // }
 
 // TEST(Bind, AssignToExternal) {
 //   int a[4];
 //   ttl::Tensor<2,2,int*> A(a);
 //   A(i,j) = B(i,j);
-//   EXPECT_EQ(a[0], B.get(0));
-//   EXPECT_EQ(a[1], B.get(1));
-//   EXPECT_EQ(a[2], B.get(2));
-//   EXPECT_EQ(a[3], B.get(3));
+//   EXPECT_EQ(a[0], B[0]);
+//   EXPECT_EQ(a[1], B[1]);
+//   EXPECT_EQ(a[2], B[2]);
+//   EXPECT_EQ(a[3], B[3]);
 // }
 
 // TEST(Bind, AssignExternal) {
@@ -135,41 +135,41 @@ TEST(Bind, AssignFromConst) {
 //   EXPECT_EQ(a[3], e[3]);
 // }
 
-TEST(Bind, AssignPermute) {
-  ttl::Tensor<2,2,int> A;
-  A(i,j) = B(j,i);
-  EXPECT_EQ(B.get(0), A.get(0));
-  EXPECT_EQ(B.get(1), A.get(2));
-  EXPECT_EQ(B.get(2), A.get(1));
-  EXPECT_EQ(B.get(3), A.get(3));
-}
+// TEST(Bind, AssignPermute) {
+//   ttl::Tensor<2,2,int> A;
+//   A(i,j) = B(j,i);
+//   EXPECT_EQ(B[0], A[0]);
+//   EXPECT_EQ(B[1], A[2]);
+//   EXPECT_EQ(B[2], A[1]);
+//   EXPECT_EQ(B[3], A[3]);
+// }
 
-TEST(Bind, AssignPermuteFromConst) {
-  ttl::Tensor<2,2,int> A;
-  A(i,j) = C(j,i);
-  EXPECT_EQ(C.get(0), A.get(0));
-  EXPECT_EQ(C.get(1), A.get(2));
-  EXPECT_EQ(C.get(2), A.get(1));
-  EXPECT_EQ(C.get(3), A.get(3));
-}
+// TEST(Bind, AssignPermuteFromConst) {
+//   ttl::Tensor<2,2,int> A;
+//   A(i,j) = C(j,i);
+//   EXPECT_EQ(C[0], A[0]);
+//   EXPECT_EQ(C[1], A[2]);
+//   EXPECT_EQ(C[2], A[1]);
+//   EXPECT_EQ(C[3], A[3]);
+// }
 
 // TEST(Bind, AssignPermuteFromExternal) {
 //   ttl::Tensor<2,2,int> A;
 //   A(i,j) = E(j,i);
-//   EXPECT_EQ(e[0], A.get(0));
-//   EXPECT_EQ(e[1], A.get(2));
-//   EXPECT_EQ(e[2], A.get(1));
-//   EXPECT_EQ(e[3], A.get(3));
+//   EXPECT_EQ(e[0], A[0]);
+//   EXPECT_EQ(e[1], A[2]);
+//   EXPECT_EQ(e[2], A[1]);
+//   EXPECT_EQ(e[3], A[3]);
 // }
 
 // TEST(Bind, AssignPermuteToExternal) {
 //   int a[4];
 //   ttl::Tensor<2,2,int*> A(a);
 //   A(i,j) = B(j,i);
-//   EXPECT_EQ(a[0], B.get(0));
-//   EXPECT_EQ(a[1], B.get(2));
-//   EXPECT_EQ(a[2], B.get(1));
-//   EXPECT_EQ(a[3], B.get(3));
+//   EXPECT_EQ(a[0], B[0]);
+//   EXPECT_EQ(a[1], B[2]);
+//   EXPECT_EQ(a[2], B[1]);
+//   EXPECT_EQ(a[3], B[3]);
 // }
 
 // TEST(Bind, AssignPermuteExternal) {
@@ -185,30 +185,30 @@ TEST(Bind, AssignPermuteFromConst) {
 // TEST(Bind, ExternalInitializeRValue) {
 //   int a[4];
 //   ttl::Tensor<2,2,int*> {a, 2 * B(i,j)};
-//   EXPECT_EQ(2 * B.get(0), a[0]);
-//   EXPECT_EQ(2 * B.get(1), a[1]);
-//   EXPECT_EQ(2 * B.get(2), a[2]);
-//   EXPECT_EQ(2 * B.get(3), a[3]);
+//   EXPECT_EQ(2 * B[0], a[0]);
+//   EXPECT_EQ(2 * B[1], a[1]);
+//   EXPECT_EQ(2 * B[2], a[2]);
+//   EXPECT_EQ(2 * B[3], a[3]);
 // }
 
 // TEST(Bind, ExternalInitializeLValue) {
 //   auto e = 2 * B(i,j);
 //   int a[4];
 //   ttl::Tensor<2,2,int*> {a, e};
-//   EXPECT_EQ(2 * B.get(0), a[0]);
-//   EXPECT_EQ(2 * B.get(1), a[1]);
-//   EXPECT_EQ(2 * B.get(2), a[2]);
-//   EXPECT_EQ(2 * B.get(3), a[3]);
+//   EXPECT_EQ(2 * B[0], a[0]);
+//   EXPECT_EQ(2 * B[1], a[1]);
+//   EXPECT_EQ(2 * B[2], a[2]);
+//   EXPECT_EQ(2 * B[3], a[3]);
 // }
 
 // TEST(Bind, ExternalAssignRValueExpression) {
 //   int a[4];
 //   ttl::Tensor<2,2,int*> A(a);
 //   A = 2 * B(i,j);
-//   EXPECT_EQ(2 * B.get(0), a[0]);
-//   EXPECT_EQ(2 * B.get(1), a[1]);
-//   EXPECT_EQ(2 * B.get(2), a[2]);
-//   EXPECT_EQ(2 * B.get(3), a[3]);
+//   EXPECT_EQ(2 * B[0], a[0]);
+//   EXPECT_EQ(2 * B[1], a[1]);
+//   EXPECT_EQ(2 * B[2], a[2]);
+//   EXPECT_EQ(2 * B[3], a[3]);
 // }
 
 // TEST(Bind, ExternalAssignLValueExpression) {
@@ -216,10 +216,10 @@ TEST(Bind, AssignPermuteFromConst) {
 //   int a[4];
 //   ttl::Tensor<2,2,int*> A(a);
 //   A = e;
-//   EXPECT_EQ(2 * B.get(0), a[0]);
-//   EXPECT_EQ(2 * B.get(1), a[1]);
-//   EXPECT_EQ(2 * B.get(2), a[2]);
-//   EXPECT_EQ(2 * B.get(3), a[3]);
+//   EXPECT_EQ(2 * B[0], a[0]);
+//   EXPECT_EQ(2 * B[1], a[1]);
+//   EXPECT_EQ(2 * B[2], a[2]);
+//   EXPECT_EQ(2 * B[3], a[3]);
 // }
 
 TEST(Bind, Trace2x2) {
@@ -237,20 +237,20 @@ TEST(Bind, Trace2x3) {
 TEST(Bind, Trace3x2) {
   ttl::Tensor<3,2,int> A = {1,2,3,4,5,6,7,8};
   auto t = A(i,i,i);
-  EXPECT_EQ(t, A.get(0) + A.get(7));
+  EXPECT_EQ(t, A[0] + A[7]);
 }
 
 TEST(Bind, ParallelContract) {
   ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
   auto t = A(i,i,j,j);
-  EXPECT_EQ(t, A.get(0) + A.get(3) + A.get(12) + A.get(15));
+  EXPECT_EQ(t, A[0] + A[3] + A[12] + A[15]);
 }
 
 TEST(Bind, SequentialContract) {
   ttl::Tensor<4,2,int> A = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
   ttl::Tensor<2,2,int> B = A(i,i,j,k);
   auto t = B(j,j);
-  EXPECT_EQ(t, B.get(0) + B.get(3));
+  EXPECT_EQ(t, B[0] + B[3]);
 }
 
 TEST(Bind, ProjectionRead1) {
@@ -261,10 +261,10 @@ TEST(Bind, ProjectionRead1) {
 
 TEST(Bind, ProjectionRead2) {
   ttl::Tensor<2,2,int> A = {0,1,2,3};
-  EXPECT_EQ(A(0,0), A[0][0]);
-  EXPECT_EQ(A(0,1), A[0][1]);
-  EXPECT_EQ(A(1,0), A[1][0]);
-  EXPECT_EQ(A(1,1), A[1][1]);
+  EXPECT_EQ(A(0,0), 0);
+  EXPECT_EQ(A(0,1), 1);
+  EXPECT_EQ(A(1,0), 2);
+  EXPECT_EQ(A(1,1), 3);
 }
 
 
@@ -278,7 +278,7 @@ TEST(Bind, ProjectionRead2_1) {
 TEST(Bind, ProjectionRead3) {
   ttl::Tensor<3,2,int> A = {0,1,2,3,4,5,6,7};
   int d = A(0,1,0);
-  EXPECT_EQ(d, A[0][1][0]);
+  EXPECT_EQ(d, 2);
   ttl::Tensor<2,2,int> B = A(i,1,j);
   EXPECT_EQ(B(0,0), A(0,1,0));
   EXPECT_EQ(B(0,1), A(0,1,1));
@@ -306,10 +306,10 @@ TEST(Bind, ProjectionWrite2) {
   A(0,1) = 1;
   A(1,0) = 2;
   A(1,1) = 3;
-  EXPECT_EQ(A[0][0], 0);
-  EXPECT_EQ(A[0][1], 1);
-  EXPECT_EQ(A[1][0], 2);
-  EXPECT_EQ(A[1][1], 3);
+  EXPECT_EQ(A(0,0), 0);
+  EXPECT_EQ(A(0,1), 1);
+  EXPECT_EQ(A(1,0), 2);
+  EXPECT_EQ(A(1,1), 3);
 }
 
 TEST(Bind, ProjectionWriteVector) {
@@ -317,12 +317,12 @@ TEST(Bind, ProjectionWriteVector) {
   ttl::Tensor<1,2,int> v = {1,2};
 
   A(i,0) = v(i);
-  EXPECT_EQ(A[0][0], 1);
-  EXPECT_EQ(A[1][0], 2);
+  EXPECT_EQ(A(0,0), 1);
+  EXPECT_EQ(A(1,0), 2);
 
   A(1,i) = v(i);
-  EXPECT_EQ(A[1][0], 1);
-  EXPECT_EQ(A[1][1], 2);
+  EXPECT_EQ(A(1,0), 1);
+  EXPECT_EQ(A(1,1), 2);
 }
 
 TEST(Bind, ProjectionWriteMatrix) {
@@ -330,10 +330,10 @@ TEST(Bind, ProjectionWriteMatrix) {
   ttl::Tensor<2,2,int> M = {1,2,3,4};
 
   A(i,0,j) = M(i,j);
-  EXPECT_EQ(A[0][0][0], 1);
-  EXPECT_EQ(A[0][0][1], 2);
-  EXPECT_EQ(A[1][0][0], 3);
-  EXPECT_EQ(A[1][0][1], 4);
+  EXPECT_EQ(A(0,0,0), 1);
+  EXPECT_EQ(A(0,0,1), 2);
+  EXPECT_EQ(A(1,0,0), 3);
+  EXPECT_EQ(A(1,0,1), 4);
 }
 
 TEST(Bind, ProjectionProduct) {
@@ -341,8 +341,8 @@ TEST(Bind, ProjectionProduct) {
   ttl::Tensor<3,2,int> C={1,2,3,4,5,6,7,8};
 
   A(i,0) = B(j,i)*C(1,j,0);
-  EXPECT_EQ(A[0][0], 26);
-  EXPECT_EQ(A[1][0], 38);
+  EXPECT_EQ(A(0,0), 26);
+  EXPECT_EQ(A(1,0), 38);
 }
 
 TEST(Bind, Curry) {
@@ -352,12 +352,12 @@ TEST(Bind, Curry) {
   EXPECT_EQ(f(1), 2);
 }
 
-TEST(Bind, PermuteSubtree) {
-  ttl::Tensor<2,2,int> A = {1,2,3,4},
-                       B = {1,3,2,4};
-  auto f = A(i,j).to(j,i);
-  EXPECT_EQ(f(0,0), B(0,0));
-  EXPECT_EQ(f(0,1), B(0,1));
-  EXPECT_EQ(f(1,0), B(1,0));
-  EXPECT_EQ(f(1,1), B(1,1));
-}
+// TEST(Bind, PermuteSubtree) {
+//   ttl::Tensor<2,2,int> A = {1,2,3,4},
+//                        B = {1,3,2,4};
+//   auto f = A(i,j).to(j,i);
+//   EXPECT_EQ(f(0,0), B(0,0));
+//   EXPECT_EQ(f(0,1), B(0,1));
+//   EXPECT_EQ(f(1,0), B(1,0));
+//   EXPECT_EQ(f(1,1), B(1,1));
+// }
