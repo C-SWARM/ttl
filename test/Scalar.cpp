@@ -31,19 +31,19 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#include <ttl/ttl.h>
+#include <ttl2/ttl.hpp>
 #include <gtest/gtest.h>
 
-TEST(Tensor, ScalarTensor) {
-  ttl::Tensor<0, 2, double> A = {1.2};
-  EXPECT_EQ(A, 1.2);
-}
+// TEST(Tensor, ScalarTensor) {
+//   ttl::Tensor<0, 2, double> A = {1.2};
+//   EXPECT_EQ(A, 1.2);
+// }
 
-TEST(Tensor, ScalarAssign) {
-  ttl::Tensor<0, 2, double> A;
-  A = 1.4;
-  EXPECT_EQ(A, 1.4);
-}
+// TEST(Tensor, ScalarAssign) {
+//   ttl::Tensor<0, 2, double> A;
+//   A = 1.4;
+//   EXPECT_EQ(A, 1.4);
+// }
 
 TEST(Tensor, ScalarExpression) {
   ttl::Tensor<0, 2, double> A = {1.2};
