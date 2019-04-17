@@ -164,19 +164,19 @@ class Bind {
   template <class... U,
             class = std::enable_if_t<!all_integer<U...>::value>>
   constexpr auto to(U... index) const & noexcept {
-    return permutation<std::tuple<U...>>(*this);
+    return permute(*this, index...);
   }
 
   template <class... U,
             class = std::enable_if_t<!all_integer<U...>::value>>
   constexpr auto to(U... index) && noexcept {
-    return permutation<std::tuple<U...>>(*this);
+    return permute(*this, index...);
   }
 
   template <class... U,
             class = std::enable_if_t<!all_integer<U...>::value>>
   constexpr auto to(U... index) & noexcept {
-    return permutation<std::tuple<U...>>(*this);
+    return permute(*this, index...);
   }
 
  private:

@@ -31,7 +31,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // -----------------------------------------------------------------------------
-#include <ttl/ttl.h>
+#include <ttl2/ttl.hpp>
 #include <gtest/gtest.h>
 
 static constexpr ttl::Index<'i'> i;
@@ -104,7 +104,7 @@ TEST(Delta, Expression) {
 }
 
 TEST(Delta, Expression2) {
-  ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8},
+  ttl::Tensor<2,3,int> A = {1,2,3,4,5,6,7,8,9},
                        B = A(i,j) * ttl::delta(j,k),
                        C = A(i,j) * ttl::delta(k,j).to(j,k),
                        D = ((ttl::delta(i,k)*ttl::delta(j,l)).to(i,j,k,l))*A(k,l);

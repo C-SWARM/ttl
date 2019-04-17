@@ -3,6 +3,7 @@
 #include "ttl/mp/duplicate.hpp"
 #include "ttl/mp/non_integer.hpp"
 #include "ttl/mp/unique.hpp"
+#include "ttl2/Algorithms.hpp"
 #include "ttl2/mp.hpp"
 
 namespace ttl {
@@ -44,6 +45,16 @@ class Expr {
 
   constexpr operator iif_t<R == 0, T, void>() && noexcept {
     return op_(Index{});
+  }
+
+  template <class... Index>
+  constexpr auto to(Index... index) const & noexcept {
+    return permute(*this, index...);
+  }
+
+  template <class... Index>
+  constexpr auto to(Index... index) && noexcept {
+    return permute(*this, index...);
   }
 
  protected:
@@ -151,9 +162,32 @@ constexpr auto zero(Index... index) noexcept {
   return make_expression<D, std::tuple<Index...>>([](auto) { return 0; });
 }
 
-template <class Index, class Op>
-constexpr auto permutation(Op op) noexcept {
+template <int D = -1, class... Index>
+constexpr auto delta(Index... index) noexcept {
+  using Outer = std::tuple<Index...>;
+  return make_expression<D, Outer>([](auto index) {
+    return apply(index, ttl::is_diagonal<Index...>);
+  });
+}
+
+template <int D = -1>
+constexpr auto identity() noexcept {
+  return delta<D>();
+}
+
+template <int D = -1, class T0, class... T, class U0, class... U>
+constexpr auto identity(std::tuple<T0, T...>, std::tuple<U0, U...>) noexcept {
+  return delta<D>(std::tuple<T0, U0>{}) * identity<D>(std::tuple<T...>{}, std::tuple<U...>{});
+}
+
+template <int D = -1, class... U>
+constexpr auto identity(U...) noexcept {
+}
+
+template <class Op, class... U>
+constexpr auto permute(Op op, U...) noexcept {
   constexpr auto D = Op::D;
+  using Index = std::tuple<U...>;
   using ChildIndex = typename Op::Index;
   return make_expression<D, Index>([op=std::move(op)](Index index) {
     return op(select<ChildIndex>(index));
@@ -169,3 +203,4 @@ constexpr auto slice(ChildIndex index, Op op) noexcept {
   });
 }
 }
+

@@ -5,12 +5,12 @@
 
 namespace ttl {
 template <class T, class Op, size_t... Is>
-constexpr auto apply(T tuple, Op&& op, std::index_sequence<Is...>) {
+constexpr auto apply(T tuple, Op&& op, std::index_sequence<Is...>) noexcept {
   return op(std::get<Is>(tuple)...);
 }
 
 template <class... T, class Op>
-constexpr auto apply(std::tuple<T...> tuple, Op&& op) {
+constexpr auto apply(std::tuple<T...> tuple, Op&& op) noexcept {
   return apply(tuple, std::forward<Op>(op), std::make_index_sequence<sizeof...(T)>());
 }
 
@@ -60,5 +60,19 @@ template <class T, class U,
           std::enable_if_t<!std::is_same<T, U>::value, void**> = nullptr>
 constexpr T select(T index, U from) noexcept {
   return expressions::transform(index, from);
+}
+
+constexpr bool is_diagonal() noexcept {
+  return true;
+}
+
+template <class T>
+constexpr bool is_diagonal(T car) noexcept {
+  return true;
+}
+
+template <class T0, class T1, class... U>
+constexpr bool is_diagonal(T0 p, T1 car, U... cdr) noexcept {
+  return (p == car) and is_diagonal(car, cdr...);
 }
 }

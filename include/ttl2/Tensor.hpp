@@ -146,6 +146,18 @@ class Tensor {
     return data[i];
   }
 
+  constexpr operator iif_t<R == 0, const T&, void>() const & noexcept {
+    return data[0];
+  }
+
+  constexpr operator iif_t<R == 0, T&, void>() && noexcept {
+    return data[0];
+  }
+
+  constexpr operator iif_t<R == 0, T&, void>() & noexcept {
+    return data[0];
+  }
+
   void fill(T t) {
     std::fill_n(data.begin(), size(), t);
   }
