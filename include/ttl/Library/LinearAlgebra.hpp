@@ -37,6 +37,7 @@
 #ifndef TTL_LIBRARY_LINEAR_ALGEBRA_HPP
 #define TTL_LIBRARY_LINEAR_ALGEBRA_HPP
 
+#include <cmath>                                // std::abs
 #include <numeric>                              // std::iota
 
 namespace ttl {
