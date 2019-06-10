@@ -47,7 +47,7 @@ option(TTL_BUILD_TESTS "build the TTL unit tests" ON)
 # -----------------------------------------------------------------------------
 # module include path
 # -----------------------------------------------------------------------------
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 # -----------------------------------------------------------------------------
 # set some basic build-type flags
@@ -67,7 +67,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Included functionality.
 # -----------------------------------------------------------------------------
 include(CTest)
-include(CheckIncludeFileCXX)
 
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.
