@@ -71,8 +71,11 @@ include(CTest)
 # -----------------------------------------------------------------------------
 # Make sure that all of the include directories we need are actually included.
 # -----------------------------------------------------------------------------
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+add_library(ttl INTERFACE)
+target_include_directories(ttl
+  INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(include)
 
